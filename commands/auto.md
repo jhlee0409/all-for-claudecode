@@ -1,4 +1,4 @@
-# /selfish.auto — Full Auto 파이프라인
+# /selfish:auto — Full Auto 파이프라인
 
 > 기능 설명 하나로 spec → plan → tasks → implement → review → clean을 완전 자동 실행한다.
 > 중간 확인 없음. clarify/analyze 스킵. Critic Loop는 각 단계에서 자동 수행.
@@ -18,7 +18,7 @@
 - `{config.risks}` — 프로젝트 고유 위험 패턴
 - `{config.mini_review}` — Mini-Review 점검 항목
 
-설정 파일이 없으면: "`.claude/selfish.config.md`가 없습니다. 프로젝트 설정을 먼저 생성하세요." 출력 후 **중단**.
+설정 파일이 없으면: "`.claude/selfish.config.md`가 없습니다. `/selfish:init`으로 프로젝트 설정을 생성하세요." 출력 후 **중단**.
 
 ---
 
@@ -56,7 +56,7 @@
 3. Feature 이름 결정 (키워드 2-3개 → kebab-case)
 4. **Pipeline Flag 활성화** (Hook 연동):
    ```bash
-   .claude/hooks/selfish-pipeline-manage.sh start {feature}
+   "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" start {feature}
    ```
    - Safety Snapshot 자동 생성 (`selfish/pre-auto` git tag)
    - Stop Gate Hook 활성화 (CI 미통과 시 응답 종료 차단)
@@ -71,9 +71,9 @@
 
 ### Phase 1: Spec (1/6)
 
-`.claude/hooks/selfish-pipeline-manage.sh phase spec`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase spec`
 
-`/selfish.spec`의 로직을 인라인 실행:
+`/selfish:spec`의 로직을 인라인 실행:
 
 1. 코드베이스에서 관련 코드 탐색 (Glob, Grep) — `{config.architecture}` 계층별 탐색
 2. `specs/{feature}/spec.md` 생성
@@ -89,9 +89,9 @@
 
 ### Phase 2: Plan (2/6)
 
-`.claude/hooks/selfish-pipeline-manage.sh phase plan`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase plan`
 
-`/selfish.plan`의 로직을 인라인 실행:
+`/selfish:plan`의 로직을 인라인 실행:
 
 1. spec.md 로드
 2. 기술적 불확실성 있으면 → WebSearch/코드탐색으로 자동 해결 → research.md 생성
@@ -109,9 +109,9 @@
 
 ### Phase 3: Tasks (3/6)
 
-`.claude/hooks/selfish-pipeline-manage.sh phase tasks`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase tasks`
 
-`/selfish.tasks`의 로직을 인라인 실행:
+`/selfish:tasks`의 로직을 인라인 실행:
 
 1. plan.md 로드
 2. Phase별 태스크 분해 (T001, T002, ...)
@@ -128,9 +128,9 @@
 
 ### Phase 4: Implement (4/6)
 
-`.claude/hooks/selfish-pipeline-manage.sh phase implement`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase implement`
 
-`/selfish.implement`의 로직을 인라인 실행:
+`/selfish:implement`의 로직을 인라인 실행:
 
 1. tasks.md 파싱
 2. Phase별 실행:
@@ -172,15 +172,15 @@
 
 4. tasks.md에 `[x]` 실시간 업데이트
 5. 전체 완료 후 `{config.ci}` 최종 검증
-   - 통과 시: `.claude/hooks/selfish-pipeline-manage.sh ci-pass` (Stop Gate 해제)
+   - 통과 시: `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" ci-pass` (Stop Gate 해제)
 6. **Implement 회고**: Plan에서 예측하지 못한 문제가 발생했다면 `specs/{feature}/retrospective.md`에 기록 (Clean에서 memory 반영용)
 7. 진행 표시: `✓ 4/6 Implement 완료 ({완료}/{전체} 태스크, CI: ✓, Mini-Review: ✓, Checkpoint: ✓)`
 
 ### Phase 5: Review (5/6)
 
-`.claude/hooks/selfish-pipeline-manage.sh phase review`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase review`
 
-`/selfish.review`의 로직을 인라인 실행:
+`/selfish:review`의 로직을 인라인 실행:
 
 1. 구현된 변경 파일 대상 리뷰 (`git diff HEAD`)
 2. 코드 품질, `{config.architecture}` 규칙, 보안, 성능, `{config.code_style}` 패턴 준수 검사
@@ -194,7 +194,7 @@
 
 ### Phase 6: Clean (6/6)
 
-`.claude/hooks/selfish-pipeline-manage.sh phase clean`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase clean`
 
 구현 및 리뷰 완료 후 아티팩트 정리 및 코드베이스 위생 점검:
 
@@ -217,7 +217,7 @@
    - `memory/checkpoint.md` 초기화 (파이프라인 완료 = 세션 목적 달성)
 6. **Pipeline Flag 해제** (Hook 연동):
    ```bash
-   .claude/hooks/selfish-pipeline-manage.sh end
+   "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" end
    ```
    - Stop Gate Hook 비활성화
    - 변경 추적 로그 삭제
@@ -256,7 +256,7 @@
 ├─ 롤백: git reset --hard selfish/pre-auto (구현 전 상태로 복원)
 ├─ 체크포인트: memory/checkpoint.md (마지막 Phase 게이트 통과 시점)
 ├─ 아티팩트: specs/{feature}/ (부분 완료, Clean 미실행 시 수동 삭제 필요)
-└─ 재개: /selfish.resume → /selfish.implement (체크포인트 기반)
+└─ 재개: /selfish:resume → /selfish:implement (체크포인트 기반)
 ```
 
 ## 주의사항

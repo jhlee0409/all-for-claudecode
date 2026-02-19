@@ -15,40 +15,43 @@
 
 ## 요구사항
 
-- [Claude Code](https://claude.ai/code) CLI
+- [Claude Code](https://claude.ai/code) CLI (플러그인 시스템 지원 버전)
 - Git
 - `jq` (PostToolUse hook에서 사용)
 
 ## 설치
 
 ```bash
-git clone https://github.com/jhlee0409/selfish-pipeline.git
-cd selfish-pipeline
-./install.sh
+npx selfish-pipeline
 ```
 
-### 설치 옵션
+설치 범위(user / project / local)를 인터랙티브하게 선택합니다:
 
-```bash
-./install.sh                  # 전체 설치 (commands + hooks + config)
-./install.sh --commands-only  # 커맨드만 (모든 프로젝트 공용)
-./install.sh --hooks-only     # 현재 프로젝트에 hook만
-./install.sh --config-only    # 현재 프로젝트에 config 템플릿만
+```
+  설치 범위를 선택하세요:
+
+    1) User (개인 전체 프로젝트)
+       → ~/.claude/settings.json
+    2) Project (팀 공유, git 커밋 가능)
+       → .claude/settings.json
+    3) Local (이 프로젝트만, gitignore)
+       → .claude/settings.local.json
+
+  선택 [1/2/3] (기본: 1):
 ```
 
-### 설치 구조
+설치 후 프로젝트 초기 설정:
 
 ```text
-~/.claude/commands/           ← selfish.*.md (15개, 유저 레벨)
-<project>/.claude/
-├── hooks/                    ← *.sh (5개, 프로젝트 레벨)
-├── settings.json             ← hook 설정
-└── selfish.config.md         ← 프로젝트별 설정
+/selfish:init                  # 프로젝트 구조 자동 분석
+/selfish:init nextjs-fsd       # Next.js + FSD 프리셋 사용
 ```
+
+> 기존 `git clone` + `install.sh` 방식에서 마이그레이션하는 경우 [MIGRATION.md](./MIGRATION.md)를 참고하세요.
 
 ## 설정
 
-설치 후 `.claude/selfish.config.md`를 프로젝트에 맞게 수정합니다:
+`/selfish:init` 실행 후 `.claude/selfish.config.md`를 프로젝트에 맞게 수정합니다:
 
 ```yaml
 # CI 명령어
@@ -70,7 +73,7 @@ client_directive: "'use client'"
 ### Full Auto (권장)
 
 ```text
-/selfish.auto "사용자 인증 기능 추가"
+/selfish:auto "사용자 인증 기능 추가"
 ```
 
 spec → plan → tasks → implement → review → clean 전체를 자동 실행합니다.
@@ -79,37 +82,38 @@ spec → plan → tasks → implement → review → clean 전체를 자동 실�
 
 | 커맨드 | 역할 | Critic |
 |--------|------|--------|
-| `/selfish.spec` | 기능 명세서 생성 | 1회 |
-| `/selfish.clarify` | 명세 모호성 해소 | - |
-| `/selfish.plan` | 구현 설계 | 3회 |
-| `/selfish.tasks` | 태스크 분해 | 1회 |
-| `/selfish.analyze` | 아티팩트 정합성 검증 | - |
-| `/selfish.implement` | 코드 구현 실행 | - |
-| `/selfish.review` | 코드 리뷰 | 1회 |
-| `/selfish.debug` | 버그 진단/수정 | 2회 |
-| `/selfish.architect` | 아키텍처 분석 | 3회 |
-| `/selfish.security` | 보안 스캔 | - |
-| `/selfish.research` | 기술 리서치 | - |
-| `/selfish.principles` | 프로젝트 원칙 관리 | - |
-| `/selfish.checkpoint` | 세션 상태 저장 | - |
-| `/selfish.resume` | 세션 복원 | - |
+| `/selfish:spec` | 기능 명세서 생성 | 1회 |
+| `/selfish:clarify` | 명세 모호성 해소 | - |
+| `/selfish:plan` | 구현 설계 | 3회 |
+| `/selfish:tasks` | 태스크 분해 | 1회 |
+| `/selfish:analyze` | 아티팩트 정합성 검증 | - |
+| `/selfish:implement` | 코드 구현 실행 | - |
+| `/selfish:review` | 코드 리뷰 | 1회 |
+| `/selfish:debug` | 버그 진단/수정 | 2회 |
+| `/selfish:architect` | 아키텍처 분석 | 3회 |
+| `/selfish:security` | 보안 스캔 | - |
+| `/selfish:research` | 기술 리서치 | - |
+| `/selfish:principles` | 프로젝트 원칙 관리 | - |
+| `/selfish:checkpoint` | 세션 상태 저장 | - |
+| `/selfish:resume` | 세션 복원 | - |
+| `/selfish:init` | 프로젝트 초기 설정 | - |
 
 ### 파이프라인 흐름
 
 ```text
-/selfish.spec "기능 설명"  →  specs/{feature}/spec.md
+/selfish:spec "기능 설명"  →  specs/{feature}/spec.md
           ↓
-/selfish.clarify (선택)    →  spec.md 인라인 업데이트
+/selfish:clarify (선택)    →  spec.md 인라인 업데이트
           ↓
-/selfish.plan              →  plan.md + research.md
+/selfish:plan              →  plan.md + research.md
           ↓
-/selfish.tasks             →  tasks.md
+/selfish:tasks             →  tasks.md
           ↓
-/selfish.analyze (선택)    →  정합성 보고서
+/selfish:analyze (선택)    →  정합성 보고서
           ↓
-/selfish.implement         →  코드 구현 (Phase별 CI 게이트)
+/selfish:implement         →  코드 구현 (Phase별 CI 게이트)
           ↓
-/selfish.review (선택)     →  리뷰 보고서
+/selfish:review (선택)     →  리뷰 보고서
 ```
 
 ## 핵심 메커니즘
@@ -149,36 +153,42 @@ Implement 중 각 Phase 완료 시:
 
 ```text
 selfish-pipeline/
-├── README.md
-├── install.sh
-├── commands/                 # 15개 selfish.*.md 커맨드
-│   ├── selfish.auto.md       # Full Auto 파이프라인
-│   ├── selfish.spec.md       # 기능 명세서
-│   ├── selfish.plan.md       # 구현 설계
-│   ├── selfish.tasks.md      # 태스크 분해
-│   ├── selfish.implement.md  # 코드 구현
-│   ├── selfish.review.md     # 코드 리뷰
-│   ├── selfish.debug.md      # 버그 진단
-│   ├── selfish.architect.md  # 아키텍처 분석
-│   ├── selfish.security.md   # 보안 스캔
-│   ├── selfish.analyze.md    # 정합성 검증
-│   ├── selfish.clarify.md    # 명세 모호성 해소
-│   ├── selfish.research.md   # 기술 리서치
-│   ├── selfish.principles.md # 원칙 관리
-│   ├── selfish.checkpoint.md # 세션 저장
-│   └── selfish.resume.md     # 세션 복원
-├── hooks/                    # 5개 bash hook
+├── .claude-plugin/
+│   └── plugin.json              # 플러그인 매니페스트
+├── bin/
+│   └── cli.mjs                  # npx 인터랙티브 인스톨러
+├── commands/                    # 16개 커맨드
+│   ├── auto.md                  # Full Auto 파이프라인
+│   ├── spec.md                  # 기능 명세서
+│   ├── plan.md                  # 구현 설계
+│   ├── tasks.md                 # 태스크 분해
+│   ├── implement.md             # 코드 구현
+│   ├── review.md                # 코드 리뷰
+│   ├── debug.md                 # 버그 진단
+│   ├── architect.md             # 아키텍처 분석
+│   ├── security.md              # 보안 스캔
+│   ├── analyze.md               # 정합성 검증
+│   ├── clarify.md               # 명세 모호성 해소
+│   ├── research.md              # 기술 리서치
+│   ├── principles.md            # 원칙 관리
+│   ├── checkpoint.md            # 세션 저장
+│   ├── resume.md                # 세션 복원
+│   └── init.md                  # 프로젝트 초기 설정
+├── hooks/
+│   └── hooks.json               # hook 이벤트 등록
+├── scripts/                     # 5개 bash hook 스크립트
 │   ├── session-start-context.sh
 │   ├── pre-compact-checkpoint.sh
 │   ├── track-selfish-changes.sh
 │   ├── selfish-stop-gate.sh
 │   └── selfish-pipeline-manage.sh
 ├── templates/
-│   ├── selfish.config.template.md  # 프로젝트 설정 템플릿
-│   └── settings.json               # Claude Code hook 설정
-└── examples/
-    └── nextjs-fsd/
-        └── selfish.config.md       # Next.js + FSD 프로젝트 예시
+│   ├── selfish.config.template.md   # 프로젝트 설정 템플릿
+│   └── selfish.config.nextjs-fsd.md # Next.js + FSD 예시
+├── package.json                 # npx 실행용
+├── README.md
+├── MIGRATION.md                 # 기존 사용자 마이그레이션 가이드
+└── LICENSE
 ```
 
 ## 라이선스

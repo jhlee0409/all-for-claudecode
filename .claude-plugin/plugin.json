@@ -1,0 +1,12 @@
+{
+  "name": "selfish",
+  "version": "1.0.0",
+  "description": "Claude Code 전용 자동화 파이프라인. spec → plan → tasks → implement → review → clean 전체 개발 사이클을 자동화합니다.",
+  "author": { "name": "jhlee0409", "email": "relee6203@gmail.com" },
+  "homepage": "https://github.com/jhlee0409/selfish-pipeline",
+  "repository": "https://github.com/jhlee0409/selfish-pipeline",
+  "license": "MIT",
+  "keywords": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"],
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json"
+}

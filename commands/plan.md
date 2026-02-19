@@ -1,4 +1,4 @@
-# /selfish.plan — 구현 설계
+# /selfish:plan — 구현 설계
 
 > 기능 명세(spec.md)를 기반으로 구현 계획(plan.md)을 생성한다.
 > Critic Loop 3회로 품질을 보장하고, 필요 시 리서치를 병렬 수행한다.
@@ -18,7 +18,7 @@
 1. **현재 브랜치** 확인 → `BRANCH_NAME`
 2. **specs/{feature}/spec.md** 탐색:
    - `specs/` 하위에서 현재 브랜치명 또는 `$ARGUMENTS`와 매칭되는 디렉토리 찾기
-   - 없으면: "spec.md가 없습니다. `/selfish.spec`을 먼저 실행하세요." 출력 후 **중단**
+   - 없으면: "spec.md가 없습니다. `/selfish:spec`을 먼저 실행하세요." 출력 후 **중단**
 3. **spec.md** 전체 읽기
 4. **memory/principles.md** 읽기 (있으면)
 5. **CLAUDE.md** 프로젝트 컨텍스트 읽기
@@ -27,7 +27,7 @@
 
 - spec.md에 `[NEEDS CLARIFICATION]` 태그가 있으면:
   - 사용자에게 경고: "미해결 명확화 항목이 있습니다. 계속하시겠습니까?"
-  - 사용자가 중단 선택 시 → `/selfish.clarify` 안내 후 **중단**
+  - 사용자가 중단 선택 시 → `/selfish:clarify` 안내 후 **중단**
 
 ### 3. Phase 0 — 리서치 (필요 시)
 
@@ -150,7 +150,7 @@ TaskCreate("Research: {주제2}", subagent_type: Explore)
 ├─ specs/{feature}/plan.md
 ├─ specs/{feature}/research.md (리서치 있었으면)
 ├─ Critic: {N}회, 주요 수정: {요약}
-└─ 다음 단계: /selfish.tasks
+└─ 다음 단계: /selfish:tasks
 ```
 
 ## 주의사항

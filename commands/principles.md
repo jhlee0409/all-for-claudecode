@@ -1,4 +1,4 @@
-# /selfish.principles — 프로젝트 원칙 관리
+# /selfish:principles — 프로젝트 원칙 관리
 
 > 프로젝트의 핵심 원칙(constitution)을 생성하고 관리한다.
 > memory/principles.md에 저장되어 모든 세션에서 참조된다.
@@ -89,6 +89,6 @@
 ## 주의사항
 
 - **영속 저장**: memory/principles.md에 저장되어 세션 간 유지.
-- **자동 참조**: /selfish.plan, /selfish.architect에서 자동으로 로드하여 검증.
+- **자동 참조**: /selfish:plan, /selfish:architect에서 자동으로 로드하여 검증.
 - **간결하게**: 원칙은 10개 이내로 유지. 너무 많으면 실효성 저하.
 - **CLAUDE.md와 중복 방지**: CLAUDE.md에 이미 있는 규칙은 원칙으로 중복 등록하지 않음.

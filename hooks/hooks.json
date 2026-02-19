@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start-context.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/session-start-context.sh\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-compact-checkpoint.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact-checkpoint.sh\""
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/track-selfish-changes.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/track-selfish-changes.sh\""
           }
         ]
       }
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/selfish-stop-gate.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-stop-gate.sh\""
           }
         ]
       }

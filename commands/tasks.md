@@ -1,4 +1,4 @@
-# /selfish.tasks — 태스크 분해
+# /selfish:tasks — 태스크 분해
 
 > plan.md를 기반으로 실행 가능한 태스크 목록(tasks.md)을 생성한다.
 > Critic Loop 1회로 커버리지를 검증한다.
@@ -16,7 +16,7 @@
 ### 1. 컨텍스트 로드
 
 1. `specs/{feature}/` 에서 로드:
-   - **plan.md** (필수) — 없으면 중단: "/selfish.plan을 먼저 실행하세요."
+   - **plan.md** (필수) — 없으면 중단: "/selfish:plan을 먼저 실행하세요."
    - **spec.md** (필수)
    - **research.md** (있으면)
 2. plan.md에서 추출:
@@ -100,12 +100,12 @@ FAIL 시: 누락 항목 추가 후 통과.
 ├─ Phase: {Phase 수}개
 ├─ 커버리지: FR {매핑률}%, NFR {매핑률}%
 ├─ Critic: 1회 완료
-└─ 다음 단계: /selfish.analyze (선택) 또는 /selfish.implement
+└─ 다음 단계: /selfish:analyze (선택) 또는 /selfish:implement
 ```
 
 ## 주의사항
 
-- **구현 코드를 쓰지 않는다**: 태스크 설명만 작성. 실제 코드는 /selfish.implement의 몫.
+- **구현 코드를 쓰지 않는다**: 태스크 설명만 작성. 실제 코드는 /selfish:implement의 몫.
 - **과도한 분해 금지**: 한 줄짜리 변경을 별도 태스크로 만들지 않음.
 - **파일 경로 정확성**: 실제 프로젝트 구조에 기반한 경로 사용 (추측 금지).
 - **[P] 마커 신중히**: 진짜 독립적인 태스크만 [P] 표시. 의심스러우면 순차.

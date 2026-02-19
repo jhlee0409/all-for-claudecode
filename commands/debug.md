@@ -1,4 +1,4 @@
-# /selfish.debug — 버그 진단 및 수정
+# /selfish:debug — 버그 진단 및 수정
 
 > 버그의 근본 원인을 분석하고 수정한다.
 > Critic Loop 2회로 수정의 안전성과 정확성을 검증한다.

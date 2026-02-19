@@ -1,4 +1,4 @@
-# /selfish.security — 보안 스캔
+# /selfish:security — 보안 스캔
 
 > 코드베이스의 보안 취약점을 탐지하고 보고한다.
 > OWASP Top 10 기준으로 검사한다. **읽기 전용** — 코드를 수정하지 않는다.

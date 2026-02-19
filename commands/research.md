@@ -1,4 +1,4 @@
-# /selfish.research — 기술 리서치
+# /selfish:research — 기술 리서치
 
 > 기술적 질문을 조사하고 결론을 정리한다.
 > 결과를 memory/research/{topic}.md에 영속 저장한다.

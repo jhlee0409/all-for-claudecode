@@ -1,4 +1,4 @@
-# /selfish.implement — 코드 구현 실행
+# /selfish:implement — 코드 구현 실행
 
 > tasks.md의 태스크를 Phase별로 실행한다.
 > 병렬 가능한 태스크([P])는 Agent Teams로 동시 실행하고, Phase 완료 시 CI 게이트를 통과해야 한다.
@@ -22,14 +22,14 @@ git tag -f selfish/pre-implement
 ```
 
 - 실패 시 `git reset --hard selfish/pre-implement`로 즉시 롤백 가능
-- 태그는 다음 `/selfish.implement` 실행 시 자동 덮어씌워짐
-- `/selfish.auto` 파이프라인 내에서 실행 시 `selfish/pre-auto` 태그가 이미 존재하므로 생략
+- 태그는 다음 `/selfish:implement` 실행 시 자동 덮어씌워짐
+- `/selfish:auto` 파이프라인 내에서 실행 시 `selfish/pre-auto` 태그가 이미 존재하므로 생략
 
 ### 1. 컨텍스트 로드
 
 1. **현재 브랜치** → `BRANCH_NAME`
 2. `specs/{feature}/` 에서 다음 파일 로드:
-   - **tasks.md** (필수) — 없으면 중단: "tasks.md가 없습니다. `/selfish.tasks`를 먼저 실행하세요."
+   - **tasks.md** (필수) — 없으면 중단: "tasks.md가 없습니다. `/selfish:tasks`를 먼저 실행하세요."
    - **plan.md** (필수) — 없으면 중단
    - **spec.md** (참고용)
    - **research.md** (있으면)
@@ -118,7 +118,7 @@ Phase 게이트 통과 후 자동으로 세션 상태를 저장한다:
 마지막 CI: ✓
 ```
 
-- 세션이 중단되어도 `/selfish.resume`로 이 지점부터 재개 가능
+- 세션이 중단되어도 `/selfish:resume`로 이 지점부터 재개 가능
 
 ### 4. 태스크 실행 패턴
 
@@ -152,7 +152,7 @@ Phase 게이트 통과 후 자동으로 세션 상태를 저장한다:
 ├─ Phase: {Phase 수}개 완료
 ├─ CI: ✓ {config.ci} 통과
 ├─ 변경 파일: {파일 수}개
-└─ 다음 단계: /selfish.review (선택)
+└─ 다음 단계: /selfish:review (선택)
 ```
 
 ## 주의사항

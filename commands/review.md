@@ -1,4 +1,4 @@
-# /selfish.review — 코드 리뷰
+# /selfish:review — 코드 리뷰
 
 > 변경된 코드를 종합적으로 리뷰한다 (품질, 보안, 성능, 아키텍처 준수).
 > Critic Loop 1회로 리뷰 자체의 완전성을 검증한다.

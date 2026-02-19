@@ -1,4 +1,4 @@
-# /selfish.clarify — 명세 모호성 해소
+# /selfish:clarify — 명세 모호성 해소
 
 > spec.md의 모호하거나 불완전한 영역을 식별하고, 사용자 질의를 통해 해결한다.
 > 답변은 spec.md에 인라인 업데이트된다.
@@ -60,7 +60,7 @@
 ├─ spec.md 업데이트: {변경 영역}
 ├─ 새 요구사항: {추가된 FR 수}개
 ├─ 잔여 [NEEDS CLARIFICATION]: {남은 수}개
-└─ 다음 단계: /selfish.plan
+└─ 다음 단계: /selfish:plan
 ```
 
 ## 주의사항

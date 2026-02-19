@@ -1,4 +1,4 @@
-# /selfish.resume — 세션 복원
+# /selfish:resume — 세션 복원
 
 > memory/checkpoint.md에서 이전 세션 상태를 복원하고 작업을 재개한다.
 
@@ -47,9 +47,9 @@
 
 ### 추천 다음 단계
 {상태에 따른 추천 커맨드}
-- tasks 진행 중 → `/selfish.implement` 재개
-- plan 완료 → `/selfish.tasks`
-- spec만 → `/selfish.plan`
+- tasks 진행 중 → `/selfish:implement` 재개
+- plan 완료 → `/selfish:tasks`
+- spec만 → `/selfish:plan`
 ```
 
 ### 4. 최종 출력

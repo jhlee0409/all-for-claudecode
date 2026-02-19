@@ -1,4 +1,4 @@
-# /selfish.spec — 기능 명세서 생성
+# /selfish:spec — 기능 명세서 생성
 
 > 자연어 기능 설명을 구조화된 명세서(spec.md)로 변환한다.
 > 외부 스크립트 없이 순수 프롬프트로 동작한다.
@@ -112,7 +112,7 @@ spec 작성 전 현재 프로젝트 구조를 파악한다:
 ├─ User Stories: {개수}개
 ├─ 요구사항: FR {개수}개, NFR {개수}개
 ├─ 미해결: {[NEEDS CLARIFICATION] 개수}개
-└─ 다음 단계: /selfish.clarify (미해결 시) 또는 /selfish.plan
+└─ 다음 단계: /selfish:clarify (미해결 시) 또는 /selfish:plan
 ```
 
 ## 주의사항

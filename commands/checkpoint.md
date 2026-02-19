@@ -1,4 +1,4 @@
-# /selfish.checkpoint — 세션 상태 저장
+# /selfish:checkpoint — 세션 상태 저장
 
 > 현재 작업 상태를 memory/checkpoint.md에 저장한다.
 > 세션 중단 시에도 진행 상황을 보존한다.
@@ -65,7 +65,7 @@
 ├─ 브랜치: {브랜치명}
 ├─ 활성 Feature: {개수}개
 ├─ 진행률: {완료 태스크}/{전체 태스크}
-└─ 복원: /selfish.resume
+└─ 복원: /selfish:resume
 ```
 
 ## 주의사항

@@ -1,4 +1,4 @@
-# /selfish.analyze — 아티팩트 정합성 검증
+# /selfish:analyze — 아티팩트 정합성 검증
 
 > spec.md, plan.md, tasks.md 간의 일관성과 품질을 검증한다.
 > **읽기 전용** — 파일을 수정하지 않는다.
