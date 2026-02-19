@@ -25,22 +25,21 @@
 npx selfish-pipeline
 ```
 
-설치 범위(user / project / local)를 인터랙티브하게 선택합니다:
+마켓플레이스 등록 + 플러그인 설치를 자동 수행하며, 설치 범위(user / project / local)를 인터랙티브하게 선택합니다.
 
+### 수동 설치
+
+```bash
+# 1. 마켓플레이스 등록
+claude plugin marketplace add jhlee0409/selfish-pipeline
+
+# 2. 플러그인 설치 (스코프 선택)
+claude plugin install selfish@selfish-pipeline --scope user      # 개인 전체
+claude plugin install selfish@selfish-pipeline --scope project   # 팀 공유
+claude plugin install selfish@selfish-pipeline --scope local     # 이 프로젝트만
 ```
-  설치 범위를 선택하세요:
 
-    1) User (개인 전체 프로젝트)
-       → ~/.claude/settings.json
-    2) Project (팀 공유, git 커밋 가능)
-       → .claude/settings.json
-    3) Local (이 프로젝트만, gitignore)
-       → .claude/settings.local.json
-
-  선택 [1/2/3] (기본: 1):
-```
-
-설치 후 프로젝트 초기 설정:
+### 설치 후 프로젝트 초기 설정
 
 ```text
 /selfish:init                  # 프로젝트 구조 자동 분석

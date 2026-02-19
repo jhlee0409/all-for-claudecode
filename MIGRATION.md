@@ -48,7 +48,14 @@ rm -f .claude/hooks/selfish-pipeline-manage.sh
 npx selfish-pipeline
 ```
 
-인터랙티브 프롬프트에서 설치 범위를 선택합니다. 기존 `install.sh`의 `--commands-only`에 해당하는 것은 **User** 스코프, 팀 공유는 **Project** 스코프입니다.
+또는 수동으로:
+
+```bash
+claude plugin marketplace add jhlee0409/selfish-pipeline
+claude plugin install selfish@selfish-pipeline --scope user
+```
+
+기존 `install.sh`의 `--commands-only`에 해당하는 것은 **User** 스코프, 팀 공유는 **Project** 스코프입니다.
 
 ### 4. 커맨드명 변경
 

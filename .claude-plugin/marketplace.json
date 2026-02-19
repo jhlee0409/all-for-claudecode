@@ -1,0 +1,21 @@
+{
+  "name": "selfish-pipeline",
+  "owner": {
+    "name": "jhlee0409",
+    "email": "relee6203@gmail.com"
+  },
+  "metadata": {
+    "description": "Claude Code 전용 자동화 파이프라인 — spec → plan → tasks → implement → review → clean",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "selfish",
+      "source": "./",
+      "description": "Claude Code 전용 자동화 파이프라인. spec → plan → tasks → implement → review → clean 전체 개발 사이클을 자동화합니다.",
+      "version": "1.0.0",
+      "category": "automation",
+      "tags": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"]
+    }
+  ]
+}
