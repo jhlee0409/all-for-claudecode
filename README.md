@@ -22,15 +22,35 @@ Selfish Pipeline is a **Claude Code plugin** that transforms your development wo
 
 ## Quick Start
 
+### Option A: Inside Claude Code (`/plugin`)
+
+```
+/plugin marketplace add jhlee0409/selfish-pipeline
+/plugin install selfish@selfish-pipeline
+```
+
+Or use the interactive UI: type `/plugin` → Manage → Add marketplace → `jhlee0409/selfish-pipeline` → Discover → install **selfish**.
+
+### Option B: One-line install (via npx)
+
 ```bash
-# Install the plugin
-claude plugin add selfish-pipeline
+npx selfish-pipeline
+```
 
-# Initialize for your project
-/selfish:init
+Interactive installer — choose scope (user / project / local) and done.
 
-# Run the full auto pipeline
-/selfish:auto "Add user authentication with JWT"
+### Option C: Claude Code CLI
+
+```bash
+claude plugin marketplace add jhlee0409/selfish-pipeline
+claude plugin install selfish@selfish-pipeline --scope user
+```
+
+### Then, inside Claude Code:
+
+```
+/selfish:init                              # Detect your stack, generate config
+/selfish:auto "Add user authentication"    # Run the full pipeline
 ```
 
 That's it. The pipeline will:
@@ -177,6 +197,9 @@ Yes. Run `/selfish:init` to auto-detect your stack, or use one of the 5 presets 
 
 ### Does it require any dependencies?
 No. Zero runtime dependencies — pure markdown commands + bash hook scripts.
+
+### How do I install it?
+Inside Claude Code, run `/plugin marketplace add jhlee0409/selfish-pipeline` then `/plugin install selfish@selfish-pipeline`. Alternatively, run `npx selfish-pipeline` from your terminal for a guided install.
 
 ### What Claude Code version is required?
 Claude Code with plugin support (2025+). The plugin uses standard hooks, commands, and agents APIs.
