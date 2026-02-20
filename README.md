@@ -12,7 +12,7 @@ claude plugin add selfish-pipeline
 
 - **Full Auto 파이프라인**: spec → plan → tasks → implement → review → clean 전 과정 자동화
 - **16개 슬래시 커맨드**: 7개 사용자 호출 커맨드 + 9개 내부 커맨드
-- **11개 Hook 이벤트 통합**: 세션 복원, 위험 명령 차단, 자동 포맷팅 등
+- **13개 Hook 이벤트 통합**: 세션 복원, 위험 명령 차단, 자동 포맷팅 등
 - **5개 프로젝트 프리셋**: Next.js, React SPA, Express API, Monorepo 등
 - **Critic Loop 자동 품질 검증**: 구현 후 자동 리뷰 및 보안 스캔
 
@@ -59,6 +59,8 @@ claude plugin add selfish-pipeline
 | `Notification` | 데스크탑 알림 |
 | `TaskCompleted` | 태스크 완료 CI 게이트 |
 | `SubagentStop` | 서브에이전트 완료 추적 |
+| `UserPromptSubmit` | 매 프롬프트에 파이프라인 Phase/Feature 컨텍스트 주입 |
+| `PermissionRequest` | implement/review Phase에서 CI 관련 Bash 자동 허용 |
 
 ## 프리셋
 

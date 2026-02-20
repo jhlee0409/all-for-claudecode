@@ -12,6 +12,7 @@ allowed-tools:
   - Bash
   - Task
   - WebSearch
+model: sonnet
 ---
 
 # /selfish:architect — 아키텍처 분석 및 설계 조언

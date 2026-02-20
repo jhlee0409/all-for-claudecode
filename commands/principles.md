@@ -8,6 +8,7 @@ allowed-tools:
   - Write
   - Grep
   - Glob
+model: haiku
 ---
 
 # /selfish:principles — 프로젝트 원칙 관리

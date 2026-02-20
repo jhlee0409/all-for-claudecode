@@ -8,6 +8,7 @@ allowed-tools:
   - Glob
   - Bash
   - Task
+model: sonnet
 ---
 
 # /selfish:review — 코드 리뷰

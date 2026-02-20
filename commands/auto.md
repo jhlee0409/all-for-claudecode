@@ -44,26 +44,8 @@ hooks:
 
 ## Critic Loop 규칙 (전 Phase 공통)
 
-> Critic Loop의 목적은 산출물의 결함을 **반드시 찾아내는 것**이다. "PASS"만 나열하는 것은 Critic을 실행하지 않은 것과 동일하다.
-
-### 필수 원칙
-
-1. **최소 발견 수**: 각 Critic 회차에서 **기준당 최소 1개의 우려사항, 개선점, 또는 검증 근거**를 기술해야 한다. 문제가 없다면 "왜 문제가 없는지"를 구체적으로 설명한다.
-2. **체크리스트 응답**: 각 기준에 대해 구체적 질문에 답변하는 형태로 출력한다. "PASS" 한 단어 금지.
-3. **Adversarial Pass**: 매 회차의 마지막에 **"이 산출물이 실패하는 시나리오 1가지"**를 반드시 기술한다. 시나리오가 현실적이면 FAIL로 전환하여 수정한다.
-4. **정량적 근거**: "없음", "준수" 같은 정성적 판단 대신, "N개 중 M개 확인", "X줄 중 Y줄 해당" 같은 정량 데이터를 제시한다.
-
-### 출력 형식
-
-```
-=== CRITIC {N}/{MAX} ===
-[기준1] {질문} → {구체적 답변 + 정량 근거}
-  우려: {있으면 기술, 없으면 "왜 없는지" 설명}
-[기준2] ...
-[ADVERSARIAL] 실패 시나리오: {구체적 시나리오}
-  → 현실적? {Y → FAIL + 수정 / N → 근거 기술}
-=== 결과: FAIL {N}건 수정 / 또는 PASS (근거 첨부) ===
-```
+> **반드시** `docs/critic-loop-rules.md`를 먼저 읽고 따른다.
+> 핵심: 기준당 최소 1개 우려사항 + 매 회차 Adversarial 실패 시나리오 필수 + 정량 근거 필수. "PASS" 한 단어 금지.
 
 ---
 
@@ -161,34 +143,7 @@ hooks:
      Task("T013: AudioVolumeControl 이동", subagent_type: "general-purpose", ...)
      → 병렬 실행 → 완료 대기 → 통합
      ```
-3. tasks.md 내 각 Implementation Phase(Phase 1, 2, 3...) 완료마다 **3단계 게이트** (모두 필수, 하나라도 생략 시 다음 Phase 진입 불가):
-
-   **Step 1. CI 게이트**: `{config.gate}`
-   - 실패 시 자동 수정 (최대 3회)
-   - 3회 실패 → 해당 Phase 중단, 사용자에게 보고
-
-   **Step 2. Mini-Review** (정량적 검증 필수):
-   - 변경된 파일 목록을 나열하고 **각 파일에 대해** `{config.mini_review}` 항목을 확인
-   - 출력 형식:
-     ```
-     Mini-Review ({N}개 파일):
-     - file1.tsx: ✓ 전항목 통과
-     - file2.tsx: ⚠ {항목} 위반 → 수정
-     - 위반: {M}건 → 수정 후 CI 재실행
-     ```
-   - 문제 발견 시 → 즉시 수정 후 CI 게이트 재실행
-
-   **Step 3. Auto-Checkpoint** (필수 — 생략 금지):
-   - `memory/checkpoint.md`에 아래 정보 기록:
-     ```markdown
-     ## Checkpoint: {feature} Phase {N}
-     - 시각: {timestamp}
-     - 완료 태스크: T001~T{N} ({완료}/{전체})
-     - 변경 파일: {파일 목록}
-     - CI: 통과
-     - 다음: Phase {N+1} 또는 계속
-     ```
-   - checkpoint 미기록 시 다음 Phase 진입 불가
+3. tasks.md 내 각 Implementation Phase 완료마다 **3단계 게이트** 수행 — `docs/phase-gate-protocol.md`를 반드시 읽고 따른다. 게이트 미통과 시 다음 Phase 진입 불가.
 
 4. tasks.md에 `[x]` 실시간 업데이트
 5. 전체 완료 후 `{config.ci}` 최종 검증

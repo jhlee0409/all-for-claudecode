@@ -2,6 +2,7 @@
 name: selfish:spec
 description: "기능 명세서 생성"
 argument-hint: "[기능 설명 자연어 텍스트]"
+model: sonnet
 ---
 # /selfish:spec — 기능 명세서 생성
 

@@ -2,6 +2,7 @@
 name: selfish:debug
 description: "버그 진단 및 수정"
 argument-hint: "[버그 설명, 에러 메시지, 또는 재현 단계]"
+model: sonnet
 ---
 
 # /selfish:debug — 버그 진단 및 수정

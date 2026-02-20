@@ -9,6 +9,7 @@ allowed-tools:
   - Read
   - Grep
   - Glob
+model: haiku
 ---
 
 # /selfish:analyze — 아티팩트 정합성 검증

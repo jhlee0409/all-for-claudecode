@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-20
+
+### Added
+- Model routing for all 16 commands (haiku for simple tasks, sonnet for design/analysis)
+- docs/ shared reference files (critic-loop-rules.md, phase-gate-protocol.md)
+- .claude/rules/ path-specific rules (shell-scripts.md, commands.md)
+- UserPromptSubmit hook — pipeline Phase/Feature context injection per prompt
+- PermissionRequest hook — auto-allow CI commands during implement/review
+- 16 new test assertions for UserPromptSubmit and PermissionRequest hooks
+
+### Changed
+- package.json version 1.2.0 → 1.3.0
+- plugin.json and marketplace.json version sync to 1.3.0
+- auto-format and notify hooks converted to async (async: true in hooks.json)
+- Removed disown workaround from auto-format and notify scripts
+- auto.md and implement.md prompt reduction (~91 lines) via docs/ references
+- architect.md model routing changed from haiku to sonnet
+- Hook coverage expanded from 11/14 to 13/14 events (93%)
+
 ## [1.2.0] - 2026-02-20
 
 ### Added

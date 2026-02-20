@@ -39,7 +39,7 @@ case "$NOTIFICATION_TYPE" in
     ;;
 esac
 
-# 플랫폼 감지 후 알림 발송 (백그라운드 실행으로 훅 블로킹 방지)
+# 플랫폼 감지 후 알림 발송 (hooks.json의 async: true로 비차단)
 # 메시지 sanitize (AppleScript/shell 인젝션 방지)
 SAFE_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/[\"\\]/\\&/g' | head -1 | cut -c1-200)
 SAFE_TITLE=$(printf '%s' "$TITLE" | sed 's/[\"\\]/\\&/g')
@@ -47,11 +47,11 @@ SAFE_TITLE=$(printf '%s' "$TITLE" | sed 's/[\"\\]/\\&/g')
 OS=$(uname -s)
 case "$OS" in
   Darwin)
-    osascript -e "display notification \"$SAFE_MESSAGE\" with title \"$SAFE_TITLE\"" &>/dev/null & disown
+    osascript -e "display notification \"$SAFE_MESSAGE\" with title \"$SAFE_TITLE\"" &>/dev/null || true
     ;;
   Linux)
     if command -v notify-send &>/dev/null; then
-      notify-send "$TITLE" "$MESSAGE" &>/dev/null & disown
+      notify-send "$TITLE" "$MESSAGE" &>/dev/null || true
     fi
     ;;
   *)

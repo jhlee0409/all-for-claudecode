@@ -3,6 +3,7 @@ name: selfish:clarify
 description: "명세 모호성 해소"
 argument-hint: "[집중 영역: 보안, 성능, UI 흐름]"
 user-invocable: false
+model: haiku
 ---
 # /selfish:clarify — 명세 모호성 해소
 

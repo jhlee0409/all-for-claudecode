@@ -3,6 +3,7 @@ name: selfish:init
 description: "프로젝트 초기 설정"
 argument-hint: "[프리셋 이름: nextjs-fsd]"
 disable-model-invocation: true
+model: haiku
 ---
 
 # /selfish:init — 프로젝트 초기 설정

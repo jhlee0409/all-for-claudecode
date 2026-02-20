@@ -10,6 +10,7 @@ allowed-tools:
   - WebSearch
   - WebFetch
   - Task
+model: sonnet
 ---
 
 # /selfish:research — 기술 리서치

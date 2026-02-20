@@ -11,6 +11,7 @@ allowed-tools:
   - Glob
   - Bash
   - Task
+model: sonnet
 ---
 
 # /selfish:security — 보안 스캔

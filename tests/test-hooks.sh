@@ -468,6 +468,86 @@ cleanup_tmpdir "$TEST_DIR"
 echo ""
 
 # ============================================================
+echo "=== selfish-user-prompt-submit.sh ==="
+# ============================================================
+
+# 1. 비활성 파이프라인 → exit 0, stdout 없음
+TEST_DIR=$(setup_tmpdir)
+OUTPUT=$(echo '' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-user-prompt-submit.sh" 2>/dev/null); CODE=$?
+assert_exit "inactive pipeline → exit 0" "0" "$CODE"
+assert_stdout_empty "inactive → no output" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 2. 활성 파이프라인 + phase → Phase/Feature 출력
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
+OUTPUT=$(echo '' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-user-prompt-submit.sh" 2>/dev/null); CODE=$?
+assert_exit "active + phase → exit 0" "0" "$CODE"
+assert_stdout_contains "active → Pipeline: test-feature" "Pipeline: test-feature" "$OUTPUT"
+assert_stdout_contains "active → Phase: implement" "Phase: implement" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 3. 활성 파이프라인 + phase 파일 없음 → Phase: unknown
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+OUTPUT=$(echo '' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-user-prompt-submit.sh" 2>/dev/null); CODE=$?
+assert_exit "active no phase file → exit 0" "0" "$CODE"
+assert_stdout_contains "no phase → Phase: unknown" "Phase: unknown" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+echo ""
+
+# ============================================================
+echo "=== selfish-permission-request.sh ==="
+# ============================================================
+
+# 1. 비활성 파이프라인 → exit 0, allow 없음
+TEST_DIR=$(setup_tmpdir)
+OUTPUT=$(echo '{"tool_input":{"command":"npm test"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "inactive pipeline → exit 0" "0" "$CODE"
+assert_stdout_empty "inactive → no allow decision" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 2. implement phase + npm test → allow
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
+OUTPUT=$(echo '{"tool_input":{"command":"npm test"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "implement + npm test → exit 0" "0" "$CODE"
+assert_stdout_contains "implement + npm test → allow" "allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 3. implement phase + shellcheck → allow
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
+OUTPUT=$(echo '{"tool_input":{"command":"shellcheck scripts/foo.sh"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "implement + shellcheck → exit 0" "0" "$CODE"
+assert_stdout_contains "implement + shellcheck → allow" "allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 4. implement phase + 위험 명령 → allow 없음
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
+OUTPUT=$(echo '{"tool_input":{"command":"rm -rf /"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "implement + dangerous → exit 0" "0" "$CODE"
+assert_stdout_empty "implement + dangerous → no allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 5. spec phase → allow 없음 (implement/review만 동작)
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "spec" > "$TEST_DIR/.claude/.selfish-phase"
+OUTPUT=$(echo '{"tool_input":{"command":"npm test"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "spec phase → exit 0" "0" "$CODE"
+assert_stdout_empty "spec phase → no allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+echo ""
+
+# ============================================================
 # 결과 출력
 # ============================================================
 echo "=== Results: $PASS/$TOTAL passed, $FAIL failed ==="

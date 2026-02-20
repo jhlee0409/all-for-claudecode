@@ -48,7 +48,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-auto-format.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-auto-format.sh\"",
+            "async": true,
+            "timeout": 30
           }
         ]
       }
@@ -100,7 +102,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-notify.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-notify.sh\"",
+            "async": true,
+            "timeout": 10
           }
         ]
       }
@@ -121,6 +125,27 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-subagent-stop.sh\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-user-prompt-submit.sh\""
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-permission-request.sh\""
           }
         ]
       }

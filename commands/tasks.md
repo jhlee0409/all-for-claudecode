@@ -3,6 +3,7 @@ name: selfish:tasks
 description: "태스크 분해"
 argument-hint: "[제약/우선순위 지시]"
 user-invocable: false
+model: haiku
 ---
 # /selfish:tasks — 태스크 분해
 

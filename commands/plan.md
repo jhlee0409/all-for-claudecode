@@ -2,6 +2,7 @@
 name: selfish:plan
 description: "구현 설계"
 argument-hint: "[추가 컨텍스트 또는 제약 조건]"
+model: sonnet
 ---
 # /selfish:plan — 구현 설계
 
