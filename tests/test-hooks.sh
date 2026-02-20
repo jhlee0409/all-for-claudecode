@@ -374,6 +374,100 @@ cleanup_tmpdir "$TEST_DIR"
 echo ""
 
 # ============================================================
+echo "=== selfish-task-completed-gate.sh ==="
+# ============================================================
+
+# 1. 비활성 파이프라인 → exit 0
+TEST_DIR=$(setup_tmpdir)
+set +e
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-task-completed-gate.sh" 2>/dev/null); CODE=$?
+set -e
+assert_exit "inactive pipeline → exit 0" "0" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+# 2. spec phase → exit 0 (CI 불필요)
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "spec" > "$TEST_DIR/.claude/.selfish-phase"
+set +e
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-task-completed-gate.sh" 2>/dev/null); CODE=$?
+set -e
+assert_exit "spec phase → exit 0" "0" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+# 3. implement phase, no CI → block (exit 2)
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
+set +e
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-task-completed-gate.sh" 2>&1); CODE=$?
+set -e
+assert_exit "implement no-ci → exit 2" "2" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+# 4. implement phase, CI passed → exit 0
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
+echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
+date +%s > "$TEST_DIR/.claude/.selfish-ci-passed"
+set +e
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-task-completed-gate.sh" 2>/dev/null); CODE=$?
+set -e
+assert_exit "implement ci-passed → exit 0" "0" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+echo ""
+
+# ============================================================
+echo "=== selfish-subagent-stop.sh ==="
+# ============================================================
+
+# 1. 비활성 → exit 0, stdout 없음
+TEST_DIR=$(setup_tmpdir)
+OUTPUT=$(echo '{"stop_hook_active":false,"agent_id":"a1","agent_type":"Explore"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-stop.sh" 2>/dev/null); CODE=$?
+assert_exit "inactive → exit 0" "0" "$CODE"
+TOTAL=$((TOTAL + 1))
+if [ ! -f "$TEST_DIR/.claude/.selfish-task-results.log" ]; then
+  echo "  ✓ inactive → no log file"; PASS=$((PASS + 1))
+else
+  echo "  ✗ inactive → no log file (file exists)"; FAIL=$((FAIL + 1))
+fi
+cleanup_tmpdir "$TEST_DIR"
+
+# 2. stop_hook_active: true → exit 0, no log
+TEST_DIR=$(setup_tmpdir)
+echo "stop-test" > "$TEST_DIR/.claude/.selfish-active"
+OUTPUT=$(echo '{"stop_hook_active":true,"agent_id":"a2","agent_type":"Task"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-stop.sh" 2>/dev/null); CODE=$?
+assert_exit "stop_hook_active → exit 0" "0" "$CODE"
+TOTAL=$((TOTAL + 1))
+if [ ! -f "$TEST_DIR/.claude/.selfish-task-results.log" ]; then
+  echo "  ✓ stop_hook_active → no log"; PASS=$((PASS + 1))
+else
+  echo "  ✗ stop_hook_active → no log (file exists)"; FAIL=$((FAIL + 1))
+fi
+cleanup_tmpdir "$TEST_DIR"
+
+# 3. 활성 + 정상 → log에 기록
+TEST_DIR=$(setup_tmpdir)
+echo "subagent-stop-test" > "$TEST_DIR/.claude/.selfish-active"
+OUTPUT=$(echo '{"stop_hook_active":false,"agent_id":"abc123","agent_type":"Explore","last_assistant_message":"Analysis complete"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-stop.sh" 2>/dev/null); CODE=$?
+assert_exit "active normal → exit 0" "0" "$CODE"
+assert_file_exists "task-results.log created" "$TEST_DIR/.claude/.selfish-task-results.log"
+assert_file_contains "log has agent_id" "$TEST_DIR/.claude/.selfish-task-results.log" "abc123"
+assert_file_contains "log has agent_type" "$TEST_DIR/.claude/.selfish-task-results.log" "Explore"
+cleanup_tmpdir "$TEST_DIR"
+
+# 4. 활성 + 빈 메시지 → "no message" 기본값
+TEST_DIR=$(setup_tmpdir)
+echo "subagent-stop-test" > "$TEST_DIR/.claude/.selfish-active"
+OUTPUT=$(echo '{"stop_hook_active":false,"agent_id":"def456","agent_type":"Task"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-stop.sh" 2>/dev/null); CODE=$?
+assert_exit "empty message → exit 0" "0" "$CODE"
+assert_file_contains "log has no message" "$TEST_DIR/.claude/.selfish-task-results.log" "no message"
+cleanup_tmpdir "$TEST_DIR"
+
+echo ""
+
+# ============================================================
 # 결과 출력
 # ============================================================
 echo "=== Results: $PASS/$TOTAL passed, $FAIL failed ==="

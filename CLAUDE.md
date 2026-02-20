@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run lint          # shellcheck scripts/*.sh
-npm test              # bash tests/test-hooks.sh (46 scenarios)
+npm test              # bash tests/test-hooks.sh (60 assertions)
 npm run test:all      # lint + test combined
 ```
 
@@ -19,8 +19,8 @@ Selfish Pipeline is a Claude Code plugin that automates the full development cyc
 ### Core Layers
 
 - **commands/** — 16 markdown files, each a slash command prompt with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `disable-model-invocation`, `context`)
-- **hooks/hooks.json** — Declares 9 hook events mapping to scripts via `${CLAUDE_PLUGIN_ROOT}/scripts/...` paths
-- **scripts/** — 11 bash scripts implementing hook logic. All follow the pattern: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
+- **hooks/hooks.json** — Declares 11 hook events mapping to scripts via `${CLAUDE_PLUGIN_ROOT}/scripts/...` paths
+- **scripts/** — 13 bash scripts implementing hook logic. All follow the pattern: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **templates/** — 5 project preset configs (nextjs-fsd, react-spa, express-api, monorepo, template)
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
 - **.claude-plugin/** — Plugin manifest (`plugin.json`) and marketplace registration (`marketplace.json`)
@@ -51,8 +51,9 @@ All scripts must:
 2. Include `trap cleanup EXIT` with at minimum a `:` placeholder
 3. Use `${CLAUDE_PROJECT_DIR:-$(pwd)}` for project root
 4. Parse stdin JSON with jq first, grep/sed fallback for jq-less environments
-5. Exit 0 on success; exit 2 only for Stop hook (blocks Claude response)
-6. Use `# shellcheck disable=SCXXXX` for intentional suppressions
+5. Exit 0 on success; exit 2 for Stop/TaskCompleted hooks (blocks Claude response/task completion)
+6. Use `printf '%s\n' "$VAR"` instead of `echo "$VAR"` when piping external data (avoids `-n`/`-e` flag interpretation)
+7. Use `# shellcheck disable=SCXXXX` for intentional suppressions
 
 ## Version Sync
 

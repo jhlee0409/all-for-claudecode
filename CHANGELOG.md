@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-20
+
+### Added
+- TaskCompleted hook — CI gate on task completion (blocks task completion if CI not passed)
+- SubagentStop hook — tracks subagent completion/failure in pipeline log
+- 14 new test assertions for TaskCompleted and SubagentStop hooks
+
+### Changed
+- package.json version 1.1.0 → 1.2.0
+- plugin.json and marketplace.json version sync to 1.2.0
+- Hook coverage expanded from 9/14 to 11/14 events (79%)
+
 ## [1.1.0] - 2026-02-20
 
 ### Added
@@ -19,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SessionEnd hook — warns on unfinished pipeline at session close
 - PostToolUseFailure hook — provides diagnostic hints for known error patterns
 - Notification hook — desktop alerts for idle_prompt and permission_prompt (macOS/Linux)
-- Hook script test framework (tests/test-hooks.sh) with 21 scenarios
+- Hook script test framework (tests/test-hooks.sh) with 46 scenarios
 - README.md documentation
 - CHANGELOG.md
 
