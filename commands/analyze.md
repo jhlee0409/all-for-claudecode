@@ -4,7 +4,6 @@ description: "Artifact consistency validation (read-only)"
 argument-hint: "[validation scope: spec-plan, tasks-only]"
 user-invocable: false
 context: fork
-agent: Explore
 allowed-tools:
   - Read
   - Grep

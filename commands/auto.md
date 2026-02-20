@@ -200,7 +200,7 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - If other `specs/` subdirectories exist, **do not delete them** (only inform the user of their existence)
    - Do not leave pipeline intermediate artifacts in the codebase
 2. **Dead code scan**:
-   - Detect unused imports from the implementation process (check with `{config.lint}`)
+   - Detect unused imports from the implementation process (check with `{config.ci}`)
    - Remove empty directories from moved/deleted files
    - Detect unused exports (re-exports of moved code from original locations etc.)
 3. **Final CI gate**:

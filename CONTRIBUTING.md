@@ -5,7 +5,7 @@ Development guidelines for adding features, modifying behavior, upgrading, and m
 ## Project Map
 
 ```
-commands/   17 markdown slash commands (the product surface)
+commands/   18 markdown slash commands (the product surface)
 scripts/    17 bash hook handlers (enforcement layer)
 hooks/      hooks.json (event → handler binding)
 agents/     2 persistent memory subagents
@@ -105,7 +105,7 @@ Follow this structure:
 
 ### Step 6: Update references
 
-- **CLAUDE.md**: Update command count (`17 markdown files` → `18 markdown files`)
+- **CLAUDE.md**: Update command count (the `N markdown files` figure in Architecture section)
 - **commands/auto.md**: If the new command is a pipeline phase, add it to the auto pipeline
 - **Global CLAUDE.md SELFISH block** (in `commands/init.md` template): Add to skill routing table if user-invocable
 - **Tests**: Add test cases if the command involves hooks or scripts

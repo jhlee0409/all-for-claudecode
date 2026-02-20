@@ -44,7 +44,7 @@ esac
 
 # Implement/Review/Clean Phase (4-6) require CI to pass
 if [ ! -f "$CI_FLAG" ]; then
-  echo "SELFISH TASK GATE: yarn ci has not been run. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires passing the CI gate. Run yarn ci and record the timestamp in .claude/.selfish-ci-passed." >&2
+  echo "SELFISH TASK GATE: CI has not been run. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires passing the CI gate. Run your CI command and record the timestamp in .claude/.selfish-ci-passed." >&2
   exit 2
 fi
 
@@ -55,7 +55,7 @@ NOW="$(date +%s)"
 if [ "$CI_TIME" -gt 0 ]; then
   DIFF=$(( NOW - CI_TIME ))
   if [ "$DIFF" -gt 600 ]; then
-    echo "SELFISH TASK GATE: CI results are stale (${DIFF} seconds ago). Please run yarn ci again." >&2
+    echo "SELFISH TASK GATE: CI results are stale (${DIFF} seconds ago). Please run your CI command again." >&2
     exit 2
   fi
 fi

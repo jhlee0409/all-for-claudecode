@@ -7,6 +7,7 @@ tools:
   - Glob
   - Bash
   - Task
+  - WebSearch
 model: sonnet
 memory: project
 isolation: worktree

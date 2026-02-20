@@ -1,7 +1,7 @@
 {
   "name": "selfish-pipeline",
   "version": "1.1.0",
-  "description": "Claude Code plugin that automates the full dev cycle — spec, plan, tasks, implement, review, clean. 16 commands, 15 hooks, 5 presets.",
+  "description": "Claude Code plugin that automates the full dev cycle — spec, plan, tasks, implement, review, clean. 18 commands, 15 hooks, 5 presets.",
   "bin": {
     "selfish-pipeline": "./bin/cli.mjs"
   },
@@ -10,6 +10,7 @@
     "agents/",
     "bin/",
     "commands/",
+    "docs/",
     "hooks/",
     "scripts/",
     "templates/",

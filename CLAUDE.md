@@ -14,7 +14,7 @@ Single script lint: `shellcheck scripts/selfish-bash-guard.sh`
 
 ## Architecture
 
-Selfish Pipeline is a Claude Code plugin that automates the full development cycle (spec → plan → tasks → implement → test → review → clean) through markdown command prompts, bash hook scripts, and project preset templates. Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or self-organizing swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
+Selfish Pipeline is a Claude Code plugin that automates the full development cycle (spec → plan → tasks → implement → review → clean) through markdown command prompts, bash hook scripts, and project preset templates. Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or self-organizing swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
 
 ### Core Layers
 
@@ -47,7 +47,7 @@ Pipeline state is managed through flag files in `$CLAUDE_PROJECT_DIR/.claude/`:
 ### Command Frontmatter Controls
 
 - `user-invocable: false` — hidden from `/` menu, only model-callable (3 commands: analyze, clarify, tasks)
-- `disable-model-invocation: true` — user-only, prevents auto-calling (6 commands: init, principles, checkpoint, resume, architect, security)
+- `disable-model-invocation: true` — user-only, prevents auto-calling (7 commands: init, doctor, principles, checkpoint, resume, architect, security)
 - `context: fork` — runs in isolated subagent, result returned to main context (3 commands: analyze, architect, security). architect and security use custom agents with `memory: project` for persistent learning
 - `model: haiku|sonnet` — model routing per command complexity (haiku for mechanical tasks, sonnet for design/analysis, omit for orchestrator inheritance)
 

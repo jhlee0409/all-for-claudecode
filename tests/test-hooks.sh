@@ -645,8 +645,8 @@ assert_file_contains "architect.md references selfish-architect agent" "$SCRIPT_
 # 8. commands/security.md contains agent: selfish-security
 assert_file_contains "security.md references selfish-security agent" "$SCRIPT_DIR/commands/security.md" "agent: selfish-security"
 
-# 9. plugin.json contains agents field
-assert_file_contains "plugin.json has agents field" "$SCRIPT_DIR/.claude-plugin/plugin.json" '"agents"'
+# 9. plugin.json contains commands field
+assert_file_contains "plugin.json has commands field" "$SCRIPT_DIR/.claude-plugin/plugin.json" '"commands"'
 
 # 10. hooks.json contains ConfigChange event
 assert_file_contains "hooks.json has ConfigChange event" "$SCRIPT_DIR/hooks/hooks.json" '"ConfigChange"'

@@ -6,7 +6,7 @@
 [![license](https://img.shields.io/github/license/jhlee0409/selfish-pipeline)](./LICENSE)
 [![test](https://img.shields.io/badge/tests-101%20passed-brightgreen)]()
 [![hooks](https://img.shields.io/badge/hooks-15%20events-blue)]()
-[![commands](https://img.shields.io/badge/commands-16-orange)]()
+[![commands](https://img.shields.io/badge/commands-18-orange)]()
 
 > Zero-dependency automation pipeline for Claude Code. One command (`/selfish:auto`) runs the entire cycle: write specs, design plans, break into tasks, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
 
@@ -14,7 +14,7 @@
 
 Selfish Pipeline is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
 
-- **16 slash commands** for every phase of development
+- **18 slash commands** for every phase of development
 - **15 hook events** with 3 handler types (shell scripts, LLM prompts, subagents)
 - **5 project presets** for popular stacks (Next.js, React SPA, Express API, Monorepo)
 - **Persistent memory agents** that learn across sessions
@@ -75,7 +75,7 @@ Runs all 6 phases automatically with **Critic Loop** quality checks at each gate
 Spec (1/6) → Plan (2/6) → Tasks (3/6) → Implement (4/6) → Review (5/6) → Clean (6/6)
 ```
 
-### 16 Slash Commands
+### 18 Slash Commands
 
 **User-invocable:**
 
@@ -85,9 +85,11 @@ Spec (1/6) → Plan (2/6) → Tasks (3/6) → Implement (4/6) → Review (5/6) �
 | `/selfish:spec` | Write feature specification with acceptance criteria |
 | `/selfish:plan` | Design implementation plan with file change map |
 | `/selfish:implement` | Execute code implementation with CI gates |
+| `/selfish:test` | Test strategy planning and test writing |
 | `/selfish:review` | Code review with security scanning |
 | `/selfish:research` | Technical research with persistent storage |
 | `/selfish:init` | Project setup — detects stack and generates config |
+| `/selfish:doctor` | Diagnose project health and plugin setup |
 
 **Model-callable (internal):**
 
@@ -187,7 +189,7 @@ This detects your tech stack and generates `.claude/selfish.config.md` with:
 ## FAQ
 
 ### What is selfish-pipeline?
-A Claude Code plugin that automates the entire development cycle (spec → plan → tasks → implement → review → clean) through 16 slash commands and 15 hook events.
+A Claude Code plugin that automates the entire development cycle (spec → plan → tasks → implement → review → clean) through 18 slash commands and 15 hook events.
 
 ### How does it compare to manual Claude Code workflows?
 Instead of manually prompting each step, selfish-pipeline orchestrates the full cycle with built-in quality gates that physically prevent skipping CI or security checks.
