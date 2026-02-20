@@ -2,6 +2,7 @@
 name: selfish:principles
 description: "프로젝트 원칙 관리"
 argument-hint: "[동작: add, remove, list, check]"
+disable-model-invocation: true
 allowed-tools:
   - Read
   - Write

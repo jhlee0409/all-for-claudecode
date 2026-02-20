@@ -2,6 +2,9 @@
 name: selfish:analyze
 description: "아티팩트 정합성 검증 (읽기 전용)"
 argument-hint: "[검증 범위: spec-plan, tasks-only]"
+user-invocable: false
+context: fork
+agent: Explore
 allowed-tools:
   - Read
   - Grep

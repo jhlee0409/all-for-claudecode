@@ -2,6 +2,7 @@
 name: selfish:checkpoint
 description: "세션 상태 저장"
 argument-hint: "[체크포인트 메시지]"
+disable-model-invocation: true
 model: haiku
 allowed-tools:
   - Read

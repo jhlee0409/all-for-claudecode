@@ -2,6 +2,9 @@
 name: selfish:architect
 description: "아키텍처 분석 및 설계 조언 (읽기 전용)"
 argument-hint: "[분석 대상 또는 설계 질문]"
+disable-model-invocation: true
+context: fork
+agent: Plan
 allowed-tools:
   - Read
   - Grep

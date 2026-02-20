@@ -2,6 +2,9 @@
 name: selfish:security
 description: "보안 스캔 (읽기 전용)"
 argument-hint: "[스캔 범위: 파일/디렉토리 경로 또는 full]"
+disable-model-invocation: true
+context: fork
+agent: Explore
 allowed-tools:
   - Read
   - Grep

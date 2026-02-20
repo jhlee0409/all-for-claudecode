@@ -2,6 +2,7 @@
 name: selfish:resume
 description: "세션 복원"
 argument-hint: ""
+disable-model-invocation: true
 model: haiku
 allowed-tools:
   - Read
