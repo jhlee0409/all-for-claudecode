@@ -150,8 +150,8 @@ Execute `/selfish:implement` logic inline with **dependency-aware orchestration*
    TaskCreate({ subject: "T012: Move AudioFadeControl", ... })
    TaskCreate({ subject: "T013: Move AudioVolumeControl", ... })
    TaskUpdate({ taskId: "T013", addBlockedBy: ["T011"] })  // if dependency exists
-   → launch unblocked tasks as parallel Task() calls
-   → wait → launch newly-unblocked → repeat until phase complete
+   → launch unblocked tasks as parallel Task() calls in a single message
+   → read results → launch newly-unblocked → repeat until phase complete
    ```
 
 5. **Swarm mode** (6+ [P] tasks):
@@ -163,7 +163,7 @@ Execute `/selfish:implement` logic inline with **dependency-aware orchestration*
      prompt: "Self-organizing worker: TaskList → claim → implement → complete → repeat until empty")
    Task("Swarm Worker 2", ...)
    // 4. Workers self-balance — fast workers claim more tasks
-   // 5. Wait for all workers to exit
+   // 5. Read all worker results before proceeding to gate
    ```
 
 6. Perform **3-step gate** on each Implementation Phase completion — **always** read `docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
@@ -267,3 +267,4 @@ Pipeline aborted (Phase {N}/6)
 - **[P] parallel is mandatory**: if a [P] marker is assigned in tasks.md, it must be executed in parallel. Orchestration mode (batch vs swarm) is selected automatically based on task count. Sequential substitution is prohibited.
 - **Swarm mode is automatic**: when a phase has 6+ [P] tasks, swarm workers self-organize via TaskList/TaskUpdate. Do not manually batch.
 - **No out-of-scope deletion**: do not delete files/directories in Clean that were not created by the current pipeline.
+- **NEVER use `run_in_background: true` on Task calls**: agents must run in foreground so results are returned before the next step.

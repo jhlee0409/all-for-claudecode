@@ -49,12 +49,12 @@ Choose review orchestration based on the number of changed files:
 Review all files directly in the current context (no delegation).
 
 #### 6–10 files: Parallel Batch
-Distribute to parallel review agents (2–3 files per agent):
+Distribute to parallel review agents (2–3 files per agent) in a **single message**:
 ```
 Task("Review: {file1, file2}", subagent_type: "general-purpose")
 Task("Review: {file3, file4}", subagent_type: "general-purpose")
-→ collect results → write consolidated review
 ```
+Read each agent's returned output, then write consolidated review.
 
 #### 11+ files: Review Swarm
 Create a review task pool and spawn self-organizing review workers:
@@ -64,14 +64,13 @@ TaskCreate({ subject: "Review: src/auth/login.ts", description: "Review for qual
 TaskCreate({ subject: "Review: src/auth/session.ts", ... })
 // ... for all changed files
 
-// 2. Spawn N review workers (N = min(5, file count / 2))
+// 2. Spawn N review workers in a single message (N = min(5, file count / 2))
 Task("Review Worker 1", subagent_type: "general-purpose",
   prompt: "You are a review worker. Loop: TaskList → claim pending → read file + diff → review → record findings → repeat until empty.
   Review criteria: {config.code_style}, {config.architecture}, security, performance.
   Output findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix.")
-
-// 3. Collect all worker outputs → write consolidated review
 ```
+Collect all worker outputs, then write consolidated review.
 
 ### 3. Perform Review
 
@@ -157,3 +156,4 @@ Review complete
 - **Full context**: read the entire file, not just the diff lines, to understand context before reviewing.
 - **Avoid false positives**: classify uncertain issues as Info.
 - **Respect patterns**: do not flag code simply because it differs from other patterns. Use CLAUDE.md and selfish.config.md as the standard.
+- **NEVER use `run_in_background: true` on Task calls**: review agents must run in foreground so results are returned before consolidation.

@@ -98,13 +98,14 @@ Execute each phase in order. Choose the orchestration mode based on the number o
   ```
   TaskUpdate({ taskId: "T004", addBlockedBy: ["T002"] })  // if T004 depends on T002
   ```
-- Launch parallel sub-agents for unblocked [P] tasks:
+- Launch parallel sub-agents for unblocked [P] tasks in a **single message** (auto-parallel):
   ```
   Task("T003: Create UserService", subagent_type: "general-purpose",
     prompt: "Implement the following task:\n\n## Task\n{description}\n\n## Related Files\n{file paths}\n\n## Plan Context\n{relevant section from plan.md}\n\n## Rules\n- {config.code_style}\n- {config.architecture}\n- Follow CLAUDE.md and selfish.config.md")
   Task("T004: Create AuthService", subagent_type: "general-purpose", ...)
   ```
-- Wait for all to complete → mark TaskUpdate(status: "completed")
+- Read each agent's returned output and verify completion
+- Mark TaskUpdate(status: "completed") for each finished task
 - Any newly-unblocked tasks from dependency resolution → launch next batch
 
 #### Swarm Mode (6+ [P] tasks)
@@ -191,3 +192,4 @@ Implementation complete
 - **On error**: prevent infinite loops. Report to user after 3 attempts.
 - **Real-time tasks.md updates**: mark checkbox on each task completion.
 - **Mode selection is automatic**: do not manually override. Sequential for non-[P], batch for ≤5, swarm for 6+.
+- **NEVER use `run_in_background: true` on Task calls**: agents must run in foreground so results are returned before the next step.
