@@ -8,3 +8,8 @@ node_modules/
 
 # Pipeline spec artifacts (generated during auto pipeline)
 specs/
+
+# Project-local config and runtime logs
+.claude/selfish.config.md
+.selfish-failures.log
+memory/
