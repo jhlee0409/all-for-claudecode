@@ -1,105 +1,186 @@
 # Selfish Pipeline
 
-**Claude Code 전용 자동화 파이프라인 플러그인**
+**Claude Code plugin that automates the full development cycle — spec → plan → tasks → implement → review → clean.**
 
-## 설치
+[![npm version](https://img.shields.io/npm/v/selfish-pipeline)](https://www.npmjs.com/package/selfish-pipeline)
+[![license](https://img.shields.io/github/license/jhlee0409/selfish-pipeline)](./LICENSE)
+[![test](https://img.shields.io/badge/tests-101%20passed-brightgreen)]()
+[![hooks](https://img.shields.io/badge/hooks-15%20events-blue)]()
+[![commands](https://img.shields.io/badge/commands-16-orange)]()
+
+> Zero-dependency automation pipeline for Claude Code. One command (`/selfish:auto`) runs the entire cycle: write specs, design plans, break into tasks, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
+
+## What is Selfish Pipeline?
+
+Selfish Pipeline is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
+
+- **16 slash commands** for every phase of development
+- **15 hook events** with 3 handler types (shell scripts, LLM prompts, subagents)
+- **5 project presets** for popular stacks (Next.js, React SPA, Express API, Monorepo)
+- **Persistent memory agents** that learn across sessions
+- **Built-in CI gates** that physically prevent skipping quality checks
+
+## Quick Start
 
 ```bash
+# Install the plugin
 claude plugin add selfish-pipeline
+
+# Initialize for your project
+/selfish:init
+
+# Run the full auto pipeline
+/selfish:auto "Add user authentication with JWT"
 ```
 
-## 주요 기능
+That's it. The pipeline will:
+1. Write a feature spec with acceptance criteria
+2. Design an implementation plan with file change map
+3. Break the plan into parallelizable tasks
+4. Implement each task with CI verification
+5. Run a code review with security scan
+6. Clean up artifacts and prepare for commit
 
-- **Full Auto 파이프라인**: spec → plan → tasks → implement → review → clean 전 과정 자동화
-- **16개 슬래시 커맨드**: 7개 사용자 호출 커맨드 + 9개 내부 커맨드
-- **15개 Hook 이벤트 (3가지 핸들러 타입)**: command + prompt + agent 핸들러
-- **5개 프로젝트 프리셋**: Next.js, React SPA, Express API, Monorepo 등
-- **Critic Loop 자동 품질 검증**: 구현 후 자동 리뷰 및 보안 스캔
-- **Persistent Memory 에이전트**: architect/security 서브에이전트가 세션 간 학습 축적
+## Features
 
-## 커맨드 목록
+### Full Auto Pipeline
 
-### 사용자 호출 커맨드
+```
+/selfish:auto "feature description"
+```
 
-| 커맨드 | 설명 |
+Runs all 6 phases automatically with **Critic Loop** quality checks at each gate:
+
+```
+Spec (1/6) → Plan (2/6) → Tasks (3/6) → Implement (4/6) → Review (5/6) → Clean (6/6)
+```
+
+### 16 Slash Commands
+
+**User-invocable:**
+
+| Command | Description |
 |---|---|
-| `/selfish:auto` | Full Auto 파이프라인 |
-| `/selfish:spec` | 기능 명세서 생성 |
-| `/selfish:plan` | 구현 설계 |
-| `/selfish:implement` | 코드 구현 실행 |
-| `/selfish:review` | 코드 리뷰 |
-| `/selfish:research` | 기술 리서치 |
-| `/selfish:init` | 프로젝트 초기 설정 |
+| `/selfish:auto` | Full Auto pipeline — runs all 6 phases |
+| `/selfish:spec` | Write feature specification with acceptance criteria |
+| `/selfish:plan` | Design implementation plan with file change map |
+| `/selfish:implement` | Execute code implementation with CI gates |
+| `/selfish:review` | Code review with security scanning |
+| `/selfish:research` | Technical research with persistent storage |
+| `/selfish:init` | Project setup — detects stack and generates config |
 
-### 내부 커맨드 (모델 자동 호출)
+**Model-callable (internal):**
 
-| 커맨드 | 설명 |
+| Command | Description |
 |---|---|
-| `/selfish:tasks` | 태스크 분해 |
-| `/selfish:analyze` | 아티팩트 정합성 검증 |
-| `/selfish:architect` | 아키텍처 분석 |
-| `/selfish:security` | 보안 스캔 |
-| `/selfish:clarify` | 명세 모호성 해소 |
-| `/selfish:debug` | 버그 진단 및 수정 |
-| `/selfish:principles` | 프로젝트 원칙 관리 |
-| `/selfish:checkpoint` | 세션 상태 저장 |
-| `/selfish:resume` | 세션 복원 |
+| `/selfish:tasks` | Break plan into parallelizable tasks |
+| `/selfish:analyze` | Verify artifact consistency |
+| `/selfish:architect` | Architecture analysis (persistent memory) |
+| `/selfish:security` | Security scan (persistent memory, isolated worktree) |
+| `/selfish:clarify` | Resolve spec ambiguities |
+| `/selfish:debug` | Bug diagnosis and fix |
+| `/selfish:principles` | Project principles management |
+| `/selfish:checkpoint` | Save session state |
+| `/selfish:resume` | Restore session state |
 
-## Hook 이벤트
+### 15 Hook Events
 
-| Hook | 동작 |
+Every hook fires automatically — no configuration needed after install.
+
+| Hook | What it does |
 |---|---|
-| `SessionStart` | 파이프라인 상태 복원 |
-| `PreCompact` | 컨텍스트 압축 전 자동 체크포인트 |
-| `PreToolUse (Bash)` | 위험 명령 차단 (`push --force` 등) |
-| `PostToolUse (Edit/Write)` | 변경 파일 추적 + 자동 포맷팅 |
-| `SubagentStart` | 서브에이전트 컨텍스트 주입 |
-| `Stop` | CI 게이트 (command) + 코드 완전성 검증 (agent) |
-| `SessionEnd` | 파이프라인 미완료 경고 |
-| `PostToolUseFailure` | 실패 진단 힌트 |
-| `Notification` | 데스크탑 알림 |
-| `TaskCompleted` | 태스크 완료 CI 게이트 (command) + 수용 기준 검증 (prompt) |
-| `SubagentStop` | 서브에이전트 완료 추적 |
-| `UserPromptSubmit` | 매 프롬프트에 파이프라인 Phase/Feature 컨텍스트 주입 |
-| `PermissionRequest` | implement/review Phase에서 CI 관련 Bash 자동 허용 |
-| `ConfigChange` | 파이프라인 활성 중 설정 변경 감사 및 차단 |
-| `TeammateIdle` | Agent Teams teammate idle 차단 (implement/review Phase) |
+| `SessionStart` | Restores pipeline state on session resume |
+| `PreCompact` | Auto-checkpoints before context compression |
+| `PreToolUse` | Blocks dangerous commands (`push --force`, `reset --hard`) |
+| `PostToolUse` | Tracks file changes + auto-formats code |
+| `SubagentStart` | Injects pipeline context into subagents |
+| `Stop` | CI gate (shell) + code completeness check (AI agent) |
+| `SessionEnd` | Warns about unfinished pipeline |
+| `PostToolUseFailure` | Diagnostic hints for known error patterns |
+| `Notification` | Desktop alerts (macOS/Linux) |
+| `TaskCompleted` | CI gate (shell) + acceptance criteria verification (LLM) |
+| `SubagentStop` | Tracks subagent completion in pipeline log |
+| `UserPromptSubmit` | Injects Phase/Feature context per prompt |
+| `PermissionRequest` | Auto-allows CI commands during implement/review |
+| `ConfigChange` | Audits/blocks settings changes during active pipeline |
+| `TeammateIdle` | Prevents Agent Teams idle during implement/review |
 
-## Hook Handler Types
+### 3 Hook Handler Types
 
-| 타입 | 설명 | 사용 이벤트 |
+| Type | Description | Use Case |
 |---|---|---|
-| `command` | 셸 스크립트 실행 (결정론적 검증) | 전체 15개 이벤트 |
-| `prompt` | LLM 단일 턴 평가 (haiku 기반) | TaskCompleted |
-| `agent` | 서브에이전트 (파일 접근 가능) | Stop |
+| `command` | Shell script execution (deterministic) | All 15 events |
+| `prompt` | LLM single-turn evaluation (haiku) | TaskCompleted |
+| `agent` | Subagent with file access tools | Stop |
 
-## Persistent Memory 에이전트
+### Persistent Memory Agents
 
-| 에이전트 | 역할 | 메모리 저장 위치 |
+Two custom agents that **learn across sessions**:
+
+| Agent | Role | Memory |
 |---|---|---|
-| `selfish-architect` | 아키텍처 분석 — ADR 결정과 패턴 기억 | `.claude/agent-memory/selfish-architect/` |
-| `selfish-security` | 보안 스캔 — 취약점 패턴과 오탐 기억 (isolation: worktree) | `.claude/agent-memory/selfish-security/` |
+| `selfish-architect` | Architecture analysis — remembers ADR decisions and patterns | `.claude/agent-memory/selfish-architect/` |
+| `selfish-security` | Security scan — remembers vulnerability patterns and false positives | `.claude/agent-memory/selfish-security/` |
 
-## 프리셋
+### Project Presets
 
-| 프리셋 | 기술 스택 |
+| Preset | Stack |
 |---|---|
-| `template` | 범용 (수동 설정) |
+| `template` | Generic (manual config) |
 | `nextjs-fsd` | Next.js + FSD + Zustand + React Query |
 | `react-spa` | Vite + React 18 + Zustand + Tailwind |
 | `express-api` | Express + TypeScript + Prisma + Jest |
 | `monorepo` | Turborepo + pnpm workspace |
 
-## 설정
+## How It Works
 
-프로젝트 초기화:
+```
+┌─────────────────────────────────────────────┐
+│  /selfish:auto "Add feature X"              │
+├─────────────────────────────────────────────┤
+│  Phase 1: Spec    → Critic Loop → Gate ✓    │
+│  Phase 2: Plan    → Critic Loop → Gate ✓    │
+│  Phase 3: Tasks   → Critic Loop → Gate ✓    │
+│  Phase 4: Implement → CI Gate → Gate ✓      │
+│  Phase 5: Review  → Security Scan → Gate ✓  │
+│  Phase 6: Clean   → Artifacts removed       │
+├─────────────────────────────────────────────┤
+│  15 hooks run automatically at each step    │
+│  Stop/TaskCompleted gates block if CI fails │
+└─────────────────────────────────────────────┘
+```
+
+## Configuration
+
+Initialize your project:
 
 ```bash
 /selfish:init
 ```
 
-프로젝트별 설정은 `.claude/selfish.config.md`에 저장됩니다.
+This detects your tech stack and generates `.claude/selfish.config.md` with:
+- CI/lint/test commands
+- Architecture style and layers
+- Framework-specific settings
+- Code style conventions
 
-## 라이선스
+## FAQ
+
+### What is selfish-pipeline?
+A Claude Code plugin that automates the entire development cycle (spec → plan → tasks → implement → review → clean) through 16 slash commands and 15 hook events.
+
+### How does it compare to manual Claude Code workflows?
+Instead of manually prompting each step, selfish-pipeline orchestrates the full cycle with built-in quality gates that physically prevent skipping CI or security checks.
+
+### Does it work with any project?
+Yes. Run `/selfish:init` to auto-detect your stack, or use one of the 5 presets (Next.js, React SPA, Express API, Monorepo, or generic template).
+
+### Does it require any dependencies?
+No. Zero runtime dependencies — pure markdown commands + bash hook scripts.
+
+### What Claude Code version is required?
+Claude Code with plugin support (2025+). The plugin uses standard hooks, commands, and agents APIs.
+
+## License
 
 MIT
