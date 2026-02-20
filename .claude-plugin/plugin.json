@@ -8,6 +8,5 @@
   "license": "MIT",
   "keywords": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"],
   "commands": "./commands/",
-  "hooks": "./hooks/hooks.json",
-  "agents": "./agents/"
+  "hooks": "./hooks/hooks.json"
 }
