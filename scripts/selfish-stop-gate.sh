@@ -1,16 +1,16 @@
 #!/bin/bash
 set -euo pipefail
-# Stop Gate Hook: 파이프라인 활성 중 CI 미통과 시 중단 차단
-# Claude가 CI를 건너뛰고 "완료"라고 말하는 것을 물리적으로 방지
+# Stop Gate Hook: Block stop while pipeline is active and CI has not passed
+# Physically prevents Claude from skipping CI and claiming "done"
 #
-# Gap 해결: "프롬프트는 강제가 아님" → exit 2로 물리적 차단
+# Gap fix: "Prompts are not enforcement" -> Physical enforcement via exit 2
 
-# trap: 비정상 종료 시 exit code 보존 + stderr 메시지
+# trap: Preserve exit code on abnormal termination + stderr message
 # shellcheck disable=SC2329
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ] && [ "$exit_code" -ne 2 ]; then
-    echo "SELFISH GATE: 비정상 종료 (exit code: $exit_code)" >&2
+    echo "SELFISH GATE: Abnormal exit (exit code: $exit_code)" >&2
   fi
   exit "$exit_code"
 }
@@ -21,41 +21,41 @@ PIPELINE_FLAG="${PROJECT_DIR}/.claude/.selfish-active"
 CI_FLAG="${PROJECT_DIR}/.claude/.selfish-ci-passed"
 PHASE_FLAG="${PROJECT_DIR}/.claude/.selfish-phase"
 
-# 파이프라인이 활성이 아니면 → 통과
+# If pipeline is not active -> pass through
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
 FEATURE="${FEATURE:-$(cat "$PIPELINE_FLAG")}"
 
-# Phase 파일이 있으면 현재 Phase 확인
+# Check current Phase if phase file exists
 CURRENT_PHASE=""
 if [ -f "$PHASE_FLAG" ]; then
   CURRENT_PHASE="$(cat "$PHASE_FLAG")"
 fi
 CURRENT_PHASE="${CURRENT_PHASE:-}"
 
-# Spec/Plan/Tasks Phase (1-3)는 CI 불필요 → 통과
+# Spec/Plan/Tasks Phase (1-3) do not require CI -> pass through
 case "${CURRENT_PHASE:-}" in
   spec|plan|tasks)
     exit 0
     ;;
 esac
 
-# Implement/Review/Clean Phase (4-6)에서는 CI 필수
+# Implement/Review/Clean Phase (4-6) require CI to pass
 if [ ! -f "$CI_FLAG" ]; then
-  echo "SELFISH GATE: yarn ci가 실행되지 않았습니다. 파이프라인 '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}'에서 CI 게이트를 통과해야 합니다. yarn ci를 실행한 후 .claude/.selfish-ci-passed에 timestamp를 기록하세요." >&2
+  echo "SELFISH GATE: yarn ci has not been run. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires passing the CI gate. Run yarn ci and record the timestamp in .claude/.selfish-ci-passed." >&2
   exit 2
 fi
 
-# CI가 10분 이내에 통과했는지 확인 (stale 방지)
+# Verify CI passed within the last 10 minutes (prevent stale results)
 CI_TIME="${CI_TIME:-$(cat "$CI_FLAG" 2>/dev/null | head -1 | tr -dc '0-9')}"
 CI_TIME="${CI_TIME:-0}"
 NOW="$(date +%s)"
 if [ "$CI_TIME" -gt 0 ]; then
   DIFF=$(( NOW - CI_TIME ))
   if [ "$DIFF" -gt 600 ]; then
-    echo "SELFISH GATE: CI 결과가 오래되었습니다 (${DIFF}초 전). yarn ci를 다시 실행하세요." >&2
+    echo "SELFISH GATE: CI results are stale (${DIFF} seconds ago). Please run yarn ci again." >&2
     exit 2
   fi
 fi

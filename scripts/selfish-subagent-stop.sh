@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# SubagentStop Hook: 서브에이전트 완료/실패 시 결과를 파이프라인 로그에 기록
-# 파이프라인 오케스트레이터가 태스크 진행 상황을 추적할 수 있도록 함
+# SubagentStop Hook: Log subagent completion/failure results to pipeline log
+# Enables pipeline orchestrator to track task progress
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -14,10 +14,10 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
 RESULTS_LOG="$PROJECT_DIR/.claude/.selfish-task-results.log"
 
-# stdin에서 hook 데이터 읽기
+# Read hook data from stdin
 INPUT=$(cat)
 
-# stop_hook_active 파싱 (무한 루프 방지 — CRITICAL)
+# Parse stop_hook_active (prevent infinite loop -- CRITICAL)
 if command -v jq >/dev/null 2>&1; then
   STOP_HOOK_ACTIVE=$(printf '%s\n' "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)
 else
@@ -28,17 +28,17 @@ else
   fi
 fi
 
-# stop_hook_active가 true면 즉시 종료 (재귀 호출 방지)
+# Exit immediately if stop_hook_active is true (prevent recursive calls)
 if [ "$STOP_HOOK_ACTIVE" = "true" ]; then
   exit 0
 fi
 
-# 파이프라인 비활성 시 조용히 종료
+# Exit silently if pipeline is inactive
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
-# 서브에이전트 정보 파싱 (jq fallback: grep은 escaped quotes 미지원 — 허용된 한계)
+# Parse subagent info (jq fallback: grep does not support escaped quotes -- accepted limitation)
 if command -v jq >/dev/null 2>&1; then
   AGENT_ID=$(printf '%s\n' "$INPUT" | jq -r '.agent_id // "unknown"' 2>/dev/null)
   AGENT_TYPE=$(printf '%s\n' "$INPUT" | jq -r '.agent_type // "unknown"' 2>/dev/null)
@@ -49,12 +49,12 @@ else
   LAST_MSG=$(printf '%s\n' "$INPUT" | grep -o '"last_assistant_message"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' | tr -d '\000-\037' || echo "no message")
 fi
 
-# 값 정리: 로그 폭발 방지 + 제어문자 제거
+# Sanitize values: prevent log explosion + remove control characters
 LAST_MSG=$(printf '%s\n' "$LAST_MSG" | head -1 | cut -c1-500)
 AGENT_ID=$(printf '%s\n' "$AGENT_ID" | head -1 | tr -d '\n\r')
 AGENT_TYPE=$(printf '%s\n' "$AGENT_TYPE" | head -1 | tr -d '\n\r' | cut -c1-100)
 
-# 결과 로그에 기록
+# Write to results log
 echo "$(date +%s) [${AGENT_TYPE}] ${AGENT_ID}: ${LAST_MSG}" >> "$RESULTS_LOG"
 
 exit 0

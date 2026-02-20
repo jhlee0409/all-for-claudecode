@@ -1,16 +1,16 @@
 #!/bin/bash
 set -euo pipefail
-# TeammateIdle Hook: 파이프라인 활성 중 implement/review Phase에서 idle 차단
-# Claude가 작업 도중 멈추는 것을 물리적으로 방지
+# TeammateIdle Hook: Block idle during implement/review Phase while pipeline is active
+# Physically prevents Claude from stopping mid-task
 #
-# Gap 해결: "프롬프트는 강제가 아님" → exit 2로 물리적 차단
+# Gap fix: "Prompts are not enforcement" -> Physical enforcement via exit 2
 
-# trap: 비정상 종료 시 exit code 보존 + stderr 메시지
+# trap: Preserve exit code on abnormal termination + stderr message
 # shellcheck disable=SC2329
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ] && [ "$exit_code" -ne 2 ]; then
-    echo "SELFISH TEAMMATE GATE: 비정상 종료 (exit code: $exit_code)" >&2
+    echo "SELFISH TEAMMATE GATE: Abnormal exit (exit code: $exit_code)" >&2
   fi
   exit "$exit_code"
 }
@@ -20,24 +20,24 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="${PROJECT_DIR}/.claude/.selfish-active"
 PHASE_FLAG="${PROJECT_DIR}/.claude/.selfish-phase"
 
-# 파이프라인이 활성이 아니면 → 통과
+# If pipeline is not active -> pass through
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
 FEATURE="$(head -1 "$PIPELINE_FLAG" | tr -d '\n\r')"
 
-# Phase 파일이 있으면 현재 Phase 확인
+# Check current Phase if phase file exists
 CURRENT_PHASE=""
 if [ -f "$PHASE_FLAG" ]; then
   CURRENT_PHASE="$(cat "$PHASE_FLAG")"
 fi
 CURRENT_PHASE="${CURRENT_PHASE:-}"
 
-# implement/review Phase에서는 idle 차단 → 작업 계속 강제
+# Block idle during implement/review Phase -> force work to continue
 case "${CURRENT_PHASE:-}" in
   implement|review)
-    echo "SELFISH TEAMMATE GATE: 파이프라인 '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}'가 활성입니다. 작업을 완료하세요." >&2
+    echo "SELFISH TEAMMATE GATE: Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' is active. Please complete the task." >&2
     exit 2
     ;;
   *)

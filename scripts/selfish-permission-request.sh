@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# PermissionRequest Hook: 파이프라인 implement/review Phase에서 CI 관련 Bash 명령 자동 허용
-# 화이트리스트 정확 일치만 허용, 명령 체이닝(&&/;/|/$()) 포함 시 기본 동작(사용자 확인)
+# PermissionRequest Hook: Auto-allow CI-related Bash commands during implement/review Phase
+# Only exact whitelist matches allowed; commands with chaining (&&/;/|/$()) fall through to default behavior (user confirmation)
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -14,15 +14,15 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
 PHASE_FLAG="$PROJECT_DIR/.claude/.selfish-phase"
 
-# stdin에서 hook 데이터 읽기
+# Read hook data from stdin
 INPUT=$(cat)
 
-# 파이프라인 비활성 시 조용히 종료
+# Exit silently if pipeline is inactive
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
-# implement/review Phase만 동작
+# Only active during implement/review Phase
 PHASE=""
 if [ -f "$PHASE_FLAG" ]; then
   PHASE="$(head -1 "$PHASE_FLAG" | tr -d '\n\r')"
@@ -32,7 +32,7 @@ case "${PHASE:-}" in
   *) exit 0 ;;
 esac
 
-# tool_input.command 파싱
+# Parse tool_input.command
 COMMAND=""
 if command -v jq >/dev/null 2>&1; then
   COMMAND=$(printf '%s\n' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
@@ -40,21 +40,21 @@ else
   COMMAND=$(printf '%s\n' "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
 fi
 
-# 빈 명령이면 기본 동작
+# If command is empty, fall through to default behavior
 if [ -z "$COMMAND" ]; then
   exit 0
 fi
 
-# 명령 체이닝/치환/개행 감지 — 포함 시 기본 동작 (보안)
+# Detect command chaining/substitution/newlines -- fall through to default behavior if found (security)
 if printf '%s' "$COMMAND" | grep -qE '&&|;|\||\$\(|`'; then
   exit 0
 fi
-# 개행 문자 포함 시 기본 동작 (multi-line 우회 방지)
+# Fall through to default behavior if newlines found (prevent multi-line bypass)
 case "$COMMAND" in
   *$'\n'*) exit 0 ;;
 esac
 
-# 화이트리스트 정확 일치 (prefix match 방지를 위해 공백 + $ 사용)
+# Whitelist exact match (uses space + $ to prevent prefix matching)
 ALLOWED=false
 case "$COMMAND" in
   "npm run lint"|"npm test"|"npm run test:all")
@@ -62,7 +62,7 @@ case "$COMMAND" in
     ;;
 esac
 
-# prefix 매칭 (shellcheck, prettier, chmod +x 뒤에 경로 허용)
+# Prefix matching (allow paths after shellcheck, prettier, chmod +x)
 if [ "$ALLOWED" = "false" ]; then
   case "$COMMAND" in
     "shellcheck "*)
@@ -72,7 +72,7 @@ if [ "$ALLOWED" = "false" ]; then
       ALLOWED=true
       ;;
     "chmod +x "*)
-      # 프로젝트 디렉토리 내 경로만 허용
+      # Only allow paths within project directory
       TARGET="${COMMAND#chmod +x }"
       case "$TARGET" in
         "$PROJECT_DIR"/*|./scripts/*|scripts/*) ALLOWED=true ;;
@@ -81,10 +81,10 @@ if [ "$ALLOWED" = "false" ]; then
   esac
 fi
 
-# 허용 결정 출력
+# Output allow decision
 if [ "$ALLOWED" = "true" ]; then
   printf '{"hookSpecificOutput":{"decision":{"behavior":"allow"}}}'
 fi
 
-# ALLOWED=false면 출력 없이 exit 0 → 기본 동작 (사용자 확인)
+# If ALLOWED=false, exit 0 with no output -> default behavior (user confirmation)
 exit 0

@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# SubagentStart Hook: 서브에이전트 생성 시 파이프라인 컨텍스트 주입
-# 서브에이전트가 현재 피처/페이즈와 프로젝트 설정을 인지하도록 함
+# SubagentStart Hook: Inject pipeline context when subagent is created
+# Ensures subagent is aware of current feature/phase and project settings
 #
-# Gap 해결: 서브에이전트는 부모 컨텍스트를 상속하지 않으므로 명시적 주입 필요
+# Gap fix: Subagents do not inherit parent context, so explicit injection is required
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -15,32 +15,32 @@ trap cleanup EXIT
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
 
-# 파이프라인 비활성 시 조용히 종료
+# Exit silently if pipeline is inactive
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
-# 1. 피처명 읽기
+# 1. Read feature name
 FEATURE=$(cat "$PIPELINE_FLAG" 2>/dev/null || echo "unknown")
 
-# 2. 현재 페이즈 읽기
+# 2. Read current phase
 PHASE=$(cat "$PROJECT_DIR/.claude/.selfish-phase" 2>/dev/null || echo "unknown")
 
-# 3. 파이프라인 상태 출력
+# 3. Output pipeline status
 echo "[SELFISH PIPELINE] Feature: $FEATURE | Phase: $PHASE"
 
-# 4. selfish.config.md 에서 설정 섹션 추출
+# 4. Extract config sections from selfish.config.md
 CONFIG_FILE="$PROJECT_DIR/.claude/selfish.config.md"
 
 if [ -f "$CONFIG_FILE" ]; then
-  # Architecture 섹션 추출 (## Architecture ~ 다음 ## 전까지)
+  # Extract Architecture section (## Architecture to next ##)
   # shellcheck disable=SC2001
   ARCH=$(sed -n '/^## Architecture/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -5 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
   if [ -n "$ARCH" ]; then
     echo "[CONFIG] Architecture: $ARCH"
   fi
 
-  # Code Style 섹션 추출 (## Code Style ~ 다음 ## 전까지)
+  # Extract Code Style section (## Code Style to next ##)
   # shellcheck disable=SC2001
   STYLE=$(sed -n '/^## Code Style/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -5 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
   if [ -n "$STYLE" ]; then

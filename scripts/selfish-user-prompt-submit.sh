@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# UserPromptSubmit Hook: 매 프롬프트에 파이프라인 Phase/Feature 컨텍스트 주입
-# 파이프라인 비활성 시 즉시 exit 0 (오버헤드 최소화)
+# UserPromptSubmit Hook: Inject pipeline Phase/Feature context on every prompt
+# Exit 0 immediately if pipeline is inactive (minimize overhead)
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -14,22 +14,22 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
 PHASE_FLAG="$PROJECT_DIR/.claude/.selfish-phase"
 
-# stdin 소비 (필수 — 미소비 시 파이프 깨짐)
+# Consume stdin (required -- pipe breaks if not consumed)
 cat > /dev/null
 
-# 파이프라인 비활성 시 조용히 종료
+# Exit silently if pipeline is inactive
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
-# Feature/Phase 읽기 + JSON 안전 처리 (특수문자 제거)
+# Read Feature/Phase + JSON-safe processing (strip special characters)
 FEATURE="$(head -1 "$PIPELINE_FLAG" | tr -d '\n\r' | tr -d '"' | cut -c1-100)"
 PHASE="unknown"
 if [ -f "$PHASE_FLAG" ]; then
   PHASE="$(head -1 "$PHASE_FLAG" | tr -d '\n\r' | tr -d '"' | cut -c1-100)"
 fi
 
-# stdout으로 additionalContext 출력 (Claude 컨텍스트에 주입)
+# Output additionalContext to stdout (injected into Claude context)
 printf '{"hookSpecificOutput":{"additionalContext":"[Pipeline: %s] [Phase: %s]"}}' "$FEATURE" "$PHASE"
 
 exit 0

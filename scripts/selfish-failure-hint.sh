@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
-# PostToolUseFailure Hook: 도구 실패 시 에러 패턴에 맞는 힌트 출력
+# PostToolUseFailure Hook: Output hints matching error patterns on tool failure
 
 # shellcheck disable=SC2329
 cleanup() {
-  # 임시 자원 정리가 필요한 경우를 위한 placeholder
+  # Placeholder for temporary resource cleanup if needed
   :
 }
 trap cleanup EXIT
@@ -13,10 +13,10 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
 FAILURES_LOG="$PROJECT_DIR/.claude/.selfish-failures.log"
 
-# stdin에서 입력 파싱
+# Parse input from stdin
 INPUT=$(cat)
 
-# tool_name 추출
+# Extract tool_name
 if command -v jq &> /dev/null; then
   TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
   ERROR=$(echo "$INPUT" | jq -r '.error // empty' 2>/dev/null)
@@ -28,41 +28,41 @@ fi
 TOOL_NAME="${TOOL_NAME:-unknown}"
 ERROR="${ERROR:-}"
 
-# 파이프라인 활성 중이면 실패 로그 기록 (에러 메시지 1줄로 정규화)
+# If pipeline is active, log failure (normalize error message to single line)
 if [ -f "$PIPELINE_FLAG" ] && [ -n "$ERROR" ]; then
   ERROR_ONELINE=$(echo "$ERROR" | head -1 | cut -c1-200)
   echo "$(date +%s) $TOOL_NAME: $ERROR_ONELINE" >> "$FAILURES_LOG"
 fi
 
-# 에러 패턴 매칭
+# Error pattern matching
 HINT=""
 case "$ERROR" in
   *EACCES*)
-    HINT="파일 권한을 확인하세요. chmod 또는 sudo가 필요할 수 있습니다."
+    HINT="Check file permissions. You may need chmod or sudo."
     ;;
   *ENOENT*|*"No such file"*)
-    HINT="파일 또는 디렉토리가 존재하는지 확인하세요."
+    HINT="Check that the file or directory exists."
     ;;
   *ECONNREFUSED*)
-    HINT="대상 서버/서비스가 실행 중인지 확인하세요."
+    HINT="Check that the target server/service is running."
     ;;
   *"command not found"*)
-    HINT="필요한 도구가 설치되어 있는지 확인하세요."
+    HINT="Check that the required tool is installed."
     ;;
   *"shellcheck"*)
-    HINT="shellcheck 설치: brew install shellcheck (macOS) 또는 apt install shellcheck (Linux)"
+    HINT="Install shellcheck: brew install shellcheck (macOS) or apt install shellcheck (Linux)"
     ;;
   *"ENOMEM"*|*"Cannot allocate"*)
-    HINT="메모리 부족. 다른 프로세스를 종료하거나 리소스를 확인하세요."
+    HINT="Out of memory. Terminate other processes or check resources."
     ;;
   *)
     HINT=""
     ;;
 esac
 
-# 힌트가 있으면 JSON 출력 (변수를 sanitize하여 JSON 인젝션 방지)
+# If hint exists, output JSON (sanitize variables to prevent JSON injection)
 if [ -n "$HINT" ]; then
-  # jq 사용 가능 시 안전한 JSON 생성, 불가 시 특수문자 제거 후 printf
+  # Generate safe JSON with jq if available, otherwise strip special chars and use printf
   if command -v jq &> /dev/null; then
     jq -n --arg ctx "[SELFISH HINT] $HINT (tool: $TOOL_NAME)" \
       '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":$ctx}}'

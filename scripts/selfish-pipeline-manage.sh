@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# Pipeline Management: selfish 파이프라인 상태 플래그 관리
-# 다른 hook 스크립트들이 참조하는 플래그 파일을 관리
+# Pipeline Management: Manage selfish pipeline state flags
+# Manages flag files referenced by other hook scripts
 #
-# 사용법:
+# Usage:
 #   selfish-pipeline-manage.sh start <feature-name>
 #   selfish-pipeline-manage.sh phase <phase-name>
 #   selfish-pipeline-manage.sh ci-pass
@@ -40,7 +40,7 @@ case "$COMMAND" in
   start)
     FEATURE="${2:?Feature name required}"
 
-    # 중복 실행 방지
+    # Prevent duplicate execution
     if [ -f "$PIPELINE_FLAG" ]; then
       EXISTING=$(cat "$PIPELINE_FLAG")
       echo "WARNING: Pipeline already active: $EXISTING" >&2
@@ -65,7 +65,7 @@ case "$COMMAND" in
     case "$PHASE" in
       spec|plan|tasks|implement|review|clean)
         echo "$PHASE" > "$PHASE_FLAG"
-        rm -f "$CI_FLAG"  # 새 Phase에서는 CI 초기화
+        rm -f "$CI_FLAG"  # Reset CI for new Phase
         echo "Phase: $PHASE"
         ;;
       *)
@@ -92,7 +92,7 @@ case "$COMMAND" in
 
     rm -f "$PIPELINE_FLAG" "$PHASE_FLAG" "$CI_FLAG" "$CHANGES_LOG"
 
-    # Safety tag 정리 (성공 완료 시)
+    # Clean up safety tag (on successful completion)
     if cd "$PROJECT_DIR" 2>/dev/null; then
       git tag -d "selfish/pre-auto" 2>/dev/null || true
     fi

@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
-# PostToolUse Hook: 파일 변경 추적
-# Edit/Write 도구 사용 후 변경된 파일을 기록
-# CI 게이트에서 어떤 파일이 변경되었는지 추적
+# PostToolUse Hook: Track file changes
+# Record changed files after Edit/Write tool usage
+# Track which files have changed for the CI gate
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
@@ -11,25 +11,25 @@ CI_FLAG="$PROJECT_DIR/.claude/.selfish-ci-passed"
 
 # shellcheck disable=SC2329
 cleanup() {
-  # 임시 자원 정리가 필요한 경우를 위한 placeholder
+  # Placeholder for temporary resource cleanup if needed
   :
 }
 trap cleanup EXIT
 
-# 파이프라인 비활성이면 → 스킵
+# If pipeline is inactive -> skip
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
-# stdin에서 tool input 파싱
+# Parse tool input from stdin
 INPUT=$(cat)
 
-# stdin이 비어있으면 스킵
+# Skip if stdin is empty
 if [ -z "$INPUT" ]; then
   exit 0
 fi
 
-# jq가 있으면 jq로, 없으면 grep/sed fallback으로 file_path 추출
+# Extract file_path with jq if available, otherwise grep/sed fallback
 if command -v jq &> /dev/null; then
   FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 else
@@ -37,11 +37,11 @@ else
 fi
 
 if [ -n "$FILE_PATH" ]; then
-  # 변경 로그에 추가 (중복 제거)
+  # Append to change log (deduplicate)
   echo "$FILE_PATH" >> "$CHANGES_LOG"
   sort -u -o "$CHANGES_LOG" "$CHANGES_LOG"
 
-  # 파일이 변경되었으므로 CI 결과 무효화
+  # Invalidate CI results since a file was changed
   rm -f "$CI_FLAG"
 fi
 

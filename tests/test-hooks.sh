@@ -1,10 +1,10 @@
 #!/bin/bash
-# selfish-pipeline Hook 스크립트 테스트
-# 실행: bash tests/test-hooks.sh (또는 npm test)
+# selfish-pipeline Hook script tests
+# Run: bash tests/test-hooks.sh (or npm test)
 
 set -uo pipefail
 
-# --- 테스트 프레임워크 ---
+# --- Test framework ---
 PASS=0; FAIL=0; TOTAL=0
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -58,7 +58,7 @@ assert_file_contains() {
   fi
 }
 
-# --- tmpdir 셋업 ---
+# --- tmpdir setup ---
 setup_tmpdir() {
   local tmpdir
   tmpdir=$(mktemp -d)
@@ -81,7 +81,7 @@ cleanup_tmpdir() {
 echo "=== selfish-bash-guard.sh ==="
 # ============================================================
 
-# 1. 비활성 파이프라인 → allow
+# 1. Inactive pipeline → allow
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(echo '{}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-bash-guard.sh" 2>/dev/null); CODE=$?
 assert_exit "inactive pipeline → exit 0" "0" "$CODE"
@@ -104,7 +104,7 @@ assert_exit "safe command → exit 0" "0" "$CODE"
 assert_stdout_contains "safe command → allow" '"decision":"allow"' "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 4. reset --hard selfish/pre- → allow (rollback 허용)
+# 4. reset --hard selfish/pre- → allow (rollback permitted)
 TEST_DIR=$(setup_tmpdir)
 echo "bash-guard-test" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(echo '{"tool_input":{"command":"git reset --hard selfish/pre-auto"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-bash-guard.sh" 2>/dev/null); CODE=$?
@@ -125,7 +125,7 @@ echo ""
 echo "=== selfish-stop-gate.sh ==="
 # ============================================================
 
-# 1. 비활성 파이프라인 → pass
+# 1. Inactive pipeline → pass
 TEST_DIR=$(setup_tmpdir)
 set +e
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-stop-gate.sh" 2>/dev/null); CODE=$?
@@ -133,7 +133,7 @@ set -e
 assert_exit "inactive pipeline → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. spec phase → pass (CI 불필요)
+# 2. spec phase → pass (CI not required)
 TEST_DIR=$(setup_tmpdir)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 echo "spec" > "$TEST_DIR/.claude/.selfish-phase"
@@ -170,13 +170,13 @@ echo ""
 echo "=== track-selfish-changes.sh ==="
 # ============================================================
 
-# 1. 비활성 → skip
+# 1. Inactive → skip
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(echo '{"tool_input":{"file_path":"/tmp/test.ts"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/track-selfish-changes.sh" 2>/dev/null); CODE=$?
 assert_exit "inactive → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 활성 → 파일 기록
+# 2. Active → file logged
 TEST_DIR=$(setup_tmpdir)
 echo "track-test" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(echo '{"tool_input":{"file_path":"/tmp/test.ts"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/track-selfish-changes.sh" 2>/dev/null); CODE=$?
@@ -208,13 +208,13 @@ echo ""
 echo "=== session-start-context.sh ==="
 # ============================================================
 
-# 1. 파이프라인 비활성 → silent (stdout empty 또는 checkpoint 관련만)
+# 1. Inactive pipeline → silent (stdout empty or checkpoint-related only)
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/session-start-context.sh" 2>/dev/null); CODE=$?
 assert_exit "no pipeline → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 파이프라인 활성 → stdout에 SELFISH 포함
+# 2. Active pipeline → stdout contains SELFISH
 TEST_DIR=$(setup_tmpdir)
 echo "context-test" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/session-start-context.sh" 2>/dev/null); CODE=$?
@@ -228,11 +228,11 @@ echo ""
 echo "=== pre-compact-checkpoint.sh ==="
 # ============================================================
 
-# 1. 실행 → checkpoint 파일 생성 확인
+# 1. Run → verify checkpoint file creation
 TEST_DIR=$(setup_tmpdir_with_git)
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/pre-compact-checkpoint.sh" 2>/dev/null); CODE=$?
 assert_exit "run → exit 0" "0" "$CODE"
-# checkpoint는 HOME/.claude/projects/{encoded}/ 에 생성되므로 stdout 확인
+# checkpoint is created at HOME/.claude/projects/{encoded}/ so verify via stdout
 assert_stdout_contains "checkpoint saved" "Auto-checkpoint saved" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
@@ -242,14 +242,14 @@ echo ""
 echo "=== selfish-subagent-context.sh ==="
 # ============================================================
 
-# 1. 비활성 → silent
+# 1. Inactive → silent
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-context.sh" 2>/dev/null); CODE=$?
 assert_exit "inactive → exit 0" "0" "$CODE"
 assert_stdout_empty "inactive → no output" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 활성 → stdout에 Feature 포함
+# 2. Active → stdout contains Feature
 TEST_DIR=$(setup_tmpdir)
 echo "subagent-test" > "$TEST_DIR/.claude/.selfish-active"
 echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
@@ -264,7 +264,7 @@ echo ""
 echo "=== selfish-pipeline-manage.sh ==="
 # ============================================================
 
-# 1. start → flag 생성
+# 1. start → flag created
 TEST_DIR=$(setup_tmpdir_with_git)
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-pipeline-manage.sh" start test-feature 2>/dev/null); CODE=$?
 assert_exit "start → exit 0" "0" "$CODE"
@@ -272,7 +272,7 @@ assert_file_exists "flag created" "$TEST_DIR/.claude/.selfish-active"
 assert_file_contains "flag contains feature" "$TEST_DIR/.claude/.selfish-active" "test-feature"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. phase → flag 업데이트
+# 2. phase → flag updated
 TEST_DIR=$(setup_tmpdir_with_git)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-pipeline-manage.sh" phase plan 2>/dev/null); CODE=$?
@@ -280,7 +280,7 @@ assert_exit "phase → exit 0" "0" "$CODE"
 assert_file_contains "phase updated" "$TEST_DIR/.claude/.selfish-phase" "plan"
 cleanup_tmpdir "$TEST_DIR"
 
-# 3. end → flags 삭제
+# 3. end → flags deleted
 TEST_DIR=$(setup_tmpdir_with_git)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
@@ -300,14 +300,14 @@ echo ""
 echo "=== selfish-session-end.sh ==="
 # ============================================================
 
-# 1. 비활성 → exit 0, stderr 없음
+# 1. Inactive → exit 0, no stderr
 TEST_DIR=$(setup_tmpdir)
 STDERR_OUT=$(echo '{"reason":"other"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-session-end.sh" 2>&1 1>/dev/null); CODE=$?
 assert_exit "inactive → exit 0" "0" "$CODE"
 assert_stdout_empty "inactive → no stderr" "$STDERR_OUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 활성 → stderr에 feature명 포함
+# 2. Active → stderr contains feature name
 TEST_DIR=$(setup_tmpdir)
 echo "session-end-test" > "$TEST_DIR/.claude/.selfish-active"
 STDERR_OUT=$(echo '{"reason":"other"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-session-end.sh" 2>&1 1>/dev/null); CODE=$?
@@ -315,7 +315,7 @@ assert_exit "active → exit 0" "0" "$CODE"
 assert_stdout_contains "active → feature in stderr" "session-end-test" "$STDERR_OUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 3. 활성 + reason → stderr에 reason 포함
+# 3. Active + reason → stderr contains reason
 TEST_DIR=$(setup_tmpdir)
 echo "session-end-test" > "$TEST_DIR/.claude/.selfish-active"
 STDERR_OUT=$(echo '{"reason":"logout"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-session-end.sh" 2>&1 1>/dev/null); CODE=$?
@@ -328,21 +328,21 @@ echo ""
 echo "=== selfish-failure-hint.sh ==="
 # ============================================================
 
-# 1. EACCES 에러 → JSON에 hint 포함
+# 1. EACCES error → JSON contains hint
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(echo '{"tool_name":"Bash","error":"EACCES: permission denied"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-failure-hint.sh" 2>/dev/null); CODE=$?
 assert_exit "EACCES → exit 0" "0" "$CODE"
 assert_stdout_contains "EACCES → hint" "SELFISH HINT" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 알 수 없는 에러 → stdout 없음
+# 2. Unknown error → no stdout
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(echo '{"tool_name":"Bash","error":"some random error"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-failure-hint.sh" 2>/dev/null); CODE=$?
 assert_exit "unknown error → exit 0" "0" "$CODE"
 assert_stdout_empty "unknown error → no output" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 3. 파이프라인 활성 + 에러 → failures.log 기록
+# 3. Active pipeline + error → failures.log written
 TEST_DIR=$(setup_tmpdir)
 echo "hint-test" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(echo '{"tool_name":"Edit","error":"ENOENT: no such file"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-failure-hint.sh" 2>/dev/null); CODE=$?
@@ -355,7 +355,7 @@ echo ""
 echo "=== selfish-notify.sh ==="
 # ============================================================
 
-# 1. 알 수 없는 notification_type → exit 0
+# 1. Unknown notification_type → exit 0
 TEST_DIR=$(setup_tmpdir)
 set +e
 OUTPUT=$(echo '{"notification_type":"auth_success","message":"done"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-notify.sh" 2>/dev/null); CODE=$?
@@ -363,7 +363,7 @@ set -e
 assert_exit "unknown type → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. idle_prompt → exit 0 (알림 발송 시도, 실패해도 exit 0)
+# 2. idle_prompt → exit 0 (attempts notification, exit 0 even on failure)
 TEST_DIR=$(setup_tmpdir)
 set +e
 OUTPUT=$(echo '{"notification_type":"idle_prompt","message":"Task completed"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-notify.sh" 2>/dev/null); CODE=$?
@@ -377,7 +377,7 @@ echo ""
 echo "=== selfish-task-completed-gate.sh ==="
 # ============================================================
 
-# 1. 비활성 파이프라인 → exit 0
+# 1. Inactive pipeline → exit 0
 TEST_DIR=$(setup_tmpdir)
 set +e
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-task-completed-gate.sh" 2>/dev/null); CODE=$?
@@ -385,7 +385,7 @@ set -e
 assert_exit "inactive pipeline → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. spec phase → exit 0 (CI 불필요)
+# 2. spec phase → exit 0 (CI not required)
 TEST_DIR=$(setup_tmpdir)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 echo "spec" > "$TEST_DIR/.claude/.selfish-phase"
@@ -422,7 +422,7 @@ echo ""
 echo "=== selfish-subagent-stop.sh ==="
 # ============================================================
 
-# 1. 비활성 → exit 0, stdout 없음
+# 1. Inactive → exit 0, no stdout
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(echo '{"stop_hook_active":false,"agent_id":"a1","agent_type":"Explore"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-stop.sh" 2>/dev/null); CODE=$?
 assert_exit "inactive → exit 0" "0" "$CODE"
@@ -447,7 +447,7 @@ else
 fi
 cleanup_tmpdir "$TEST_DIR"
 
-# 3. 활성 + 정상 → log에 기록
+# 3. Active + normal → written to log
 TEST_DIR=$(setup_tmpdir)
 echo "subagent-stop-test" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(echo '{"stop_hook_active":false,"agent_id":"abc123","agent_type":"Explore","last_assistant_message":"Analysis complete"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-stop.sh" 2>/dev/null); CODE=$?
@@ -457,7 +457,7 @@ assert_file_contains "log has agent_id" "$TEST_DIR/.claude/.selfish-task-results
 assert_file_contains "log has agent_type" "$TEST_DIR/.claude/.selfish-task-results.log" "Explore"
 cleanup_tmpdir "$TEST_DIR"
 
-# 4. 활성 + 빈 메시지 → "no message" 기본값
+# 4. Active + empty message → "no message" default
 TEST_DIR=$(setup_tmpdir)
 echo "subagent-stop-test" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(echo '{"stop_hook_active":false,"agent_id":"def456","agent_type":"Task"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-subagent-stop.sh" 2>/dev/null); CODE=$?
@@ -471,14 +471,14 @@ echo ""
 echo "=== selfish-user-prompt-submit.sh ==="
 # ============================================================
 
-# 1. 비활성 파이프라인 → exit 0, stdout 없음
+# 1. Inactive pipeline → exit 0, no stdout
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(echo '' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-user-prompt-submit.sh" 2>/dev/null); CODE=$?
 assert_exit "inactive pipeline → exit 0" "0" "$CODE"
 assert_stdout_empty "inactive → no output" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 활성 파이프라인 + phase → Phase/Feature 출력
+# 2. Active pipeline + phase → outputs Phase/Feature
 TEST_DIR=$(setup_tmpdir)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
@@ -488,7 +488,7 @@ assert_stdout_contains "active → Pipeline: test-feature" "Pipeline: test-featu
 assert_stdout_contains "active → Phase: implement" "Phase: implement" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 3. 활성 파이프라인 + phase 파일 없음 → Phase: unknown
+# 3. Active pipeline + no phase file → Phase: unknown
 TEST_DIR=$(setup_tmpdir)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 OUTPUT=$(echo '' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-user-prompt-submit.sh" 2>/dev/null); CODE=$?
@@ -502,7 +502,7 @@ echo ""
 echo "=== selfish-permission-request.sh ==="
 # ============================================================
 
-# 1. 비활성 파이프라인 → exit 0, allow 없음
+# 1. Inactive pipeline → exit 0, no allow
 TEST_DIR=$(setup_tmpdir)
 OUTPUT=$(echo '{"tool_input":{"command":"npm test"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-permission-request.sh" 2>/dev/null); CODE=$?
 assert_exit "inactive pipeline → exit 0" "0" "$CODE"
@@ -527,7 +527,7 @@ assert_exit "implement + shellcheck → exit 0" "0" "$CODE"
 assert_stdout_contains "implement + shellcheck → allow" "allow" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 4. implement phase + 위험 명령 → allow 없음
+# 4. implement phase + dangerous command → no allow
 TEST_DIR=$(setup_tmpdir)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
@@ -536,7 +536,7 @@ assert_exit "implement + dangerous → exit 0" "0" "$CODE"
 assert_stdout_empty "implement + dangerous → no allow" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# 5. spec phase → allow 없음 (implement/review만 동작)
+# 5. spec phase → no allow (only implement/review phases apply)
 TEST_DIR=$(setup_tmpdir)
 echo "test-feature" > "$TEST_DIR/.claude/.selfish-active"
 echo "spec" > "$TEST_DIR/.claude/.selfish-phase"
@@ -551,7 +551,7 @@ echo ""
 echo "=== selfish-config-change.sh ==="
 # ============================================================
 
-# 1. 비활성 파이프라인 → exit 0
+# 1. Inactive pipeline → exit 0
 TEST_DIR=$(setup_tmpdir)
 set +e
 OUTPUT=$(echo '{"source":"user_settings","file_path":"/tmp/settings.json"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-config-change.sh" 2>/dev/null); CODE=$?
@@ -559,7 +559,7 @@ set -e
 assert_exit "inactive pipeline → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 활성 + policy_settings → exit 0 (로그만)
+# 2. Active + policy_settings → exit 0 (log only)
 TEST_DIR=$(setup_tmpdir)
 echo "config-test" > "$TEST_DIR/.claude/.selfish-active"
 set +e
@@ -570,7 +570,7 @@ assert_file_exists "audit log created (policy)" "$TEST_DIR/.claude/.selfish-conf
 assert_file_contains "audit log has policy_settings" "$TEST_DIR/.claude/.selfish-config-audit.log" "policy_settings"
 cleanup_tmpdir "$TEST_DIR"
 
-# 3. 활성 + user_settings → exit 2 (차단)
+# 3. Active + user_settings → exit 2 (blocked)
 TEST_DIR=$(setup_tmpdir)
 echo "config-test" > "$TEST_DIR/.claude/.selfish-active"
 set +e
@@ -587,7 +587,7 @@ echo ""
 echo "=== selfish-teammate-idle.sh ==="
 # ============================================================
 
-# 1. 비활성 파이프라인 → exit 0
+# 1. Inactive pipeline → exit 0
 TEST_DIR=$(setup_tmpdir)
 set +e
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-teammate-idle.sh" 2>/dev/null); CODE=$?
@@ -595,7 +595,7 @@ set -e
 assert_exit "inactive pipeline → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 2. 활성 + spec phase → exit 0 (idle 허용)
+# 2. Active + spec phase → exit 0 (idle allowed)
 TEST_DIR=$(setup_tmpdir)
 echo "teammate-test" > "$TEST_DIR/.claude/.selfish-active"
 echo "spec" > "$TEST_DIR/.claude/.selfish-phase"
@@ -605,7 +605,7 @@ set -e
 assert_exit "spec phase → exit 0" "0" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
-# 3. 활성 + implement phase → exit 2 (idle 차단)
+# 3. Active + implement phase → exit 2 (idle blocked)
 TEST_DIR=$(setup_tmpdir)
 echo "teammate-test" > "$TEST_DIR/.claude/.selfish-active"
 echo "implement" > "$TEST_DIR/.claude/.selfish-phase"
@@ -621,52 +621,52 @@ echo ""
 echo "=== agents/ + hooks.json type validation ==="
 # ============================================================
 
-# 1. agents/selfish-architect.md 존재
+# 1. agents/selfish-architect.md exists
 assert_file_exists "agents/selfish-architect.md exists" "$SCRIPT_DIR/agents/selfish-architect.md"
 
-# 2. agents/selfish-security.md 존재
+# 2. agents/selfish-security.md exists
 assert_file_exists "agents/selfish-security.md exists" "$SCRIPT_DIR/agents/selfish-security.md"
 
-# 3. selfish-architect.md에 memory: project 포함
+# 3. selfish-architect.md contains memory: project
 assert_file_contains "architect agent has memory: project" "$SCRIPT_DIR/agents/selfish-architect.md" "memory: project"
 
-# 4. selfish-security.md에 memory: project 포함
+# 4. selfish-security.md contains memory: project
 assert_file_contains "security agent has memory: project" "$SCRIPT_DIR/agents/selfish-security.md" "memory: project"
 
-# 5. hooks.json에 type: "prompt" 포함
+# 5. hooks.json contains type: "prompt"
 assert_file_contains "hooks.json has type prompt" "$SCRIPT_DIR/hooks/hooks.json" '"type": "prompt"'
 
-# 6. hooks.json에 type: "agent" 포함
+# 6. hooks.json contains type: "agent"
 assert_file_contains "hooks.json has type agent" "$SCRIPT_DIR/hooks/hooks.json" '"type": "agent"'
 
-# 7. commands/architect.md에 agent: selfish-architect 포함
+# 7. commands/architect.md contains agent: selfish-architect
 assert_file_contains "architect.md references selfish-architect agent" "$SCRIPT_DIR/commands/architect.md" "agent: selfish-architect"
 
-# 8. commands/security.md에 agent: selfish-security 포함
+# 8. commands/security.md contains agent: selfish-security
 assert_file_contains "security.md references selfish-security agent" "$SCRIPT_DIR/commands/security.md" "agent: selfish-security"
 
-# 9. plugin.json에 agents 필드 포함
+# 9. plugin.json contains agents field
 assert_file_contains "plugin.json has agents field" "$SCRIPT_DIR/.claude-plugin/plugin.json" '"agents"'
 
-# 10. hooks.json에 ConfigChange 이벤트 포함
+# 10. hooks.json contains ConfigChange event
 assert_file_contains "hooks.json has ConfigChange event" "$SCRIPT_DIR/hooks/hooks.json" '"ConfigChange"'
 
-# 11. hooks.json에 TeammateIdle 이벤트 포함
+# 11. hooks.json contains TeammateIdle event
 assert_file_contains "hooks.json has TeammateIdle event" "$SCRIPT_DIR/hooks/hooks.json" '"TeammateIdle"'
 
-# 12. selfish-security.md에 isolation: worktree 포함
+# 12. selfish-security.md contains isolation: worktree
 assert_file_contains "security agent has isolation: worktree" "$SCRIPT_DIR/agents/selfish-security.md" "isolation: worktree"
 
-# 13. selfish-architect.md에 skills 필드 포함
+# 13. selfish-architect.md contains skills field
 assert_file_contains "architect agent has skills field" "$SCRIPT_DIR/agents/selfish-architect.md" "skills:"
 
-# 14. selfish-security.md에 skills 필드 포함
+# 14. selfish-security.md contains skills field
 assert_file_contains "security agent has skills field" "$SCRIPT_DIR/agents/selfish-security.md" "skills:"
 
 echo ""
 
 # ============================================================
-# 결과 출력
+# Results output
 # ============================================================
 echo "=== Results: $PASS/$TOTAL passed, $FAIL failed ==="
 exit "$FAIL"

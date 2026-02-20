@@ -1,19 +1,19 @@
 #!/bin/bash
 set -euo pipefail
-# Notification Hook: 작업 완료 및 권한 승인 필요 시 OS 알림 발송
-# idle_prompt → 작업 완료 알림, permission_prompt → 권한 승인 요청 알림
+# Notification Hook: Send OS notifications on task completion and permission approval requests
+# idle_prompt -> task completion notification, permission_prompt -> permission approval request notification
 
 # shellcheck disable=SC2329
 cleanup() {
-  # 임시 자원 정리가 필요한 경우를 위한 placeholder
+  # Placeholder for temporary resource cleanup if needed
   :
 }
 trap cleanup EXIT
 
-# stdin에서 JSON 읽기
+# Read JSON from stdin
 INPUT=$(cat)
 
-# notification_type, message 파싱: jq 우선, grep/sed 폴백
+# Parse notification_type, message: jq preferred, grep/sed fallback
 NOTIFICATION_TYPE=""
 MESSAGE=""
 if command -v jq &>/dev/null; then
@@ -26,21 +26,21 @@ else
     | sed 's/.*:[[:space:]]*"//;s/"$//' || true)
 fi
 
-# notification_type에 따라 제목 설정
+# Set title based on notification_type
 case "$NOTIFICATION_TYPE" in
   idle_prompt)
-    TITLE="Claude 작업 완료"
+    TITLE="Claude Task Complete"
     ;;
   permission_prompt)
-    TITLE="권한 승인 필요"
+    TITLE="Permission Approval Required"
     ;;
   *)
     exit 0
     ;;
 esac
 
-# 플랫폼 감지 후 알림 발송 (hooks.json의 async: true로 비차단)
-# 메시지 sanitize (AppleScript/shell 인젝션 방지)
+# Detect platform and send notification (non-blocking via async: true in hooks.json)
+# Sanitize message (prevent AppleScript/shell injection)
 SAFE_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/[\"\\]/\\&/g' | head -1 | cut -c1-200)
 SAFE_TITLE=$(printf '%s' "$TITLE" | sed 's/[\"\\]/\\&/g')
 
