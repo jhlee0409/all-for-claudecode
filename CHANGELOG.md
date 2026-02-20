@@ -5,91 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.0] - 2026-02-20
-
-### Added
-- ConfigChange hook — settings file change audit/block during active pipeline
-- TeammateIdle hook — prevents Agent Teams teammate idle during implement/review phases
-- `isolation: worktree` for selfish-security agent (isolated git worktree execution)
-- `skills` field for both agents (pre-loads critic-loop-rules and phase-gate-protocol)
-- 15 new test assertions for ConfigChange, TeammateIdle, and agent frontmatter fields
-
-### Changed
-- package.json version 1.4.0 → 1.5.0
-- plugin.json and marketplace.json version sync to 1.5.0
-- Hook coverage expanded from 13 to 15 events (ConfigChange + TeammateIdle)
-- Agent frontmatter enhanced with isolation and skills fields
-
-## [1.4.0] - 2026-02-20
-
-### Added
-- agents/ directory with persistent memory subagents (selfish-architect, selfish-security)
-- `memory: project` for architect and security agents — learnings persist across sessions
-- `type: "prompt"` hook handler on TaskCompleted — LLM-based acceptance criteria verification
-- `type: "agent"` hook handler on Stop — code completeness verification with file access
-- plugin.json `agents` field for agent auto-discovery
-- 9 new test assertions for agents and hook handler types
-
-### Changed
-- package.json version 1.3.0 → 1.4.0
-- plugin.json and marketplace.json version sync to 1.4.0
-- commands/architect.md agent field: `Plan` → `selfish-architect` (custom agent with memory)
-- commands/security.md agent field: `Explore` → `selfish-security` (custom agent with memory)
-- Hook handler types expanded: command only → command + prompt + agent (3 types)
-
-## [1.3.0] - 2026-02-20
-
-### Added
-- Model routing for all 16 commands (haiku for simple tasks, sonnet for design/analysis)
-- docs/ shared reference files (critic-loop-rules.md, phase-gate-protocol.md)
-- .claude/rules/ path-specific rules (shell-scripts.md, commands.md)
-- UserPromptSubmit hook — pipeline Phase/Feature context injection per prompt
-- PermissionRequest hook — auto-allow CI commands during implement/review
-- 16 new test assertions for UserPromptSubmit and PermissionRequest hooks
-
-### Changed
-- package.json version 1.2.0 → 1.3.0
-- plugin.json and marketplace.json version sync to 1.3.0
-- auto-format and notify hooks converted to async (async: true in hooks.json)
-- Removed disown workaround from auto-format and notify scripts
-- auto.md and implement.md prompt reduction (~91 lines) via docs/ references
-- architect.md model routing changed from haiku to sonnet
-- Hook coverage expanded from 11/14 to 13/14 events (93%)
-
-## [1.2.0] - 2026-02-20
-
-### Added
-- TaskCompleted hook — CI gate on task completion (blocks task completion if CI not passed)
-- SubagentStop hook — tracks subagent completion/failure in pipeline log
-- 14 new test assertions for TaskCompleted and SubagentStop hooks
-
-### Changed
-- package.json version 1.1.0 → 1.2.0
-- plugin.json and marketplace.json version sync to 1.2.0
-- Hook coverage expanded from 9/14 to 11/14 events (79%)
-
 ## [1.1.0] - 2026-02-20
 
 ### Added
 - Skills frontmatter for all 16 commands (name, description, argument-hint, allowed-tools, model)
-- PreToolUse Bash guard hook — blocks dangerous commands during pipeline (push --force, reset --hard, etc.)
+- Model routing for all 16 commands (haiku for simple tasks, sonnet for design/analysis)
+- docs/ shared reference files (critic-loop-rules.md, phase-gate-protocol.md)
+- .claude/rules/ path-specific rules (shell-scripts.md, commands.md)
+- agents/ directory with persistent memory subagents (selfish-architect, selfish-security)
+- `memory: project` for architect and security agents — learnings persist across sessions
+- `isolation: worktree` for selfish-security agent (isolated git worktree execution)
+- `skills` field for both agents (pre-loads critic-loop-rules and phase-gate-protocol)
+- PreToolUse Bash guard hook — blocks dangerous commands during pipeline
 - SubagentStart context injection — injects pipeline state into subagents
+- PostToolUse auto-format hook — background formatting after Edit/Write (async)
+- SessionEnd hook — warns on unfinished pipeline at session close
+- PostToolUseFailure hook — provides diagnostic hints for known error patterns
+- Notification hook — desktop alerts for idle_prompt and permission_prompt (async)
+- TaskCompleted hook — CI gate (command) + LLM acceptance criteria verification (prompt)
+- SubagentStop hook — tracks subagent completion/failure in pipeline log
+- UserPromptSubmit hook — pipeline Phase/Feature context injection per prompt
+- PermissionRequest hook — auto-allow CI commands during implement/review
+- ConfigChange hook — settings file change audit/block during active pipeline
+- TeammateIdle hook — prevents Agent Teams teammate idle during implement/review phases
+- Stop hook enhanced with agent handler for code completeness verification
 - Dynamic config injection via `!`command`` syntax in command prompts
 - `context: fork` for read-only commands (analyze, architect, security)
 - Invocation control: `user-invocable: false` (3 commands), `disable-model-invocation: true` (6 commands)
-- PostToolUse auto-format hook — background formatting after Edit/Write (prettier, black, gofmt, rustfmt)
 - 3 preset templates: react-spa, express-api, monorepo
-- SessionEnd hook — warns on unfinished pipeline at session close
-- PostToolUseFailure hook — provides diagnostic hints for known error patterns
-- Notification hook — desktop alerts for idle_prompt and permission_prompt (macOS/Linux)
-- Hook script test framework (tests/test-hooks.sh) with 46 scenarios
-- README.md documentation
-- CHANGELOG.md
+- Hook script test framework (tests/test-hooks.sh) with 101 assertions
+- 3 hook handler types: command (shell), prompt (LLM single-turn), agent (subagent with tools)
+- plugin.json `agents` field for agent auto-discovery
+- README.md, CHANGELOG.md documentation
 
 ### Changed
 - package.json version 1.0.0 → 1.1.0
 - plugin.json and marketplace.json version sync to 1.1.0
-- Hook coverage expanded from 3/14 to 9/14 events (64%)
+- Hook coverage expanded from 3 to 15 events (100%)
+- auto-format and notify hooks converted to async
+- auto.md and implement.md prompt reduction via docs/ references
+- commands/architect.md and security.md use custom agents with persistent memory
 
 ## [1.0.0] - 2026-02-19
 
