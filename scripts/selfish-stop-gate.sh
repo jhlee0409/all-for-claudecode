@@ -33,6 +33,10 @@ fi
 STOP_HOOK_ACTIVE=""
 if command -v jq &>/dev/null; then
   STOP_HOOK_ACTIVE=$(printf '%s\n' "$INPUT" | jq -r '.stop_hook_active // empty' 2>/dev/null || true)
+else
+  if printf '%s\n' "$INPUT" | grep -q '"stop_hook_active"[[:space:]]*:[[:space:]]*true' 2>/dev/null; then
+    STOP_HOOK_ACTIVE="true"
+  fi
 fi
 if [ "$STOP_HOOK_ACTIVE" = "true" ]; then
   exit 0

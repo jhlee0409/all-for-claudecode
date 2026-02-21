@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.claude/rules/development.md` general development rules
 - Hook script test framework (tests/test-hooks.sh) with 118 assertions
 - 3 hook handler types: command (shell), prompt (LLM single-turn), agent (subagent with tools)
-- plugin.json `agents` field for agent auto-discovery
+- Agents auto-discovery via `agents/` directory
 - README.md, CHANGELOG.md documentation
 
 ### Changed
