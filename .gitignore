@@ -11,5 +11,7 @@ specs/
 
 # Project-local config and runtime logs
 .claude/selfish.config.md
-.selfish-failures.log
 memory/
+
+# IDE / tool artifacts
+firebase-debug.log

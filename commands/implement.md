@@ -2,16 +2,6 @@
 name: selfish:implement
 description: "Execute code implementation"
 argument-hint: "[task ID or phase specification]"
-hooks:
-  PostToolUse:
-    - matcher: "Edit|Write"
-      hooks:
-        - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-selfish-changes.sh"
-  Stop:
-    - hooks:
-        - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-stop-gate.sh"
 ---
 
 # /selfish:implement — Execute Code Implementation

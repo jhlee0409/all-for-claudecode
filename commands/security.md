@@ -107,7 +107,7 @@ Task("Security scan: src/shared/api/", subagent_type: general-purpose)
 - **Mitigation**: {how to fix}
 
 ### Dependency Audit
-{{config.auditCmd} result summary — if executable}
+{config.auditCmd} result summary — if executable
 
 ### Recommended Actions
 {prioritized fix suggestions}

@@ -47,7 +47,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
 | Config file exists | Read `.claude/selfish.config.md` | File exists | Fix: run `/selfish:init` |
-| Required sections present | Grep for `## ci`, `## gate`, `## architecture`, `## code_style` | All 4 sections found | Fix: add missing section to `.claude/selfish.config.md` or re-run `/selfish:init` |
+| Required sections present | Grep for `## CI Commands`, `## Phase Gate`, `## Architecture`, `## Code Style` | All 4 sections found | Fix: add missing section to `.claude/selfish.config.md` or re-run `/selfish:init` |
 | CI command runnable | Extract CI command from config, run it | Exits 0 | ⚠ Warning: CI command failed. Check `{config.ci}` in selfish.config.md |
 | Gate command runnable | Extract gate command from config, run it | Exits 0 | ⚠ Warning: gate command failed. Check `{config.gate}` in selfish.config.md |
 

@@ -91,6 +91,7 @@ case "$COMMAND" in
     fi
 
     rm -f "$PIPELINE_FLAG" "$PHASE_FLAG" "$CI_FLAG" "$CHANGES_LOG"
+    rm -f "$FLAG_DIR/.selfish-failures.log" "$FLAG_DIR/.selfish-task-results.log" "$FLAG_DIR/.selfish-config-audit.log"
 
     # Clean up safety tag (on successful completion)
     if cd "$PROJECT_DIR" 2>/dev/null; then

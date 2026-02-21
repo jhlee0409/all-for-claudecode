@@ -2,16 +2,6 @@
 name: selfish:auto
 description: "Full auto pipeline"
 argument-hint: "[feature description in natural language]"
-hooks:
-  PostToolUse:
-    - matcher: "Edit|Write"
-      hooks:
-        - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-selfish-changes.sh"
-  Stop:
-    - hooks:
-        - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-stop-gate.sh"
 ---
 
 # /selfish:auto — Full Auto Pipeline
