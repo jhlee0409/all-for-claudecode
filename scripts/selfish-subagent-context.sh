@@ -27,7 +27,7 @@ FEATURE=$(cat "$PIPELINE_FLAG" 2>/dev/null || echo "unknown")
 PHASE=$(cat "$PROJECT_DIR/.claude/.selfish-phase" 2>/dev/null || echo "unknown")
 
 # 3. Output pipeline status
-echo "[SELFISH PIPELINE] Feature: $FEATURE | Phase: $PHASE"
+printf '%s\n' "[SELFISH PIPELINE] Feature: $FEATURE | Phase: $PHASE"
 
 # 4. Extract config sections from selfish.config.md
 CONFIG_FILE="$PROJECT_DIR/.claude/selfish.config.md"
@@ -37,14 +37,14 @@ if [ -f "$CONFIG_FILE" ]; then
   # shellcheck disable=SC2001
   ARCH=$(sed -n '/^## Architecture/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -5 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
   if [ -n "$ARCH" ]; then
-    echo "[CONFIG] Architecture: $ARCH"
+    printf '%s\n' "[CONFIG] Architecture: $ARCH"
   fi
 
   # Extract Code Style section (## Code Style to next ##)
   # shellcheck disable=SC2001
   STYLE=$(sed -n '/^## Code Style/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -5 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
   if [ -n "$STYLE" ]; then
-    echo "[CONFIG] Code Style: $STYLE"
+    printf '%s\n' "[CONFIG] Code Style: $STYLE"
   fi
 fi
 

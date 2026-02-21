@@ -31,7 +31,7 @@ ERROR="${ERROR:-}"
 # If pipeline is active, log failure (normalize error message to single line)
 if [ -f "$PIPELINE_FLAG" ] && [ -n "$ERROR" ]; then
   ERROR_ONELINE=$(echo "$ERROR" | head -1 | cut -c1-200)
-  echo "$(date +%s) $TOOL_NAME: $ERROR_ONELINE" >> "$FAILURES_LOG"
+  printf '%s\n' "$(date +%s) $TOOL_NAME: $ERROR_ONELINE" >> "$FAILURES_LOG"
 fi
 
 # Error pattern matching

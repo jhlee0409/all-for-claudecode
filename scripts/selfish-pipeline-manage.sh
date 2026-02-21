@@ -48,8 +48,8 @@ case "$COMMAND" in
       exit 1
     fi
 
-    echo "$FEATURE" > "$PIPELINE_FLAG"
-    echo "spec" > "$PHASE_FLAG"
+    printf '%s\n' "$FEATURE" > "$PIPELINE_FLAG"
+    printf '%s\n' "spec" > "$PHASE_FLAG"
     rm -f "$CI_FLAG" "$CHANGES_LOG"
 
     # Safety snapshot
@@ -64,7 +64,7 @@ case "$COMMAND" in
     PHASE="${2:?Phase name required}"
     case "$PHASE" in
       spec|plan|tasks|implement|review|clean)
-        echo "$PHASE" > "$PHASE_FLAG"
+        printf '%s\n' "$PHASE" > "$PHASE_FLAG"
         rm -f "$CI_FLAG"  # Reset CI for new Phase
         echo "Phase: $PHASE"
         ;;

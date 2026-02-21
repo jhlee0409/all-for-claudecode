@@ -11,6 +11,7 @@ allowed-tools:
   - Glob
   - Bash
   - Task
+  - WebSearch
 model: sonnet
 ---
 

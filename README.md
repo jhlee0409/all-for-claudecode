@@ -4,9 +4,9 @@
 
 [![npm version](https://img.shields.io/npm/v/selfish-pipeline)](https://www.npmjs.com/package/selfish-pipeline)
 [![license](https://img.shields.io/github/license/jhlee0409/selfish-pipeline)](./LICENSE)
-[![test](https://img.shields.io/badge/tests-101%20passed-brightgreen)]()
-[![hooks](https://img.shields.io/badge/hooks-15%20events-blue)]()
-[![commands](https://img.shields.io/badge/commands-18-orange)]()
+[![test](https://img.shields.io/badge/tests-101%20passed-brightgreen)](#testing)
+[![hooks](https://img.shields.io/badge/hooks-15%20events-blue)](#15-hook-events)
+[![commands](https://img.shields.io/badge/commands-18-orange)](#18-slash-commands)
 
 > Zero-dependency automation pipeline for Claude Code. One command (`/selfish:auto`) runs the entire cycle: write specs, design plans, break into tasks, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
 

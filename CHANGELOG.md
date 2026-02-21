@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-02-20
 
 ### Added
-- Skills frontmatter for all 16 commands (name, description, argument-hint, allowed-tools, model)
-- Model routing for all 16 commands (haiku for simple tasks, sonnet for design/analysis)
+- Skills frontmatter for all 18 commands (name, description, argument-hint, allowed-tools, model)
+- Model routing for all 18 commands (haiku for simple tasks, sonnet for design/analysis)
 - docs/ shared reference files (critic-loop-rules.md, phase-gate-protocol.md)
 - .claude/rules/ path-specific rules (shell-scripts.md, commands.md)
 - agents/ directory with persistent memory subagents (selfish-architect, selfish-security)
@@ -31,8 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop hook enhanced with agent handler for code completeness verification
 - Dynamic config injection via `!`command`` syntax in command prompts
 - `context: fork` for read-only commands (analyze, architect, security)
-- Invocation control: `user-invocable: false` (3 commands), `disable-model-invocation: true` (6 commands)
+- Invocation control: `user-invocable: false` (3 commands), `disable-model-invocation: true` (7 commands)
+- `/selfish:doctor` project health diagnosis command
+- `/selfish:test` test generation command
 - 3 preset templates: react-spa, express-api, monorepo
+- `.claude/rules/development.md` general development rules
 - Hook script test framework (tests/test-hooks.sh) with 101 assertions
 - 3 hook handler types: command (shell), prompt (LLM single-turn), agent (subagent with tools)
 - plugin.json `agents` field for agent auto-discovery
@@ -51,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release
 - Full Auto pipeline: spec → plan → tasks → implement → review → clean
-- 16 slash commands for complete development cycle automation
+- 16 initial slash commands for complete development cycle automation
 - Critic Loop quality verification at each pipeline phase
 - SessionStart hook for pipeline state restoration
 - PreCompact hook for automatic checkpointing before context compression

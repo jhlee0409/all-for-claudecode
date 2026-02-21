@@ -243,43 +243,70 @@ Create `templates/selfish.config.{name}.md` following the structure:
 ```markdown
 # Selfish Configuration
 
-## Project
-- name: {project-name}
-- type: {type}
-- language: TypeScript
+> This file defines project-specific settings for the selfish command system.
 
 ## CI Commands
-\`\`\`bash
-npm run typecheck && npm run lint && npm test
-\`\`\`
 
-## Phase Gate
-\`\`\`bash
-npm run typecheck && npm run lint
-\`\`\`
-
-## Lint
-\`\`\`bash
-npm run lint
+\`\`\`yaml
+ci: "npm run ci"
+typecheck: "npm run typecheck"
+lint: "npm run lint"
+lint_fix: "npm run lint:fix"
+gate: "npm run typecheck && npm run lint"
+test: "npm test"
 \`\`\`
 
 ## Architecture
-{Architecture description, layer rules, import direction rules}
+
+\`\`\`yaml
+style: "Layered"
+layers: []
+import_rule: ""
+segments: []
+path_alias: ""
+\`\`\`
 
 ## Framework
-{Framework-specific characteristics}
+
+\`\`\`yaml
+name: ""
+runtime: ""
+server_client_boundary: false
+\`\`\`
 
 ## Code Style
-{Code style rules, naming conventions}
+
+\`\`\`yaml
+language: "TypeScript"
+strict_mode: true
+\`\`\`
 
 ## State Management
-{State management patterns}
 
-## Risks
-{Project-specific risk patterns}
+\`\`\`yaml
+global_state: ""
+server_state: ""
+\`\`\`
 
-## Mini-Review
-{Checklist items for mini-review}
+## Styling
+
+\`\`\`yaml
+framework: ""
+\`\`\`
+
+## Testing
+
+\`\`\`yaml
+framework: ""
+\`\`\`
+
+## Project-Specific Risks
+
+1. (risk pattern)
+
+## Mini-Review Checklist
+
+1. (checklist item)
 ```
 
 ### Step 2: Register in init.md
@@ -484,6 +511,7 @@ Every new script in `scripts/` must have:
 
 - `commands.md` — Rules for writing command files (frontmatter requirements)
 - `shell-scripts.md` — Rules for writing shell scripts (conventions)
+- `development.md` — General development rules (testing, version sync, etc.)
 - These are auto-loaded by Claude Code and enforced during development
 
 ---

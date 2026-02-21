@@ -91,6 +91,8 @@ Structure analysis results and **print to console**:
 
 ### 4. Critic Loop (3 iterations)
 
+> **Always** read `docs/critic-loop-rules.md` first and follow it.
+
 | Criterion | Validation |
 |-----------|------------|
 | **FEASIBILITY** | Is the suggestion achievable in the current codebase? |
