@@ -17,12 +17,12 @@ INPUT=$(cat)
 NOTIFICATION_TYPE=""
 MESSAGE=""
 if command -v jq &>/dev/null; then
-  NOTIFICATION_TYPE=$(echo "$INPUT" | jq -r '.notification_type // empty' 2>/dev/null || true)
-  MESSAGE=$(echo "$INPUT" | jq -r '.message // empty' 2>/dev/null || true)
+  NOTIFICATION_TYPE=$(printf '%s\n' "$INPUT" | jq -r '.notification_type // empty' 2>/dev/null || true)
+  MESSAGE=$(printf '%s\n' "$INPUT" | jq -r '.message // empty' 2>/dev/null || true)
 else
-  NOTIFICATION_TYPE=$(echo "$INPUT" | grep -o '"notification_type"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null \
+  NOTIFICATION_TYPE=$(printf '%s\n' "$INPUT" | grep -o '"notification_type"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null \
     | sed 's/.*:[[:space:]]*"//;s/"$//' || true)
-  MESSAGE=$(echo "$INPUT" | grep -o '"message"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null \
+  MESSAGE=$(printf '%s\n' "$INPUT" | grep -o '"message"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null \
     | sed 's/.*:[[:space:]]*"//;s/"$//' || true)
 fi
 

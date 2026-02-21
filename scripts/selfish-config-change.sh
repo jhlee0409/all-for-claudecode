@@ -29,7 +29,7 @@ fi
 # Parse source (jq preferred, grep/sed fallback)
 SOURCE=""
 if command -v jq >/dev/null 2>&1; then
-  SOURCE=$(printf '%s\n' "$INPUT" | jq -r '.source // empty' 2>/dev/null)
+  SOURCE=$(printf '%s\n' "$INPUT" | jq -r '.source // empty' 2>/dev/null || true)
 else
   SOURCE=$(printf '%s\n' "$INPUT" | grep -o '"source"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
 fi
@@ -38,7 +38,7 @@ SOURCE=$(printf '%s' "$SOURCE" | head -1 | tr -d '\n\r' | cut -c1-500)
 # Parse file_path (jq preferred, grep/sed fallback)
 FILE_PATH=""
 if command -v jq >/dev/null 2>&1; then
-  FILE_PATH=$(printf '%s\n' "$INPUT" | jq -r '.file_path // empty' 2>/dev/null)
+  FILE_PATH=$(printf '%s\n' "$INPUT" | jq -r '.file_path // empty' 2>/dev/null || true)
 else
   FILE_PATH=$(printf '%s\n' "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
 fi

@@ -18,11 +18,11 @@ INPUT=$(cat)
 
 # Extract tool_name
 if command -v jq &> /dev/null; then
-  TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
-  ERROR=$(echo "$INPUT" | jq -r '.error // empty' 2>/dev/null)
+  TOOL_NAME=$(printf '%s\n' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null || true)
+  ERROR=$(printf '%s\n' "$INPUT" | jq -r '.error // empty' 2>/dev/null || true)
 else
-  TOOL_NAME=$(echo "$INPUT" | grep -o '"tool_name"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
-  ERROR=$(echo "$INPUT" | grep -o '"error"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
+  TOOL_NAME=$(printf '%s\n' "$INPUT" | grep -o '"tool_name"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
+  ERROR=$(printf '%s\n' "$INPUT" | grep -o '"error"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
 fi
 
 TOOL_NAME="${TOOL_NAME:-unknown}"

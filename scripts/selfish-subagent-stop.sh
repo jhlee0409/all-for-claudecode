@@ -19,7 +19,7 @@ INPUT=$(cat)
 
 # Parse stop_hook_active (prevent infinite loop -- CRITICAL)
 if command -v jq >/dev/null 2>&1; then
-  STOP_HOOK_ACTIVE=$(printf '%s\n' "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)
+  STOP_HOOK_ACTIVE=$(printf '%s\n' "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null || true)
 else
   if printf '%s\n' "$INPUT" | grep -q '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
     STOP_HOOK_ACTIVE="true"
@@ -40,9 +40,9 @@ fi
 
 # Parse subagent info (jq fallback: grep does not support escaped quotes -- accepted limitation)
 if command -v jq >/dev/null 2>&1; then
-  AGENT_ID=$(printf '%s\n' "$INPUT" | jq -r '.agent_id // "unknown"' 2>/dev/null)
-  AGENT_TYPE=$(printf '%s\n' "$INPUT" | jq -r '.agent_type // "unknown"' 2>/dev/null)
-  LAST_MSG=$(printf '%s\n' "$INPUT" | jq -r '.last_assistant_message // "no message"' 2>/dev/null)
+  AGENT_ID=$(printf '%s\n' "$INPUT" | jq -r '.agent_id // "unknown"' 2>/dev/null || true)
+  AGENT_TYPE=$(printf '%s\n' "$INPUT" | jq -r '.agent_type // "unknown"' 2>/dev/null || true)
+  LAST_MSG=$(printf '%s\n' "$INPUT" | jq -r '.last_assistant_message // "no message"' 2>/dev/null || true)
 else
   AGENT_ID=$(printf '%s\n' "$INPUT" | grep -o '"agent_id"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' || echo "unknown")
   AGENT_TYPE=$(printf '%s\n' "$INPUT" | grep -o '"agent_type"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' || echo "unknown")

@@ -28,9 +28,9 @@ INPUT=$(cat)
 # Parse reason: jq preferred, grep/sed fallback
 REASON=""
 if command -v jq &>/dev/null; then
-  REASON=$(echo "$INPUT" | jq -r '.reason // empty' 2>/dev/null || true)
+  REASON=$(printf '%s\n' "$INPUT" | jq -r '.reason // empty' 2>/dev/null || true)
 else
-  REASON=$(echo "$INPUT" | grep -o '"reason"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null \
+  REASON=$(printf '%s\n' "$INPUT" | grep -o '"reason"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null \
     | sed 's/.*:[[:space:]]*"//;s/"$//' || true)
 fi
 
