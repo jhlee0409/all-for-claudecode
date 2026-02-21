@@ -15,15 +15,15 @@ trap cleanup EXIT
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="${PROJECT_DIR}/.claude/.selfish-active"
 
+# Consume stdin early (required -- pipe breaks if not consumed)
+INPUT=$(cat)
+
 # If pipeline is not active -> exit silently
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
 fi
 
 FEATURE=$(head -1 "$PIPELINE_FLAG" | tr -d '\n\r')
-
-# Read JSON from stdin
-INPUT=$(cat)
 
 # Parse reason: jq preferred, grep/sed fallback
 REASON=""

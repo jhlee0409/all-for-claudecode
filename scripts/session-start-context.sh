@@ -17,6 +17,10 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+
+# Consume stdin (required -- pipe breaks if not consumed)
+cat > /dev/null
+
 # Dynamically derive auto-memory directory from project path
 PROJECT_PATH=$(cd "$PROJECT_DIR" 2>/dev/null && pwd || echo "$PROJECT_DIR")
 ENCODED_PATH="${PROJECT_PATH//\//-}"

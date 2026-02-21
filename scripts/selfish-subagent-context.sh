@@ -15,6 +15,9 @@ trap cleanup EXIT
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
 
+# Consume stdin (required -- pipe breaks if not consumed)
+cat > /dev/null
+
 # Exit silently if pipeline is inactive
 if [ ! -f "$PIPELINE_FLAG" ]; then
   exit 0
