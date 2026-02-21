@@ -15,8 +15,8 @@ Every command must have YAML frontmatter with:
 
 ## Model Assignment
 Every command should have a `model:` field:
-- `haiku` — mechanical/simple tasks (init, principles, analyze, checkpoint, resume)
-- `sonnet` — design/analysis tasks (spec, plan, tasks, clarify, review, research, debug, architect, security)
+- `haiku` — mechanical/simple tasks (init, doctor, principles, analyze, checkpoint, resume)
+- `sonnet` — design/analysis tasks (spec, plan, tasks, clarify, review, research, debug, test, architect, security)
 - Omit for orchestrators (auto, implement) to inherit parent model
 
 ## Invocation Control

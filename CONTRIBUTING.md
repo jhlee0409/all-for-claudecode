@@ -20,8 +20,8 @@ bin/        ESM CLI installer
 
 | I want to... | Primary file(s) | Also update |
 |---------------|-----------------|-------------|
-| Add a new slash command | `commands/{name}.md` | CLAUDE.md (command count), `tests/test-hooks.sh` if hooks involved |
-| Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | CLAUDE.md (hook count), `tests/test-hooks.sh` |
+| Add a new slash command | `commands/{name}.md` | CLAUDE.md (command count), README.md (badge + table), `tests/test-hooks.sh` if hooks involved |
+| Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | CLAUDE.md (hook count), README.md (badge + table), `tests/test-hooks.sh` |
 | Add a new project template | `templates/selfish.config.{name}.md` | `commands/init.md` (template list) |
 | Add a new agent | `agents/{name}.md` | CLAUDE.md (agent count) |
 | Modify pipeline flow | `commands/auto.md` | Related phase commands, `docs/phase-gate-protocol.md` |
