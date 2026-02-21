@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-02-21
+
+### Fixed
+- PreToolUse hook migrated to `hookSpecificOutput.permissionDecision` format (deprecated top-level `decision` removed)
+- SubagentStart hook outputs `hookSpecificOutput` JSON instead of plain text (context injection now works)
+- All 17 hook scripts consume stdin to prevent pipe breaks
+- All jq calls wrapped with `|| true` to prevent crash under `pipefail`
+- All `echo` with external data replaced with `printf '%s\n'` (flag interpretation safety)
+- All flag file reads use `head -1 | tr -d '\n\r'` (multi-line safety)
+- Stop gate: `stop_hook_active` check with grep/sed fallback for jq-less environments
+- Pipeline manage: feature name sanitization (newline, path traversal, length limit)
+- Permission request: redirect operators (`>`, `<`) added to chaining filter
+- Task completed gate: stdin consumption + stale CI detection safety
+- Notification hook: `$` and backtick escaping to prevent command injection via AppleScript
+- Failure hint hook: jq output `|| true` + echo→printf for external data
+- Session end hook: stdin consumed before early exit path
+- Config change hook: consistent exit code preservation in cleanup trap
+
+### Changed
+- Test suite expanded from 101 to 118 assertions (17 new edge case tests)
+- CLAUDE.md updated: PreToolUse protocol docs, command counts, test count
+- CONTRIBUTING.md updated: hook protocol table, script template, quick reference
+- README.md: test badge anchor fix, badge count update
+- `.claude/rules/commands.md`: model assignment lists updated (doctor, test added)
+- Version sync now includes `commands/init.md` SELFISH block (4-file sync)
+
 ## [1.1.0] - 2026-02-20
 
 ### Added

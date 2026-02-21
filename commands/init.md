@@ -162,7 +162,7 @@ If legacy block (`## Selfish Auto-Trigger Rules` etc.) exists, remove it then ap
 
 ```markdown
 <!-- SELFISH:START -->
-<!-- SELFISH:VERSION:1.1.0 -->
+<!-- SELFISH:VERSION:1.1.1 -->
 <selfish-pipeline>
 IMPORTANT: For requests matching the selfish skill routing table below, always invoke the corresponding skill via the Skill tool. Do not substitute with other agents or tools.
 
