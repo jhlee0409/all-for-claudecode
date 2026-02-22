@@ -8,7 +8,7 @@ model: sonnet
 # /selfish:tasks — Task Decomposition
 
 > Generates an executable task list (tasks.md) based on plan.md.
-> Validates coverage with 1 Critic Loop iteration.
+> Validates coverage with convergence-based Critic Loop.
 
 ## Arguments
 
@@ -78,18 +78,30 @@ Decompose tasks per Phase defined in plan.md.
 6. **Test tasks**: Include a verification task for each testable unit
 7. **Phase gate**: Add a `{config.gate}` validation task at the end of each Phase
 
-### 3. Critic Loop (1 pass)
+### 3. Retrospective Check
+
+If `memory/retrospectives/` directory exists, load retrospective files and check:
+- Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
+- Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
+
+### 4. Critic Loop
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
+
+Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
 | **COVERAGE** | Are all files in plan.md's File Change Map included in tasks? Are all FR-* in spec.md covered? |
 | **DEPENDENCIES** | Is the dependency graph a valid DAG? Do [P] tasks within the same phase have no file overlaps? Are all `depends:` targets valid task IDs? For physical validation of [P] file overlaps, reference the validation script: `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-parallel-validate.sh"` can be called with the tasks.md path to verify no conflicts exist. |
 
-On FAIL: add missing items and re-check.
+**On FAIL**: auto-fix and continue to next pass.
+**On ESCALATE**: pause, present options to user, apply choice, resume.
+**On DEFER**: record reason, mark criterion clean, continue.
+**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
-### 4. Coverage Mapping
+### 5. Coverage Mapping
 
 ```markdown
 ## Coverage Mapping
@@ -102,7 +114,7 @@ On FAIL: add missing items and re-check.
 
 Every FR-*/NFR-* must be mapped to at least one task.
 
-### 5. Final Output
+### 6. Final Output
 
 Save to `specs/{feature}/tasks.md`, then:
 
@@ -112,7 +124,7 @@ Tasks generated
 ├─ Tasks: {total count} ({[P] count} parallelizable)
 ├─ Phases: {phase count}
 ├─ Coverage: FR {coverage}%, NFR {coverage}%
-├─ Critic: 1 iteration complete
+├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 └─ Next step: /selfish:analyze (optional) or /selfish:implement
 ```
 

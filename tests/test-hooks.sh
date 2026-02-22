@@ -119,6 +119,30 @@ assert_exit "empty stdin → exit 0" "0" "$CODE"
 assert_stdout_contains "empty stdin → allow" '"permissionDecision":"allow"' "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
+# 6. push --force → updatedInput contains safe alternative
+TEST_DIR=$(setup_tmpdir)
+echo "bash-guard-test" > "$TEST_DIR/.claude/.selfish-active"
+OUTPUT=$(echo '{"tool_input":{"command":"git push --force"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-bash-guard.sh" 2>/dev/null); CODE=$?
+assert_stdout_contains "push --force → updatedInput" '"updatedInput"' "$OUTPUT"
+assert_stdout_contains "push --force → safe alternative" '"command":"git push"' "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 7. reset --hard → updatedInput contains git stash
+TEST_DIR=$(setup_tmpdir)
+echo "bash-guard-test" > "$TEST_DIR/.claude/.selfish-active"
+OUTPUT=$(echo '{"tool_input":{"command":"git reset --hard HEAD"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-bash-guard.sh" 2>/dev/null); CODE=$?
+assert_stdout_contains "reset --hard → updatedInput" '"updatedInput"' "$OUTPUT"
+assert_stdout_contains "reset --hard → safe alternative" '"command":"git stash"' "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 8. clean -f → updatedInput contains git clean -n
+TEST_DIR=$(setup_tmpdir)
+echo "bash-guard-test" > "$TEST_DIR/.claude/.selfish-active"
+OUTPUT=$(echo '{"tool_input":{"command":"git clean -f"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-bash-guard.sh" 2>/dev/null); CODE=$?
+assert_stdout_contains "clean -f → updatedInput" '"updatedInput"' "$OUTPUT"
+assert_stdout_contains "clean -f → safe alternative" '"command":"git clean -n"' "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
 echo ""
 
 # ============================================================

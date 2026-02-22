@@ -8,7 +8,7 @@ model: sonnet
 # /selfish:debug — Bug Diagnosis and Fix
 
 > Analyzes the root cause of a bug and fixes it.
-> Validates the safety and accuracy of the fix with 2 Critic Loop passes.
+> Validates the safety and accuracy of the fix with convergence-based Critic Loop.
 
 ## Arguments
 
@@ -59,18 +59,22 @@ Verify starting from highest probability.
 2. **Impact analysis**: verify what effect the fix has on other code
 3. **Apply fix**
 
-### 5. Critic Loop (2 passes)
+### 5. Critic Loop
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
+
+Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
 | **SAFETY** | Does the fix break any other functionality? Any side effects? |
 | **CORRECTNESS** | Does it actually resolve the root cause? Or just mask the symptom? |
 
-On FAIL:
-- SAFETY fail → check and fix impacted code
-- CORRECTNESS fail → revisit hypotheses, move to next hypothesis
+**On FAIL**: auto-fix and continue to next pass.
+**On ESCALATE**: pause, present options to user, apply choice, resume.
+**On DEFER**: record reason, mark criterion clean, continue.
+**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
 ### 6. Verification
 
@@ -86,7 +90,7 @@ Retry after fixing on failure (max 3 attempts).
 Debug complete
 ├─ Root cause: {one-line summary}
 ├─ Fixed files: {file list}
-├─ Critic: {N} passes complete
+├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 ├─ Verified: typecheck + lint passed
 └─ Impact scope: {affected components/features}
 ```

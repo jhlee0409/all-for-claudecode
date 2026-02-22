@@ -14,7 +14,7 @@ model: sonnet
 # /selfish:review — Code Review
 
 > Performs a comprehensive review of changed code (quality, security, performance, architecture compliance).
-> Validates completeness of the review itself with 1 Critic Loop pass.
+> Validates completeness of the review itself with convergence-based Critic Loop.
 
 ## Arguments
 
@@ -131,18 +131,30 @@ For each changed file, examine from the following perspectives:
 - {1-2 things done well}
 ```
 
-### 5. Critic Loop (1 pass)
+### 5. Retrospective Check
+
+If `memory/retrospectives/` directory exists, load retrospective files and check:
+- Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
+- Were there false positives that wasted effort? Reduce sensitivity for those patterns.
+
+### 6. Critic Loop
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
+
+Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
 | **COMPLETENESS** | Were all changed files reviewed? Are there any missed perspectives? |
 | **PRECISION** | Are the findings actual issues, not false positives? |
 
-On FAIL: revise review and update final output.
+**On FAIL**: auto-fix and continue to next pass.
+**On ESCALATE**: pause, present options to user, apply choice, resume.
+**On DEFER**: record reason, mark criterion clean, continue.
+**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
-### 5.5. Archive Review Report
+### 7. Archive Review Report
 
 When running inside a pipeline (specs/{feature}/ exists), persist the review results:
 
@@ -158,13 +170,13 @@ When running inside a pipeline (specs/{feature}/ exists), persist the review res
 
 When running standalone (no active pipeline), skip archiving — display results in console only.
 
-### 6. Final Output
+### 8. Final Output
 
 ```
 Review complete
 ├─ Files: {changed file count}
 ├─ Found: Critical {N} / Warning {N} / Info {N}
-├─ Critic: 1 pass complete
+├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 └─ Conclusion: {one-line summary}
 ```
 

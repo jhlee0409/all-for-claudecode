@@ -7,7 +7,7 @@ model: sonnet
 # /selfish:spec — Generate Feature Specification
 
 > Converts a natural language feature description into a structured specification (spec.md).
-> Operates on pure prompts without external scripts.
+> Validates completeness with convergence-based Critic Loop. Operates on pure prompts without external scripts.
 
 ## Arguments
 
@@ -104,26 +104,32 @@ Create `specs/{feature-name}/spec.md`:
 - {uncertain items — record if any, remove section if none}
 ```
 
-### 4. Critic Loop (1 pass)
+### 4. Retrospective Check
+
+If `memory/retrospectives/` directory exists, load retrospective files and check:
+- Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
+- Were there scope-related issues in past specs? Warn about similar ambiguities.
+
+### 5. Critic Loop
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
 
-After writing, perform a **self-critique loop** once:
+Run the critic loop until convergence. Safety cap: 5 passes.
 
-```
-=== CRITIC PASS 1/1 ===
-[COMPLETENESS]  Does every User Story have acceptance scenarios? Are any requirements missing?
-[MEASURABILITY] Are the success criteria measurable, not subjective?
-[INDEPENDENCE]  Are implementation details (code, library names) absent from the spec?
-[EDGE_CASES]    Are at least 2 edge cases identified? Any missing boundary conditions?
-```
+| Criterion | Validation |
+|-----------|------------|
+| **COMPLETENESS** | Does every User Story have acceptance scenarios? Are any requirements missing? |
+| **MEASURABILITY** | Are the success criteria measurable, not subjective? |
+| **INDEPENDENCE** | Are implementation details (code, library names) absent from the spec? |
+| **EDGE_CASES** | Are at least 2 edge cases identified? Any missing boundary conditions? |
 
-- **On FAIL**: auto-fix spec.md → notify user of changes
-  - e.g., `⚠ COMPLETENESS: US3 missing acceptance scenarios. Adding...`
-- **ALL PASS**: display `✓ Critic passed`
-- Complete FAIL → fix → re-validate cycle before proceeding to the next step
+**On FAIL**: auto-fix and continue to next pass.
+**On ESCALATE**: pause, present options to user, apply choice, resume.
+**On DEFER**: record reason, mark criterion clean, continue.
+**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
-### 5. Final Output
+### 6. Final Output
 
 ```
 Spec generated

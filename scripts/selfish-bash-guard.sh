@@ -44,30 +44,40 @@ fi
 
 # Check for dangerous patterns
 DENY_REASON=""
+SAFE_ALTERNATIVE=""
 
 case "$COMMAND" in
   *"push --force"*|*"push -f "*|*"push -f")
     DENY_REASON="git push --force is blocked during pipeline"
+    SAFE_ALTERNATIVE="git push"
     ;;
   *"reset --hard"*)
     # Allow selfish/pre- tag rollback
     if [[ "$COMMAND" != *"selfish/pre-"* ]]; then
       DENY_REASON="git reset --hard is blocked during pipeline"
+      SAFE_ALTERNATIVE="git stash"
     fi
     ;;
   *"checkout ."*|*"checkout -- ."*)
     DENY_REASON="git checkout . is blocked during pipeline"
+    SAFE_ALTERNATIVE="git diff"
     ;;
   *"restore ."*)
     DENY_REASON="git restore . is blocked during pipeline"
+    SAFE_ALTERNATIVE="git diff"
     ;;
   *"clean -f"*)
     DENY_REASON="git clean -f is blocked during pipeline"
+    SAFE_ALTERNATIVE="git clean -n"
     ;;
 esac
 
 if [ -n "$DENY_REASON" ]; then
-  printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"SELFISH GUARD: %s"}}\n' "$DENY_REASON"
+  if [ -n "$SAFE_ALTERNATIVE" ]; then
+    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"SELFISH GUARD: %s. Safe alternative: %s","updatedInput":{"command":"%s"}}}\n' "$DENY_REASON" "$SAFE_ALTERNATIVE" "$SAFE_ALTERNATIVE"
+  else
+    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"SELFISH GUARD: %s"}}\n' "$DENY_REASON"
+  fi
 else
   printf '{"hookSpecificOutput":{"permissionDecision":"allow"}}\n'
 fi

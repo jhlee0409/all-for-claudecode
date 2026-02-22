@@ -7,7 +7,7 @@ model: sonnet
 # /selfish:plan — Implementation Design
 
 > Generates an implementation plan (plan.md) based on the feature specification (spec.md).
-> Ensures quality with 3 Critic Loop passes and runs research in parallel when needed.
+> Ensures quality with convergence-based Critic Loop and runs research in parallel when needed.
 
 ## Arguments
 
@@ -139,13 +139,11 @@ Create `specs/{feature}/plan.md`. **Must** follow the structure below:
 {error handling, performance optimization, tests}
 ```
 
-### 5. Critic Loop (3 passes)
+### 5. Critic Loop
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
 
-After drafting plan.md, perform **up to 3 self-critique passes**.
-
-Validate against these 5 criteria each pass:
+Run the critic loop until convergence. Safety cap: 7 passes.
 
 | Criterion | Validation |
 |-----------|------------|
@@ -155,10 +153,11 @@ Validate against these 5 criteria each pass:
 | **RISK** | Are there any unidentified risks? Additionally, if `memory/retrospectives/` directory contains files from previous pipeline runs, load each file and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
 | **PRINCIPLES** | Does it not violate the MUST principles in principles.md? |
 
-**Output rules**:
-- **If there are FAIL items**: display `⚠ {criterion}: {issue summary}. Fixing...` → update plan.md → proceed to next pass
-- **If no FAIL items**: display `✓ Critic {N}/3 passed`
-- **Final**: `Critic Loop complete ({N} passes). Key changes: {change summary}` or `Critic Loop complete (1 pass). No changes.`
+**On FAIL**: auto-fix and continue to next pass.
+**On ESCALATE**: pause, present options to user, apply choice, resume.
+**On DEFER**: record reason, mark criterion clean, continue.
+**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
 ### 6. Agent Teams (if needed)
 
@@ -176,7 +175,7 @@ Task("Research: {topic2}", subagent_type: "general-purpose")
 Plan generated
 ├─ specs/{feature}/plan.md
 ├─ specs/{feature}/research.md (if research was performed)
-├─ Critic: {N} passes, key changes: {summary}
+├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 └─ Next step: /selfish:tasks
 ```
 

@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/session-start-context.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/session-start-context.sh\"",
+            "statusMessage": "Loading pipeline context..."
           }
         ]
       }
@@ -17,7 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact-checkpoint.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact-checkpoint.sh\"",
+            "statusMessage": "Saving checkpoint..."
           }
         ]
       }
@@ -40,7 +42,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/track-selfish-changes.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/track-selfish-changes.sh\"",
+            "statusMessage": "Tracking file changes..."
           }
         ]
       },
@@ -50,6 +53,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-auto-format.sh\"",
+            "statusMessage": "Auto-formatting...",
             "async": true,
             "timeout": 30
           }
@@ -61,7 +65,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-subagent-context.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-subagent-context.sh\"",
+            "statusMessage": "Injecting pipeline context..."
           }
         ]
       }
@@ -93,7 +98,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-session-end.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-session-end.sh\"",
+            "statusMessage": "Saving session state..."
           }
         ]
       }
@@ -104,7 +110,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-failure-hint.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-failure-hint.sh\"",
+            "statusMessage": "Analyzing failure..."
           }
         ]
       }
@@ -149,7 +156,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-subagent-stop.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-subagent-stop.sh\"",
+            "statusMessage": "Logging agent result..."
           }
         ]
       }
@@ -159,7 +167,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-user-prompt-submit.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-user-prompt-submit.sh\"",
+            "statusMessage": "Loading pipeline status..."
           }
         ]
       }
@@ -170,7 +179,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-permission-request.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-permission-request.sh\"",
+            "statusMessage": "Checking permissions..."
           }
         ]
       }
@@ -191,7 +201,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-teammate-idle.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-teammate-idle.sh\"",
+            "statusMessage": "Checking teammate gate..."
           }
         ]
       }

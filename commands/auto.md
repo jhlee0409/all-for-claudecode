@@ -35,7 +35,7 @@ If config file is missing: print "`.claude/selfish.config.md` not found. Create 
 ## Critic Loop Rules (common to all phases)
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
-> Core: minimum 1 concern per criterion + mandatory Adversarial failure scenario each pass + quantitative evidence required. "PASS" as a single word is prohibited.
+> Core: minimum 1 concern per criterion + mandatory Adversarial failure scenario each pass + quantitative evidence required. "PASS" as a single word is prohibited. Uses convergence-based termination with 4 verdicts (PASS/FAIL/ESCALATE/DEFER). On ESCALATE: pause and present options to user even in auto mode.
 
 ---
 
@@ -78,13 +78,16 @@ Execute `/selfish:spec` logic inline:
 2. Create `specs/{feature}/spec.md`
 3. `[NEEDS CLARIFICATION]` items are **auto-resolved with best-guess** (clarify skipped)
    - Tag auto-resolved items with `[AUTO-RESOLVED]`
-4. **Critic Loop 1 pass** (follow Critic Loop rules):
+4. **Retrospective check**: if `memory/retrospectives/` exists, load and check:
+   - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
+   - Were there scope-related issues in past specs? Warn about similar ambiguities.
+5. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
    - COMPLETENESS: does every User Story have acceptance scenarios? Any missing requirements?
    - MEASURABILITY: are success criteria measurable, not subjective? **Is quantitative evidence provided for numerical targets?**
    - INDEPENDENCE: are implementation details (code, library names) absent from the spec?
    - EDGE_CASES: are at least 2 identified? Any missing boundary conditions?
-   - FAIL items → auto-fix and update spec.md
-5. Progress: `✓ 1/6 Spec complete (US: {N}, FR: {N}, Critic: {FAIL count} fixed)`
+   - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+6. Progress: `✓ 1/6 Spec complete (US: {N}, FR: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
 ### Phase 2: Plan (2/6)
 
@@ -96,7 +99,7 @@ Execute `/selfish:plan` logic inline:
 2. If technical uncertainties exist → auto-resolve via WebSearch/code exploration → create research.md
 3. Create `specs/{feature}/plan.md`
    - **If setting numerical targets (line counts etc.), include structure-analysis-based estimates** (e.g., "function A ~50 lines, component B ~80 lines → total ~130 lines")
-4. **Critic Loop 3 passes** (follow Critic Loop rules):
+4. **Critic Loop until convergence** (safety cap: 7, follow Critic Loop rules):
    - Criteria: COMPLETENESS, FEASIBILITY, ARCHITECTURE, RISK, PRINCIPLES
    - **RISK criterion mandatory checks**:
      - Enumerate **at least 3** `{config.ci}` failure scenarios and describe mitigation
@@ -104,7 +107,8 @@ Execute `/selfish:plan` logic inline:
      - Consider `{config.framework}` characteristics (server/client boundary etc.)
    - **ARCHITECTURE criterion**: explicitly describe import paths for moved/created files and pre-validate against `{config.architecture}` rules
    - Each pass must **explicitly explore what was missed in the previous pass** ("Pass 2: {X} was missed in pass 1. Further review: ...")
-5. Progress: `✓ 2/6 Plan complete (Critic: {total FAIL fixes}, files: {N})`
+   - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+5. Progress: `✓ 2/6 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N})`
 
 ### Phase 3: Tasks (3/6)
 
@@ -120,11 +124,15 @@ Execute `/selfish:tasks` logic inline:
    - Validate dependency graph is a DAG (no circular references)
    - [P] tasks **must be executed in parallel** in Phase 4 (declaring [P] then running sequentially is prohibited)
 4. Coverage mapping (FR → Task)
-5. **Critic Loop 1 pass** (follow Critic Loop rules):
+5. **Retrospective check**: if `memory/retrospectives/` exists, load and check:
+   - Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
+   - Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
+6. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
    - COVERAGE: is every FR/NFR mapped to at least 1 task?
    - DEPENDENCIES: is the dependency graph a valid DAG? Do [P] tasks have no file overlaps?
-6. Create `specs/{feature}/tasks.md`
-7. Progress: `✓ 3/6 Tasks complete (tasks: {N}, parallel: {N})`
+   - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+7. Create `specs/{feature}/tasks.md`
+8. Progress: `✓ 3/6 Tasks complete (tasks: {N}, parallel: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
 ### Phase 4: Implement (4/6)
 
@@ -179,13 +187,17 @@ Execute `/selfish:review` logic inline:
 
 1. Review implemented changed files (`git diff HEAD`)
 2. Check code quality, `{config.architecture}` rules, security, performance, `{config.code_style}` pattern compliance
-3. **Critic Loop 1 pass** (follow Critic Loop rules):
+3. **Retrospective check**: if `memory/retrospectives/` exists, load and check:
+   - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
+   - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
+4. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
    - COMPLETENESS: cross-check every SC (success criterion) from spec.md one by one. Provide specific metrics if falling short.
    - PRECISION: are there unnecessary changes? Are there out-of-scope modifications?
-4. **Handling SC shortfalls**:
+   - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+5. **Handling SC shortfalls**:
    - Fixable → attempt auto-fix → re-run `{config.ci}` verification
    - Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
-5. Progress: `✓ 5/6 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
+6. Progress: `✓ 5/6 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
 
 ### Phase 6: Clean (6/6)
 
@@ -209,13 +221,30 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - If there were `[AUTO-RESOLVED]` items → record decisions in `memory/decisions/`
    - **If retrospective.md exists** → record as patterns missed by the Plan phase Critic Loop in `memory/retrospectives/` (reuse as RISK checklist items in future runs)
    - **If review-report.md exists** → copy to `memory/reviews/{feature}-{date}.md` before specs/ deletion
-5. **Checkpoint reset**:
+5. **Quality report** (structured pipeline metrics):
+   - Generate `memory/quality-history/{feature}-{date}.json` with the following structure:
+     ```json
+     {
+       "feature": "{feature}",
+       "date": "{YYYY-MM-DD}",
+       "phases": {
+         "spec": { "user_stories": N, "requirements": { "FR": N, "NFR": N }, "auto_resolved": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
+         "plan": { "files_planned": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
+         "tasks": { "total": N, "parallel": N, "phases": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
+         "implement": { "completed": N, "total": N, "ci_passes": N, "ci_failures": N },
+         "review": { "critical": N, "warning": N, "info": N, "sc_shortfalls": N, "critic_passes": N, "critic_fixes": N, "escalations": N }
+       },
+       "totals": { "changed_files": N, "auto_resolved": N, "escalations": N }
+     }
+     ```
+   - Create `memory/quality-history/` directory if it does not exist
+6. **Checkpoint reset**:
    - Clear `memory/checkpoint.md` (pipeline complete = session goal achieved)
-6.5. **Timeline finalize**:
+7. **Timeline finalize**:
    ```bash
    "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"
    ```
-6. **Release Pipeline Flag** (hook integration):
+8. **Release Pipeline Flag** (hook integration):
    ```bash
    "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" end
    ```
@@ -223,14 +252,14 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - Change tracking log deleted
    - Safety tag removed (successful completion)
    - Phase rollback tags removed (handled automatically by pipeline end)
-7. Progress: `✓ 6/6 Clean complete (deleted: {N}, dead code: {N}, CI: ✓)`
+9. Progress: `✓ 6/6 Clean complete (deleted: {N}, dead code: {N}, CI: ✓)`
 
 ### Final Output
 
 ```
 Auto pipeline complete: {feature}
 ├─ Spec: US {N}, FR {N}
-├─ Plan: Critic {FAIL fixes}, research {present/absent}
+├─ Plan: Critic converged ({N} passes, {M} fixes, {E} escalations), research {present/absent}
 ├─ Tasks: {total} (parallel {N})
 ├─ Implement: {completed}/{total} tasks, CI ✓, Checkpoint ✓
 ├─ Review: Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N}
@@ -267,7 +296,8 @@ Pipeline aborted (Phase {N}/6)
 - **Large feature warning**: warn before starting if more than 5 User Stories are expected.
 - **Read existing code first**: always read existing files before modifying. Do not blindly generate code.
 - **Follow project rules**: project rules in `selfish.config.md` and `CLAUDE.md` take priority.
-- **Critic Loop is not a ritual**: a single "PASS" line is equivalent to not running Critic at all. Always follow the format in the Critic Loop rules section.
+- **Critic Loop is not a ritual**: a single "PASS" line is equivalent to not running Critic at all. Always follow the format in the Critic Loop rules section. Critic uses convergence-based termination — it may finish in 1 pass or take several, depending on the output quality.
+- **ESCALATE pauses auto mode**: when a Critic finds an ambiguous issue requiring user judgment, the pipeline pauses and presents options via AskUserQuestion. Auto mode automates clear decisions but escalates ambiguous ones.
 - **[P] parallel is mandatory**: if a [P] marker is assigned in tasks.md, it must be executed in parallel. Orchestration mode (batch vs swarm) is selected automatically based on task count. Sequential substitution is prohibited.
 - **Swarm mode is automatic**: when a phase has 6+ [P] tasks, swarm workers self-organize via TaskList/TaskUpdate. Do not manually batch.
 - **No out-of-scope deletion**: do not delete files/directories in Clean that were not created by the current pipeline.

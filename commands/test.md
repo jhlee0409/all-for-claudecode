@@ -73,18 +73,22 @@ Confirm strategy with user before proceeding.
 - Co-location: `{filename}.test.{ext}` (same directory)
 - Separate: `__tests__/{filename}.test.{ext}` or `tests/` directory
 
-### 4. Critic Loop (1 pass)
+### 4. Critic Loop
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
+
+Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
 | **COVERAGE** | Are all core logic and branch points covered? |
 | **QUALITY** | Do tests validate behavior, not implementation details? Are there any brittle tests? |
 
-On FAIL:
-- COVERAGE fail → add missing cases
-- QUALITY fail → refactor tests (fix over-mocking, implementation coupling, etc.)
+**On FAIL**: auto-fix and continue to next pass.
+**On ESCALATE**: pause, present options to user, apply choice, resume.
+**On DEFER**: record reason, mark criterion clean, continue.
+**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
 ### 5. Run and Verify Tests
 
@@ -106,7 +110,7 @@ Tests complete
 ├─ Target: {file/feature}
 ├─ Written: {N} tests ({unit X, integration Y, E2E Z})
 ├─ Coverage: {summary of key branch point coverage}
-├─ Critic: 1 pass complete
+├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 ├─ Verified: all tests passing
 └─ Found: {bug details if found, otherwise "no issues"}
 ```

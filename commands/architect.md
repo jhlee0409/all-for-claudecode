@@ -18,7 +18,7 @@ model: sonnet
 # /selfish:architect — Architecture Analysis and Design Advice
 
 > Analyzes the codebase architecture and records design decisions.
-> Ensures design quality through 3 Critic Loop iterations. **Read-only** — does not modify code.
+> Ensures design quality through convergence-based Critic Loop. **Read-only** — does not modify code.
 
 ## Arguments
 
@@ -89,9 +89,11 @@ Structure analysis results and **print to console**:
 {config.architecture} rule violations, import direction validation
 ```
 
-### 4. Critic Loop (3 iterations)
+### 4. Critic Loop
 
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
+
+Run the critic loop until convergence. Safety cap: 7 passes.
 
 | Criterion | Validation |
 |-----------|------------|
@@ -100,10 +102,11 @@ Structure analysis results and **print to console**:
 | **COMPATIBILITY** | Is it compatible with existing code? Are there breaking changes? |
 | **ARCHITECTURE** | Does it comply with {config.architecture} rules? |
 
-Output rules:
-- FAIL: `⚠ {criterion}: {issue}. Revising...`
-- PASS: `✓ Critic {N}/3 passed`
-- Final: `Critic Loop complete ({N} iterations). Key revisions: {summary}`
+**On FAIL**: auto-fix and continue to next pass.
+**On ESCALATE**: pause, present options to user, apply choice, resume.
+**On DEFER**: record reason, mark criterion clean, continue.
+**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
 ### 5. Save ADR (for design decisions)
 
@@ -125,7 +128,7 @@ If ADR type, save to `memory/decisions/{YYYY-MM-DD}-{topic}.md`:
 Architecture analysis complete
 ├─ Type: {structure analysis | design question | ADR | refactoring evaluation}
 ├─ Findings: {count}
-├─ Critic: {N} iterations complete
+├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 ├─ ADR: {saved | n/a}
 └─ Suggestion: {key suggestion in one line}
 ```
