@@ -60,7 +60,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 |-------|-----|------|------|
 | Global CLAUDE.md exists | Read `~/.claude/CLAUDE.md` | File exists | ⚠ Warning: no global CLAUDE.md. Selfish skills won't auto-trigger from intent. Fix: run `/selfish:init` |
 | SELFISH block present | Grep for `<!-- SELFISH:START -->` and `<!-- SELFISH:END -->` in `~/.claude/CLAUDE.md` | Both markers found | Fix: run `/selfish:init` to inject SELFISH block |
-| SELFISH block version | Extract version from `<!-- SELFISH:VERSION:X.Y.Z -->` | Version matches or is newer than plugin version | ⚠ Warning: SELFISH block is outdated (found {old}, current {new}). Fix: run `/selfish:init` to update |
+| SELFISH block version | Extract version from `<!-- SELFISH:VERSION:X.Y.Z -->` in CLAUDE.md. Then read `${CLAUDE_PLUGIN_ROOT}/package.json` to get the actual plugin version. Compare the two. | Block version ≥ plugin version | ⚠ Warning: SELFISH block is outdated (found {block_version}, current {plugin_version}). Fix: run `/selfish:init` to update |
 | No conflicting routing | Grep for conflicting agent patterns (`executor`, `deep-executor`, `debugger`, `code-reviewer`) outside SELFISH block that could intercept selfish intents | No conflicts or conflicts are inside other tool blocks | ⚠ Warning: found agent routing that may conflict with selfish skills. Review `~/.claude/CLAUDE.md` |
 
 ### Category 4: Pipeline State
