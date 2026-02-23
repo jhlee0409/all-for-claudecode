@@ -7,5 +7,6 @@
   "repository": "https://github.com/jhlee0409/selfish-pipeline",
   "license": "MIT",
   "keywords": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"],
-  "commands": "./commands/"
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json"
 }
