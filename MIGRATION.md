@@ -82,11 +82,14 @@ For new projects, you can auto-generate it with `/selfish:init`.
 ## What Stays the Same
 
 - `.claude/selfish.config.md` file format and path
-- `.claude/selfish/specs/{feature}/` artifact paths
-- `.claude/selfish/memory/` references (checkpoint, principles, research, decisions)
 - `.selfish-*` state file paths
 - `git tag selfish/pre-*` safety tags
 - Internal logic of hook scripts
+
+## What Changed (v1.2.2+)
+
+- `specs/{feature}/` → `.claude/selfish/specs/{feature}/`
+- `memory/` → `.claude/selfish/memory/` (checkpoint, principles, research, decisions)
 
 ## FAQ
 

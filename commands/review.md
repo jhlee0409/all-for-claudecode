@@ -1,6 +1,6 @@
 ---
 name: selfish:review
-description: "Code review (read-only)"
+description: "Code review"
 argument-hint: "[scope: file path, PR number, or staged]"
 allowed-tools:
   - Read
