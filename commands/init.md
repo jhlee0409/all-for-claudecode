@@ -155,6 +155,8 @@ Based on choice:
 
 #### Step 4. Inject SELFISH Block
 
+**Version resolution**: Read `${CLAUDE_PLUGIN_ROOT}/package.json` and extract the `"version"` field. Use this value as `{PLUGIN_VERSION}` in the template below.
+
 Add the following block at the **very end** of the file (later-positioned directives have higher priority).
 
 Replace existing SELFISH block if present, otherwise append.
@@ -162,7 +164,7 @@ If legacy block (`## Selfish Auto-Trigger Rules` etc.) exists, remove it then ap
 
 ```markdown
 <!-- SELFISH:START -->
-<!-- SELFISH:VERSION:1.1.1 -->
+<!-- SELFISH:VERSION:{PLUGIN_VERSION} -->
 <selfish-pipeline>
 IMPORTANT: For requests matching the selfish skill routing table below, always invoke the corresponding skill via the Skill tool. Do not substitute with other agents or tools.
 
