@@ -145,7 +145,7 @@ When a worker agent exits with error (non-zero return or timeout):
 
 #### Phase Completion Gate (3 steps)
 
-> **Always** read `docs/phase-gate-protocol.md` first and perform the 3 steps (CI gate → Mini-Review → Auto-Checkpoint) in order.
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first and perform the 3 steps (CI gate → Mini-Review → Auto-Checkpoint) in order.
 > Cannot advance to the next phase without passing the gate. Abort and report to user after 3 consecutive CI failures.
 
 After passing the gate, create a phase rollback point:

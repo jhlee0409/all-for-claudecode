@@ -78,7 +78,7 @@ Create `specs/{feature-name}/spec.md`:
 - **NFR-001**: {performance/security/accessibility etc.}
 
 ### Auto-Suggested NFRs
-{Load `docs/nfr-templates.md` and select 3-5 relevant NFRs based on the project type detected from selfish.config.md}
+{Load `${CLAUDE_PLUGIN_ROOT}/docs/nfr-templates.md` and select 3-5 relevant NFRs based on the project type detected from selfish.config.md}
 - **NFR-A01** [AUTO-SUGGESTED]: {suggestion from matching project type template}
 - **NFR-A02** [AUTO-SUGGESTED]: {suggestion}
 - **NFR-A03** [AUTO-SUGGESTED]: {suggestion}
@@ -112,7 +112,7 @@ If `memory/retrospectives/` directory exists, load retrospective files and check
 
 ### 5. Critic Loop
 
-> **Always** read `docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
 Run the critic loop until convergence. Safety cap: 5 passes.
 

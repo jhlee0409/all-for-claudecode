@@ -3,6 +3,7 @@ name: selfish-architect
 description: "Architecture analysis agent — remembers ADR decisions and architecture patterns across sessions to provide consistent design guidance."
 tools:
   - Read
+  - Write
   - Grep
   - Glob
   - Bash

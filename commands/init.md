@@ -188,6 +188,9 @@ User-only (not auto-triggered — inform user on request):
 - `selfish:doctor` — inform user when health check is requested
 - `selfish:architect` — inform user when architecture review is requested
 - `selfish:security` — inform user when security scan is requested
+- `selfish:checkpoint` — inform user when session save is requested
+- `selfish:resume` — inform user when session restore is requested
+- `selfish:principles` — inform user when project principles management is requested
 
 ## Pipeline
 

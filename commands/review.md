@@ -4,6 +4,7 @@ description: "Code review (read-only)"
 argument-hint: "[scope: file path, PR number, or staged]"
 allowed-tools:
   - Read
+  - Write
   - Grep
   - Glob
   - Bash
@@ -139,7 +140,7 @@ If `memory/retrospectives/` directory exists, load retrospective files and check
 
 ### 6. Critic Loop
 
-> **Always** read `docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
 Run the critic loop until convergence. Safety cap: 5 passes.
 

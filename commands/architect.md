@@ -1,12 +1,13 @@
 ---
 name: selfish:architect
-description: "Architecture analysis and design advice (read-only)"
+description: "Architecture analysis and design advice"
 argument-hint: "[analysis target or design question]"
 disable-model-invocation: true
 context: fork
 agent: selfish-architect
 allowed-tools:
   - Read
+  - Write
   - Grep
   - Glob
   - Bash
@@ -18,7 +19,7 @@ model: sonnet
 # /selfish:architect — Architecture Analysis and Design Advice
 
 > Analyzes the codebase architecture and records design decisions.
-> Ensures design quality through convergence-based Critic Loop. **Read-only** — does not modify code.
+> Ensures design quality through convergence-based Critic Loop. Does not modify source code. May write ADR files to `memory/decisions/`.
 
 ## Arguments
 
@@ -91,7 +92,7 @@ Structure analysis results and **print to console**:
 
 ### 4. Critic Loop
 
-> **Always** read `docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
 Run the critic loop until convergence. Safety cap: 7 passes.
 
@@ -135,7 +136,7 @@ Architecture analysis complete
 
 ## Notes
 
-- **Read-only**: Does not modify code. Performs analysis and suggestions only.
+- **No source modification**: Does not modify project source code. May write ADR files to `memory/decisions/`.
 - **Based on actual code**: Explore the actual codebase, not assumptions.
 - **Architecture first**: All suggestions respect {config.architecture} rules.
 - **Incremental changes**: Prefer incremental improvements over big-bang refactoring.

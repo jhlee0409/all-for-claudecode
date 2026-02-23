@@ -141,7 +141,7 @@ Create `specs/{feature}/plan.md`. **Must** follow the structure below:
 
 ### 5. Critic Loop
 
-> **Always** read `docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
 Run the critic loop until convergence. Safety cap: 7 passes.
 

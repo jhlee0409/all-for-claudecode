@@ -34,7 +34,7 @@ If config file is missing: print "`.claude/selfish.config.md` not found. Create 
 
 ## Critic Loop Rules (common to all phases)
 
-> **Always** read `docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 > Core: minimum 1 concern per criterion + mandatory Adversarial failure scenario each pass + quantitative evidence required. "PASS" as a single word is prohibited. Uses convergence-based termination with 4 verdicts (PASS/FAIL/ESCALATE/DEFER). On ESCALATE: pause and present options to user even in auto mode.
 
 ---
@@ -171,7 +171,7 @@ Execute `/selfish:implement` logic inline with **dependency-aware orchestration*
    // 5. Read all worker results before proceeding to gate
    ```
 
-6. Perform **3-step gate** on each Implementation Phase completion — **always** read `docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
+6. Perform **3-step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
    - On gate pass: create phase rollback point `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase-tag {phase_number}`
 7. Real-time `[x]` updates in tasks.md
 8. After full completion, run `{config.ci}` final verification
