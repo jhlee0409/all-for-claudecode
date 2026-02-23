@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Automated pipeline for Claude Code — spec → plan → tasks → implement → review → clean",
-    "version": "1.2.1"
+    "version": "1.2.2"
   },
   "plugins": [
     {
       "name": "selfish",
       "source": "./",
       "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec → plan → tasks → implement → review → clean.",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "category": "automation",
       "tags": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"]
     }
