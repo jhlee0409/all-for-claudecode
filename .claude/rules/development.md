@@ -13,7 +13,7 @@ Before making changes, identify the blast radius:
 
 ## Mandatory Before Commit
 
-1. `npm run test:all` must pass (lint + 118 assertions)
+1. `npm run test:all` must pass (lint + 161 assertions)
 2. No Korean text in tracked files: `git diff --cached --name-only | xargs grep -l '[가-힣]' 2>/dev/null` should return empty
 3. New shell scripts must have: `set -euo pipefail`, `trap cleanup EXIT`, jq-first parsing
 4. New shell scripts must have test coverage in tests/test-hooks.sh

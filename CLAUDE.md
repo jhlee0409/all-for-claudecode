@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run lint          # shellcheck scripts/*.sh
-npm test              # bash tests/test-hooks.sh (155 assertions)
+npm test              # bash tests/test-hooks.sh (161 assertions)
 npm run test:all      # lint + test combined
 ```
 
@@ -22,7 +22,7 @@ Selfish Pipeline is a Claude Code plugin that automates the full development cyc
 - **agents/** — 2 persistent memory subagents (selfish-architect, selfish-security) with `memory: project` for cross-session learning
 - **hooks/hooks.json** — Declares 15 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 2 hooks use `async: true`. Includes ConfigChange (settings audit) and TeammateIdle (Agent Teams gate)
 - **scripts/** — 20 bash scripts implementing hook logic. All follow the pattern: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
-- **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md) referenced by commands
+- **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
 - **templates/** — 5 project preset configs (nextjs-fsd, react-spa, express-api, monorepo, template)
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
 - **.claude-plugin/** — Plugin manifest (`plugin.json`) and marketplace registration (`marketplace.json`)

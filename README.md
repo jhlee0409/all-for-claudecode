@@ -4,7 +4,7 @@
 
 [![npm version](https://img.shields.io/npm/v/selfish-pipeline)](https://www.npmjs.com/package/selfish-pipeline)
 [![license](https://img.shields.io/github/license/jhlee0409/selfish-pipeline)](./LICENSE)
-[![test](https://img.shields.io/badge/tests-118%20passed-brightgreen)](#how-it-works)
+[![test](https://img.shields.io/badge/tests-161%20passed-brightgreen)](#how-it-works)
 [![hooks](https://img.shields.io/badge/hooks-15%20events-blue)](#15-hook-events)
 [![commands](https://img.shields.io/badge/commands-18-orange)](#18-slash-commands)
 

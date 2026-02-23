@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-23
+
+### Added
+- Convergence-based critic loop — replaces fixed-pass loops with dynamic termination across 8 commands
+- 4 critic verdicts: PASS, FAIL, ESCALATE, DEFER with escalation triggers for ambiguous issues
+- Safety caps (5 rounds default, 7 max) to prevent infinite critic loops
+- Timeline logger script (`selfish-timeline-log.sh`) — JSONL event logging with auto-rotation
+- Parallel task validator script (`selfish-parallel-validate.sh`) — detects file conflicts in `[P]` batches
+- Preflight checker script (`selfish-preflight-check.sh`) — validates environment before pipeline start
+- Pipeline manage: `log`, `phase-tag`, `phase-tag-clean` subcommands
+- Phase rollback support in auto.md pipeline orchestration
+- Swarm recovery logic in implement.md for failed parallel tasks
+- Report archiving in review.md
+- Alternative design section in plan.md with retrospective loader
+- NFR (Non-Functional Requirements) auto-suggest in spec.md
+- `[P]` (parallel) marker validation in tasks.md
+- `docs/nfr-templates.md` — project-type NFR suggestion templates
+- `statusMessage` output on 11 hook handlers for UI progress indication
+- `updatedInput` with safe alternatives in bash-guard (suggests safe commands instead of just blocking)
+- Retrospective learning integration in spec, tasks, and review commands
+
+### Changed
+- Test suite expanded from 118 to 161 assertions (43 new tests)
+- Critic loop rules doc significantly expanded with convergence protocol, verdict definitions, and escalation triggers
+- hooks.json updated with statusMessage support across handlers
+- CLAUDE.md updated: test count (161), docs list (nfr-templates.md)
+- README.md: test badge updated (161)
+
 ## [1.1.1] - 2026-02-21
 
 ### Fixed
