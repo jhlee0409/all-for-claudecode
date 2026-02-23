@@ -965,12 +965,106 @@ assert_exit "preflight: no node_modules → exit 0 (warn)" "0" "$CODE"
 assert_stdout_contains "preflight: warns about node_modules" "node_modules" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
-# T014-5. No package.json at all → fail (no CI command)
+# T014-5. No package.json at all → warn (not fail)
 TEST_DIR=$(setup_tmpdir_with_git)
-set +e
 OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
-set -e
-assert_exit "preflight: no package.json → exit 1" "1" "$CODE"
+assert_exit "preflight: no package.json → exit 0 (warn)" "0" "$CODE"
+assert_stdout_contains "preflight: warns about missing CI" "not detected" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-6. selfish.config.md with ci: field → pass (config takes priority)
+TEST_DIR=$(setup_tmpdir_with_git)
+cat > "$TEST_DIR/.claude/selfish.config.md" << 'CFG_EOF'
+## CI Commands
+```yaml
+ci: "cargo test"
+gate: "cargo check"
+```
+CFG_EOF
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: selfish.config.md ci → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects CI from config" "cargo test" "$OUTPUT"
+assert_stdout_contains "preflight: reports config source" "selfish.config.md" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-7. turbo.json + pnpm-workspace.yaml → pass (monorepo detection)
+TEST_DIR=$(setup_tmpdir_with_git)
+echo '{}' > "$TEST_DIR/turbo.json"
+echo 'packages:' > "$TEST_DIR/pnpm-workspace.yaml"
+touch "$TEST_DIR/pnpm-lock.yaml"
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: turbo+pnpm → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects pnpm turbo" "pnpm turbo test" "$OUTPUT"
+assert_stdout_contains "preflight: reports turbo source" "turbo.json" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-8. Makefile with test: target → pass
+TEST_DIR=$(setup_tmpdir_with_git)
+cat > "$TEST_DIR/Makefile" << 'MAKE_EOF'
+test:
+	echo "running tests"
+MAKE_EOF
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: Makefile test → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects make test" "make test" "$OUTPUT"
+assert_stdout_contains "preflight: reports Makefile source" "Makefile" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-9. yarn.lock → PM=yarn, uses yarn test
+TEST_DIR=$(setup_tmpdir_with_git)
+cat > "$TEST_DIR/package.json" << 'PKG_EOF'
+{"scripts":{"test":"jest"}}
+PKG_EOF
+touch "$TEST_DIR/yarn.lock"
+mkdir -p "$TEST_DIR/node_modules"
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: yarn.lock → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects yarn test" "yarn test" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-10. bun.lock → PM=bun
+TEST_DIR=$(setup_tmpdir_with_git)
+cat > "$TEST_DIR/package.json" << 'PKG_EOF'
+{"scripts":{"test":"bun test"}}
+PKG_EOF
+touch "$TEST_DIR/bun.lock"
+mkdir -p "$TEST_DIR/node_modules"
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: bun.lock → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects bun test" "bun test" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-11. nx.json → npx nx run-many
+TEST_DIR=$(setup_tmpdir_with_git)
+echo '{}' > "$TEST_DIR/nx.json"
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: nx.json → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects nx" "npx nx run-many" "$OUTPUT"
+assert_stdout_contains "preflight: reports nx source" "nx.json" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-12. selfish.config.md with only gate: (no ci:) → uses gate as fallback
+TEST_DIR=$(setup_tmpdir_with_git)
+cat > "$TEST_DIR/.claude/selfish.config.md" << 'CFG_EOF'
+## CI Commands
+```yaml
+gate: "make check"
+```
+CFG_EOF
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: gate fallback → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects gate command" "make check" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T014-13. package.json with "ci" script (not "test")
+TEST_DIR=$(setup_tmpdir_with_git)
+cat > "$TEST_DIR/package.json" << 'PKG_EOF'
+{"scripts":{"ci":"npm run lint && npm run typecheck"}}
+PKG_EOF
+mkdir -p "$TEST_DIR/node_modules"
+OUTPUT=$(CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/selfish-preflight-check.sh" 2>/dev/null); CODE=$?
+assert_exit "preflight: ci script → exit 0" "0" "$CODE"
+assert_stdout_contains "preflight: detects npm run ci" "npm run ci" "$OUTPUT"
 cleanup_tmpdir "$TEST_DIR"
 
 # ============================================================
