@@ -38,7 +38,7 @@ git tag -f selfish/pre-implement
 ### 1. Load Context
 
 1. **Current branch** → `BRANCH_NAME`
-2. Load the following files from `specs/{feature}/`:
+2. Load the following files from `.claude/selfish/specs/{feature}/`:
    - **tasks.md** (required) — abort if missing: "tasks.md not found. Run `/selfish:tasks` first."
    - **plan.md** (required) — abort if missing
    - **spec.md** (for reference)
@@ -48,6 +48,10 @@ git tag -f selfish/pre-implement
    - Group by phase
    - Build dependency graph (validate DAG — abort if circular)
    - Identify already-completed `[x]` tasks
+4. **Recent changes**: run `git log --oneline -20` to understand what changed recently (context for implementation)
+5. **Smoke test**: run `{config.gate}` before starting implementation:
+   - If it fails → diagnose before implementing (existing code is broken — fix first or report to user)
+   - If it passes → baseline confirmed, proceed to implementation
 
 ### 2. Check Progress
 

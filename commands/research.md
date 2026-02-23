@@ -16,7 +16,7 @@ model: sonnet
 # /selfish:research — Technical Research
 
 > Investigates technical questions and summarizes conclusions.
-> Results are persisted to memory/research/{topic}.md.
+> Results are persisted to .claude/selfish/memory/research/{topic}.md.
 
 ## Arguments
 
@@ -33,7 +33,7 @@ Extract from `$ARGUMENTS`:
 
 ### 2. Check Existing Research
 
-Check `memory/research/` directory for related prior research:
+Check `.claude/selfish/memory/research/` directory for related prior research:
 - If found: load existing content and decide whether an update is needed
 - If not found: proceed with new research
 
@@ -88,7 +88,7 @@ Source priority:
 
 ### 5. Save
 
-- Save to `memory/research/{topic-kebab-case}.md`
+- Save to `.claude/selfish/memory/research/{topic-kebab-case}.md`
 - If the file already exists, update it (refresh the date)
 
 ### 6. Final Output
@@ -96,7 +96,7 @@ Source priority:
 ```
 Research complete
 ├─ Topic: {topic}
-├─ Saved: memory/research/{filename}.md
+├─ Saved: .claude/selfish/memory/research/{filename}.md
 ├─ Conclusion: {one-line summary}
 └─ Sources: {number of key sources}
 ```
@@ -106,4 +106,4 @@ Research complete
 - **Current date basis**: Use WebSearch to verify up-to-date information rather than relying on knowledge cutoff.
 - **Sources required**: Cite sources for all technical claims.
 - **Project context**: Derive conclusions applicable to this project, not generic research.
-- **Persistent storage**: Save to memory/research/ for reuse across sessions.
+- **Persistent storage**: Save to .claude/selfish/memory/research/ for reuse across sessions.

@@ -34,7 +34,7 @@ config.architecture = the architecture pattern used in the project
 
 ### 1. Load Artifacts
 
-From `specs/{feature}/`:
+From `.claude/selfish/specs/{feature}/`:
 - **spec.md** (required)
 - **plan.md** (required)
 - **tasks.md** (if present)
@@ -66,7 +66,7 @@ Validate across 6 categories:
 - Mismatches between technical decisions in plan and execution in tasks
 
 #### E. Principles Compliance (PRINCIPLES)
-- Validate against MUST principles in memory/principles.md if present
+- Validate against MUST principles in .claude/selfish/memory/principles.md if present
 - Potential violations of {config.architecture} rules
 
 #### F. Unidentified Risks (RISK)

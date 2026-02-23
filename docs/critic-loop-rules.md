@@ -6,7 +6,11 @@
 
 1. **Minimum findings**: In each Critic round, **at least 1 concern, improvement point, or verification rationale per criterion** must be stated. If there are no issues, explain specifically "why there are no issues."
 2. **Checklist responses**: For each criterion, output takes the form of answering specific questions. Single-word "PASS" is prohibited.
-3. **Adversarial Pass**: At the end of every round, **"1 scenario in which this output fails"** must be stated. If the scenario is realistic, convert to FAIL and fix.
+3. **Adversarial Pass**: At the end of every round, apply **3 progressive critic perspectives**:
+   - **Skeptic**: "Which assumption here is most likely wrong?"
+   - **Devil's Advocate**: "How could this design be misused or fail unexpectedly?"
+   - **Edge-case Hunter**: "What input would cause this to fail silently?"
+   State one failure scenario per perspective. If any scenario is realistic → convert to FAIL and fix. If all are unrealistic → state quantitative rationale for each.
 4. **Quantitative rationale**: Instead of qualitative judgments like "none" or "compliant," present quantitative data such as "M of N confirmed," "Y of X lines applicable."
 
 ## Verdict System (4 types)
@@ -75,8 +79,11 @@ Options:
 [Criterion1] {question} → {answer + quantitative rationale}
   Verdict: PASS | FAIL ({fix description}) | ESCALATE | DEFER ({reason})
 [Criterion2] ...
-[ADVERSARIAL] Failure scenario: {specific scenario}
-  → Realistic? {Y → FAIL + fix / N → state rationale}
+[ADVERSARIAL]
+  Skeptic: {assumption most likely wrong}
+  Devil's Advocate: {misuse or unexpected failure}
+  Edge-case Hunter: {input causing silent failure}
+  → Realistic? {Y → FAIL + fix / N → state quantitative rationale per perspective}
 === Result: {CONVERGED ({N} passes, {M} fixes, {E} escalations) | CONTINUE ({N} fixed) | ESCALATE ({N} items) | SAFETY CAP} ===
 ```
 

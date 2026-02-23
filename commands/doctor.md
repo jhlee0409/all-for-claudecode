@@ -68,9 +68,9 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
 | No stale pipeline flag | Check `.claude/.selfish-active` | File does not exist (no active pipeline) | ⚠ Warning: stale pipeline flag found (feature: {name}). This may block normal operations. Fix: `rm .claude/.selfish-active .claude/.selfish-phase .claude/.selfish-ci-passed` or run `/selfish:resume` |
-| No orphaned artifacts | Glob `specs/*/spec.md` | No specs directories, or all are from active pipeline | ⚠ Warning: orphaned `specs/{name}/` found. Left over from a previous pipeline. Fix: `rm -rf specs/{name}/` |
+| No orphaned artifacts | Glob `.claude/selfish/specs/*/spec.md` | No specs directories, or all are from active pipeline | ⚠ Warning: orphaned `.claude/selfish/specs/{name}/` found. Left over from a previous pipeline. Fix: `rm -rf .claude/selfish/specs/{name}/` |
 | No lingering safety tags | `git tag -l 'selfish/pre-*'` | No tags, or tags match active pipeline | ⚠ Warning: lingering safety tag `selfish/pre-{x}` found. Fix: `git tag -d selfish/pre-{x}` |
-| Checkpoint state | Read `memory/checkpoint.md` if exists | No checkpoint (clean), or checkpoint is from current session | ⚠ Warning: stale checkpoint from {date}. Fix: run `/selfish:resume` to continue or delete `memory/checkpoint.md` |
+| Checkpoint state | Read `.claude/selfish/memory/checkpoint.md` if exists | No checkpoint (clean), or checkpoint is from current session | ⚠ Warning: stale checkpoint from {date}. Fix: run `/selfish:resume` to continue or delete `.claude/selfish/memory/checkpoint.md` |
 
 ### Category 5: Hook Health
 

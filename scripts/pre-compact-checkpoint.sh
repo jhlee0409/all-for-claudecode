@@ -59,8 +59,8 @@ fi
 # Check tasks.md progress status
 TASKS_DONE=0
 TASKS_TOTAL=0
-if [ -n "$PIPELINE_FEATURE" ] && [ -d "$PROJECT_DIR/specs/$PIPELINE_FEATURE" ]; then
-  TASKS_FILE="$PROJECT_DIR/specs/$PIPELINE_FEATURE/tasks.md"
+if [ -n "$PIPELINE_FEATURE" ] && [ -d "$PROJECT_DIR/.claude/selfish/specs/$PIPELINE_FEATURE" ]; then
+  TASKS_FILE="$PROJECT_DIR/.claude/selfish/specs/$PIPELINE_FEATURE/tasks.md"
   if [ -f "$TASKS_FILE" ]; then
     TASKS_DONE=$(grep -cE '\[x\]' "$TASKS_FILE" 2>/dev/null || echo 0)
     TASKS_TOTAL=$(grep -cE '\[(x| )\]' "$TASKS_FILE" 2>/dev/null || echo 0)
@@ -107,6 +107,6 @@ $STAGED_LIST
 EOF
 
 # Inject context via stdout (Claude can see this info after compaction)
-echo "Auto-checkpoint saved to memory/checkpoint.md (branch: $BRANCH, pipeline: ${PIPELINE_FEATURE:-inactive})"
+echo "Auto-checkpoint saved to .claude/selfish/memory/checkpoint.md (branch: $BRANCH, pipeline: ${PIPELINE_FEATURE:-inactive})"
 
 exit 0

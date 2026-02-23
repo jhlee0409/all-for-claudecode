@@ -84,7 +84,22 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 
 Retry after fixing on failure (max 3 attempts).
 
-### 7. Final Output
+### 7. Retrospective Entry (if new pattern found)
+
+If this debug session reveals a pattern not previously documented in `.claude/selfish/memory/retrospectives/`:
+
+Append to `.claude/selfish/memory/retrospectives/{YYYY-MM-DD}.md`:
+```markdown
+## Pattern: {category}
+**What happened**: {concrete description}
+**Root cause**: {why this bug occurred}
+**Prevention rule**: {actionable rule — usable in future plan/implement phases}
+**Severity**: Critical | Warning
+```
+
+Only write if the pattern is new and actionable. Generic observations are prohibited.
+
+### 8. Final Output
 
 ```
 Debug complete

@@ -19,7 +19,7 @@ model: sonnet
 # /selfish:architect — Architecture Analysis and Design Advice
 
 > Analyzes the codebase architecture and records design decisions.
-> Ensures design quality through convergence-based Critic Loop. Does not modify source code. May write ADR files to `memory/decisions/`.
+> Ensures design quality through convergence-based Critic Loop. Does not modify source code. May write ADR files to `.claude/selfish/memory/decisions/`.
 
 ## Arguments
 
@@ -111,7 +111,7 @@ Run the critic loop until convergence. Safety cap: 7 passes.
 
 ### 5. Save ADR (for design decisions)
 
-If ADR type, save to `memory/decisions/{YYYY-MM-DD}-{topic}.md`:
+If ADR type, save to `.claude/selfish/memory/decisions/{YYYY-MM-DD}-{topic}.md`:
 
 ```markdown
 # ADR: {title}
@@ -136,7 +136,7 @@ Architecture analysis complete
 
 ## Notes
 
-- **No source modification**: Does not modify project source code. May write ADR files to `memory/decisions/`.
+- **No source modification**: Does not modify project source code. May write ADR files to `.claude/selfish/memory/decisions/`.
 - **Based on actual code**: Explore the actual codebase, not assumptions.
 - **Architecture first**: All suggestions respect {config.architecture} rules.
 - **Incremental changes**: Prefer incremental improvements over big-bang refactoring.

@@ -13,7 +13,7 @@ allowed-tools:
 
 # /selfish:checkpoint — Save Session State
 
-> Saves the current work state to memory/checkpoint.md.
+> Saves the current work state to .claude/selfish/memory/checkpoint.md.
 > Preserves progress even if the session is interrupted.
 
 ## Arguments
@@ -41,7 +41,7 @@ Collect automatically:
 
 ### 2. Save Checkpoint
 
-**Overwrite** `memory/checkpoint.md` (keep only the latest state):
+**Overwrite** `.claude/selfish/memory/checkpoint.md` (keep only the latest state):
 
 ````markdown
 # Session Checkpoint

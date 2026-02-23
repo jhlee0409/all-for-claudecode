@@ -134,7 +134,7 @@ For each changed file, examine from the following perspectives:
 
 ### 5. Retrospective Check
 
-If `memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/selfish/memory/retrospectives/` directory exists, load retrospective files and check:
 - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
 - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 
@@ -155,11 +155,26 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 **On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
 **On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
-### 7. Archive Review Report
+### 7. Retrospective Entry (if new pattern found)
 
-When running inside a pipeline (specs/{feature}/ exists), persist the review results:
+If this review reveals a recurring pattern not previously documented in `.claude/selfish/memory/retrospectives/`:
 
-1. Write full review output (Summary table + Detailed Findings + Positives) to `specs/{feature}/review-report.md`
+Append to `.claude/selfish/memory/retrospectives/{YYYY-MM-DD}.md`:
+```markdown
+## Pattern: {category}
+**What happened**: {concrete description}
+**Root cause**: {why this keeps occurring}
+**Prevention rule**: {actionable rule — usable in future plan/implement phases}
+**Severity**: Critical | Warning
+```
+
+Only write if the pattern is new and actionable. Generic observations are prohibited.
+
+### 8. Archive Review Report
+
+When running inside a pipeline (.claude/selfish/specs/{feature}/ exists), persist the review results:
+
+1. Write full review output (Summary table + Detailed Findings + Positives) to `.claude/selfish/specs/{feature}/review-report.md`
 2. Include metadata header:
    ```markdown
    # Review Report: {feature name}
@@ -167,11 +182,11 @@ When running inside a pipeline (specs/{feature}/ exists), persist the review res
    > Files reviewed: {count}
    > Findings: Critical {N} / Warning {N} / Info {N}
    ```
-3. This file survives Clean phase (copied to `memory/reviews/{feature}-{date}.md` before specs/ deletion)
+3. This file survives Clean phase (copied to `.claude/selfish/memory/reviews/{feature}-{date}.md` before .claude/selfish/specs/ deletion)
 
 When running standalone (no active pipeline), skip archiving — display results in console only.
 
-### 8. Final Output
+### 9. Final Output
 
 ```
 Review complete

@@ -22,7 +22,7 @@ model: sonnet
 
 ### 1. Load Spec
 
-1. Read `specs/{feature}/spec.md` — stop if not found
+1. Read `.claude/selfish/specs/{feature}/spec.md` — stop if not found
 2. If a `[NEEDS CLARIFICATION]` section exists, process it first
 3. Quickly check existing codebase for related patterns
 

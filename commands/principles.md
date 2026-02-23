@@ -14,7 +14,7 @@ model: haiku
 # /selfish:principles — Manage Project Principles
 
 > Creates and manages the project's core principles (constitution).
-> Stored in memory/principles.md and referenced across all sessions.
+> Stored in .claude/selfish/memory/principles.md and referenced across all sessions.
 
 ## Arguments
 
@@ -32,7 +32,7 @@ model: haiku
 
 ### 1. Check Current State
 
-Read `memory/principles.md`:
+Read `.claude/selfish/memory/principles.md`:
 - If present: load existing principles
 - If absent: empty state (show `init` instructions)
 
@@ -101,7 +101,7 @@ Collect principles interactively:
 
 ## Notes
 
-- **Persistent storage**: Saved to memory/principles.md and maintained across sessions.
+- **Persistent storage**: Saved to .claude/selfish/memory/principles.md and maintained across sessions.
 - **Auto-referenced**: Automatically loaded and validated by /selfish:plan and /selfish:architect.
 - **Keep it concise**: Maintain no more than 10 principles. Too many reduces effectiveness.
 - **Avoid duplication with CLAUDE.md**: Do not re-register rules already present in CLAUDE.md as principles.

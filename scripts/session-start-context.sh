@@ -36,7 +36,7 @@ if [ -f "$PIPELINE_FLAG" ]; then
   OUTPUT="[SELFISH PIPELINE ACTIVE] Feature: $FEATURE"
 
   # tasks.md progress
-  TASKS_FILE="$PROJECT_DIR/specs/$FEATURE/tasks.md"
+  TASKS_FILE="$PROJECT_DIR/.claude/selfish/specs/$FEATURE/tasks.md"
   if [ -f "$TASKS_FILE" ]; then
     DONE=$(grep -cE '\[x\]' "$TASKS_FILE" 2>/dev/null || echo 0)
     TOTAL=$(grep -cE '\[(x| )\]' "$TASKS_FILE" 2>/dev/null || echo 0)

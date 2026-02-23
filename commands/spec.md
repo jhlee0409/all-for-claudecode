@@ -29,7 +29,7 @@ model: sonnet
 2. Determine **feature name**:
    - Extract 2-3 key keywords from `$ARGUMENTS`
    - Convert to kebab-case (e.g., "add user authentication" → `user-auth`)
-3. **Create directory**: `specs/{feature-name}/` (create parent `specs/` directory if it does not exist)
+3. **Create directory**: `.claude/selfish/specs/{feature-name}/` (create parent `.claude/selfish/specs/` directory if it does not exist)
 4. If already exists, confirm with user: "Overwrite existing spec?"
 
 ### 2. Explore Codebase
@@ -42,7 +42,7 @@ Before writing the spec, understand the current project structure:
 
 ### 3. Write Spec
 
-Create `specs/{feature-name}/spec.md`:
+Create `.claude/selfish/specs/{feature-name}/spec.md`:
 
 ```markdown
 # Feature Spec: {feature name}
@@ -106,7 +106,7 @@ Create `specs/{feature-name}/spec.md`:
 
 ### 4. Retrospective Check
 
-If `memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/selfish/memory/retrospectives/` directory exists, load retrospective files and check:
 - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
 - Were there scope-related issues in past specs? Warn about similar ambiguities.
 
@@ -133,7 +133,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 
 ```
 Spec generated
-├─ specs/{feature-name}/spec.md
+├─ .claude/selfish/specs/{feature-name}/spec.md
 ├─ User Stories: {count}
 ├─ Requirements: FR {count}, NFR {count}
 ├─ Unresolved: {[NEEDS CLARIFICATION] count}

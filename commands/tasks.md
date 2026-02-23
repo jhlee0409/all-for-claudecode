@@ -22,7 +22,7 @@ model: sonnet
 
 ### 1. Load Context
 
-1. Load from `specs/{feature}/`:
+1. Load from `.claude/selfish/specs/{feature}/`:
    - **plan.md** (required) — stop if missing: "Run /selfish:plan first."
    - **spec.md** (required)
    - **research.md** (if present)
@@ -73,14 +73,14 @@ Decompose tasks per Phase defined in plan.md.
 1. **1 task = 1 file** principle (where possible)
 2. **Same file = sequential**, **different files = [P] candidate**
 3. **Explicit dependencies**: Use `depends: [T001, T002]` to declare blocking dependencies. Tasks without `depends:` and with [P] marker are immediately parallelizable.
-4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-parallel-validate.sh" specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
+4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-parallel-validate.sh" .claude/selfish/specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
 5. **Dependency graph must be a DAG**: no circular dependencies allowed. Validate before output.
 6. **Test tasks**: Include a verification task for each testable unit
 7. **Phase gate**: Add a `{config.gate}` validation task at the end of each Phase
 
 ### 3. Retrospective Check
 
-If `memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/selfish/memory/retrospectives/` directory exists, load retrospective files and check:
 - Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
 - Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
 
@@ -116,11 +116,11 @@ Every FR-*/NFR-* must be mapped to at least one task.
 
 ### 6. Final Output
 
-Save to `specs/{feature}/tasks.md`, then:
+Save to `.claude/selfish/specs/{feature}/tasks.md`, then:
 
 ```
 Tasks generated
-├─ specs/{feature}/tasks.md
+├─ .claude/selfish/specs/{feature}/tasks.md
 ├─ Tasks: {total count} ({[P] count} parallelizable)
 ├─ Phases: {phase count}
 ├─ Coverage: FR {coverage}%, NFR {coverage}%

@@ -6,13 +6,10 @@ node_modules/
 # Selfish pipeline state files (runtime artifacts)
 .claude/.selfish-*
 
-# Pipeline spec artifacts (generated during auto pipeline)
-specs/
-
-# Project-local config and runtime logs
+# Selfish pipeline artifacts (specs, memory, config)
+.claude/selfish/
 .claude/selfish.config.md
 .claude/agent-memory/
-memory/
 
 # IDE / tool artifacts
 firebase-debug.log

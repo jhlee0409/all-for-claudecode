@@ -26,11 +26,11 @@ model: sonnet
 ### 1. Load Context
 
 1. Check **current branch** → `BRANCH_NAME`
-2. Find **specs/{feature}/spec.md**:
-   - Search under `specs/` for a directory matching the current branch name or `$ARGUMENTS`
+2. Find **.claude/selfish/specs/{feature}/spec.md**:
+   - Search under `.claude/selfish/specs/` for a directory matching the current branch name or `$ARGUMENTS`
    - If not found: print "spec.md not found. Run `/selfish:spec` first." then **abort**
 3. Read full **spec.md**
-4. Read **memory/principles.md** (if present)
+4. Read **.claude/selfish/memory/principles.md** (if present)
 5. Read **CLAUDE.md** project context
 
 ### 2. Clarification Check
@@ -39,7 +39,7 @@ model: sonnet
   - Warn user: "There are unresolved clarification items. Do you want to continue?"
   - If user chooses to stop → guide to `/selfish:clarify` then **abort**
 
-### 3. Phase 0 — Research (if needed)
+### 3. Phase 0 — Research (ReWOO pattern, if needed)
 
 Extract technical uncertainties from spec.md:
 
@@ -47,22 +47,40 @@ Extract technical uncertainties from spec.md:
 2. Are performance requirements unverified?
 3. Is the integration approach with the existing codebase unclear?
 
-**If there are uncertain items**:
-- Resolve each via WebSearch/codebase exploration
-- Record results in `specs/{feature}/research.md`:
-  ```markdown
-  ## {topic}
-  **Decision**: {chosen approach}
-  **Rationale**: {reason}
-  **Alternatives**: {other approaches considered}
-  **Source**: {URL or file path}
-  ```
-
 **If no uncertain items**: skip Phase 0.
+
+**If there are uncertain items**, follow the 3-step ReWOO flow:
+
+#### Step 1: Plan (enumerate all topics — NO execution yet)
+List all research topics as a numbered list:
+```
+1. {topic1} — {what we need to know}
+2. {topic2} — {what we need to know}
+3. {topic3} — {what we need to know}
+```
+
+#### Step 2: Execute (parallel for independent topics)
+- If topics are independent (no result dependency): launch parallel Task() calls in a **single message**:
+  ```
+  Task("Research: {topic1}", subagent_type: "general-purpose")
+  Task("Research: {topic2}", subagent_type: "general-purpose")
+  ```
+- If a topic depends on another's result: execute sequentially after the dependency resolves
+- For 1-2 topics: resolve directly via WebSearch/codebase exploration (no delegation needed)
+
+#### Step 3: Solve (consolidate all results)
+Collect all results and record in `.claude/selfish/specs/{feature}/research.md`:
+```markdown
+## {topic}
+**Decision**: {chosen approach}
+**Rationale**: {reason}
+**Alternatives**: {other approaches considered}
+**Source**: {URL or file path}
+```
 
 ### 4. Phase 1 — Write Design
 
-Create `specs/{feature}/plan.md`. **Must** follow the structure below:
+Create `.claude/selfish/specs/{feature}/plan.md`. **Must** follow the structure below:
 
 ```markdown
 # Implementation Plan: {feature name}
@@ -81,7 +99,7 @@ Create `specs/{feature}/plan.md`. **Must** follow the structure below:
 - **Constraints**: {constraints extracted from spec}
 
 ## Principles Check
-{if memory/principles.md exists: validation results against MUST principles}
+{if .claude/selfish/memory/principles.md exists: validation results against MUST principles}
 {if violations possible: state explicitly + justification}
 
 ## Architecture Decision
@@ -150,7 +168,7 @@ Run the critic loop until convergence. Safety cap: 7 passes.
 | **COMPLETENESS** | Are all requirements (FR-*) from spec.md reflected in the plan? |
 | **FEASIBILITY** | Is it compatible with the existing codebase? Are dependencies available? |
 | **ARCHITECTURE** | Does it comply with {config.architecture} rules? |
-| **RISK** | Are there any unidentified risks? Additionally, if `memory/retrospectives/` directory contains files from previous pipeline runs, load each file and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
+| **RISK** | Are there any unidentified risks? Additionally, if `.claude/selfish/memory/retrospectives/` directory contains files from previous pipeline runs, load each file and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
 | **PRINCIPLES** | Does it not violate the MUST principles in principles.md? |
 
 **On FAIL**: auto-fix and continue to next pass.
@@ -159,22 +177,12 @@ Run the critic loop until convergence. Safety cap: 7 passes.
 **On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
 **On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
-### 6. Agent Teams (if needed)
-
-If research items are 3 or more, delegate to parallel research agents via Task tool:
-
-```
-Task("Research: {topic1}", subagent_type: "general-purpose")
-Task("Research: {topic2}", subagent_type: "general-purpose")
-→ collect results → consolidate into research.md
-```
-
-### 7. Final Output
+### 6. Final Output
 
 ```
 Plan generated
-├─ specs/{feature}/plan.md
-├─ specs/{feature}/research.md (if research was performed)
+├─ .claude/selfish/specs/{feature}/plan.md
+├─ .claude/selfish/specs/{feature}/research.md (if research was performed)
 ├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 └─ Next step: /selfish:tasks
 ```

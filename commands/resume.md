@@ -12,7 +12,7 @@ allowed-tools:
 
 # /selfish:resume — Restore Session
 
-> Restores the previous session state from memory/checkpoint.md and resumes work.
+> Restores the previous session state from .claude/selfish/memory/checkpoint.md and resumes work.
 
 ## Arguments
 
@@ -22,7 +22,7 @@ allowed-tools:
 
 ### 1. Load Checkpoint
 
-Read `memory/checkpoint.md`:
+Read `.claude/selfish/memory/checkpoint.md`:
 - If not found: output "No saved checkpoint found." then **stop**
 - If found: parse the full contents
 
@@ -34,7 +34,7 @@ Compare the checkpoint state against the current environment:
    - If different: warn + suggest switching
 2. **File state**: Have any files changed since the checkpoint?
    - Check for new commits with `git log {checkpoint hash}..HEAD --oneline`
-3. **Feature directory**: Does specs/{feature}/ still exist?
+3. **Feature directory**: Does .claude/selfish/specs/{feature}/ still exist?
 
 ### 3. Report State
 
