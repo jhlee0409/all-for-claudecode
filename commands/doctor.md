@@ -149,7 +149,7 @@ Pipeline State
 
 Hook Health
   ✓ hooks.json valid
-  ✓ All 17 scripts exist
+  ✓ All scripts exist
   ✓ All scripts executable
 
 ─────────────────────────

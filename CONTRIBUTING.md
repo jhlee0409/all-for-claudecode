@@ -6,13 +6,12 @@ Development guidelines for adding features, modifying behavior, upgrading, and m
 
 ```
 commands/   18 markdown slash commands (the product surface)
-scripts/    17 bash hook handlers (enforcement layer)
+scripts/    bash hook handlers (enforcement layer)
 hooks/      hooks.json (event → handler binding)
 agents/     2 persistent memory subagents
 docs/       shared reference documents
 templates/  5 project preset configs
-tests/      bash test suite (118 assertions)
-bin/        ESM CLI installer
+tests/      bash test suite bin/        ESM CLI installer
 .claude-plugin/  plugin.json + marketplace.json
 ```
 
@@ -447,8 +446,7 @@ cp "$SRC/CLAUDE.md" "$CACHE/CLAUDE.md"
 ### Running tests
 
 ```bash
-npm test              # bash tests/test-hooks.sh (118 assertions)
-npm run lint          # shellcheck scripts/*.sh
+npm test              # bash tests/test-hooks.sh npm run lint          # shellcheck scripts/*.sh
 npm run test:all      # lint + test combined
 ```
 
