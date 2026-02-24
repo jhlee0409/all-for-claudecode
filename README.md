@@ -1,3 +1,6 @@
+<div align="center">                                                                                                                                        
+  <img src="https://github.com/user-attachments/assets/9e23029e-e326-4cfa-b329-3bdd1006aecd" alt="all-for-claudecode" width="640" />                        
+</div>
 # all-for-claudecode
 
 **Claude Code plugin that automates the full development cycle — spec → plan → implement → review → clean.**
