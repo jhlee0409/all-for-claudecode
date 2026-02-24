@@ -63,7 +63,20 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | AFC block version | Extract version from `<!-- AFC:VERSION:X.Y.Z -->` in CLAUDE.md. Then read `${CLAUDE_PLUGIN_ROOT}/package.json` to get the actual plugin version. Compare the two. | Block version ≥ plugin version | ⚠ Warning: AFC block is outdated (found {block_version}, current {plugin_version}). Fix: run `/afc:init` to update |
 | No conflicting routing | Grep for conflicting agent patterns (`executor`, `deep-executor`, `debugger`, `code-reviewer`) outside AFC block that could intercept afc intents | No conflicts or conflicts are inside other tool blocks | ⚠ Warning: found agent routing that may conflict with afc skills. Review `~/.claude/CLAUDE.md` |
 
-### Category 4: Pipeline State
+### Category 4: Legacy Migration (v1.x → v2.0)
+
+> Detects leftover artifacts from the old `selfish-pipeline` (v1.x) plugin. If none found, print `✓ No legacy artifacts` and skip this category.
+
+| Check | How | Pass | Fail |
+|-------|-----|------|------|
+| No legacy CLAUDE.md block | Grep `~/.claude/CLAUDE.md` for `<!-- SELFISH:START -->` | Marker not found | ⚠ Warning: legacy `SELFISH:START` block found in `~/.claude/CLAUDE.md`. Fix: run `/afc:init` (will replace with AFC block) |
+| No legacy config file | Check `.claude/selfish.config.md` | File does not exist | ⚠ Warning: legacy config `.claude/selfish.config.md` found. Fix: `mv .claude/selfish.config.md .claude/afc.config.md` |
+| No legacy state files | Glob `.claude/.selfish-*` | No files found | ⚠ Warning: legacy state files `.claude/.selfish-*` found. Fix: `cd .claude && for f in .selfish-*; do mv "$f" "${f/.selfish-/.afc-}"; done` |
+| No legacy artifact dir | Check `.claude/selfish/` directory | Directory does not exist | ⚠ Warning: legacy artifact directory `.claude/selfish/` found. Fix: `mv .claude/selfish .claude/afc` |
+| No legacy git tags | `git tag -l 'selfish/pre-*' 'selfish/phase-*'` | No tags found | ⚠ Warning: legacy git tags found. Fix: `git tag -l 'selfish/*' \| xargs git tag -d` |
+| No legacy plugin installed | Check if `selfish@selfish-pipeline` appears in installed plugins (grep settings.json for `selfish-pipeline`) | Not found | ⚠ Warning: old `selfish-pipeline` plugin still installed. Fix: `claude plugin uninstall selfish@selfish-pipeline && claude plugin marketplace remove jhlee0409/selfish-pipeline` |
+
+### Category 5: Pipeline State
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
@@ -72,7 +85,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | No lingering safety tags | `git tag -l 'afc/pre-*'` | No tags, or tags match active pipeline | ⚠ Warning: lingering safety tag `afc/pre-{x}` found. Fix: `git tag -d afc/pre-{x}` |
 | Checkpoint state | Read `.claude/afc/memory/checkpoint.md` if exists | No checkpoint (clean), or checkpoint is from current session | ⚠ Warning: stale checkpoint from {date}. Fix: run `/afc:resume` to continue or delete `.claude/afc/memory/checkpoint.md` |
 
-### Category 5: Hook Health
+### Category 6: Hook Health
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
@@ -80,7 +93,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | All scripts exist | For each script referenced in hooks.json, check file exists | All scripts found | ✗ Fix: reinstall plugin |
 | Scripts executable | Check execute permission on each script in plugin's scripts/ | All have +x | Fix: `chmod +x` on the missing scripts, or reinstall plugin |
 
-### Category 6: Version Sync (development only)
+### Category 7: Version Sync (development only)
 
 > Only run if current directory is the all-for-claudecode source repo (check for `package.json` with `"name": "all-for-claudecode"`).
 

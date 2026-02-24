@@ -19,13 +19,38 @@ model: haiku
 
 ## Execution Steps
 
-### 1. Check for Existing Config
+### 1. Legacy Migration Check
+
+Before anything else, detect and migrate v1.x (selfish-pipeline) artifacts:
+
+**A. Config file migration**
+- If `.claude/selfish.config.md` exists AND `.claude/afc.config.md` does NOT exist:
+  - Rename: `mv .claude/selfish.config.md .claude/afc.config.md`
+  - Print: `Migrated: selfish.config.md → afc.config.md`
+- If both exist: print warning, keep `afc.config.md`, skip migration
+
+**B. State file migration**
+- Glob `.claude/.selfish-*` — if any found:
+  - Rename each: `.selfish-{x}` → `.afc-{x}`
+  - Print: `Migrated: {count} state files (.selfish-* → .afc-*)`
+
+**C. Artifact directory migration**
+- If `.claude/selfish/` exists AND `.claude/afc/` does NOT exist:
+  - Rename: `mv .claude/selfish .claude/afc`
+  - Print: `Migrated: .claude/selfish/ → .claude/afc/`
+
+**D. Git tag migration**
+- Check `git tag -l 'selfish/pre-*' 'selfish/phase-*'`
+- If any found: rename each tag (`git tag afc/... selfish/... && git tag -d selfish/...`)
+- Print: `Migrated: {count} git tags (selfish/* → afc/*)`
+
+### 2. Check for Existing Config
 
 If `.claude/afc.config.md` already exists:
 - Ask user: "Config file already exists. Do you want to overwrite it?"
 - If declined: **abort**
 
-### 2. Preset Branch
+### 3. Preset Branch
 
 #### A. Preset Specified (`$ARGUMENTS` provided)
 
@@ -77,22 +102,23 @@ Analyze project structure and auto-infer configuration:
 - `strict` in `tsconfig.json` → strict_mode
 - Read 2-3 existing code samples to verify naming patterns
 
-### 3. Generate Config File
+### 4. Generate Config File
 
 1. Generate config based on `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.template.md`
 2. Fill in blanks with auto-inferred values
 3. For items that cannot be inferred: keep template defaults + mark with `# TODO: Adjust for your project`
 4. Save to `.claude/afc.config.md`
 
-### 4. Scan Global CLAUDE.md and Detect Conflicts
+### 5. Scan Global CLAUDE.md and Detect Conflicts
 
 Read `~/.claude/CLAUDE.md` and analyze in the following order.
 
-#### Step 1. Check for Existing AFC Block
+#### Step 1. Check for Existing AFC or Legacy SELFISH Block
 
-Check for presence of `<!-- AFC:START -->` marker.
-- If found: replace with latest version (proceed to Step 3)
-- If not found: proceed to Step 2
+Check for presence of `<!-- AFC:START -->` or `<!-- SELFISH:START -->` marker.
+- If `<!-- AFC:START -->` found: replace with latest version (proceed to Step 3)
+- If `<!-- SELFISH:START -->` found (legacy v1.x): remove the entire `SELFISH:START` ~ `SELFISH:END` block, then proceed to inject new AFC block at Step 4. Print: `Migrated: SELFISH block → AFC block in ~/.claude/CLAUDE.md`
+- If neither found: proceed to Step 2
 
 #### Step 2. Conflict Pattern Scan
 
@@ -117,10 +143,12 @@ Find these patterns:
 - `delegate to`, `route to`, `always use` + agent name combinations
 - Directives related to `auto-trigger`, `intent detection`, `intent-based routing`
 
-**D. Legacy afc Block Detection**
-Previous versions without markers:
+**D. Legacy Block Detection**
+Previous versions without markers or with old branding:
 - `## All-for-ClaudeCode Auto-Trigger Rules`
 - `## All-for-ClaudeCode Integration`
+- `<!-- SELFISH:START -->` ~ `<!-- SELFISH:END -->` (v1.x block — should have been caught in Step 1, but double-check here)
+- `<selfish-pipeline>` / `</selfish-pipeline>` XML tags
 
 #### Step 3. Report Conflicts and User Choice
 
@@ -216,7 +244,7 @@ The following rules were auto-generated to resolve conflicts:
 - This block is at the end of the file and therefore has the highest priority
 ```
 
-### 5. Final Output
+### 6. Final Output
 
 ```
 All-for-ClaudeCode initialization complete
