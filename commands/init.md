@@ -1,27 +1,27 @@
 ---
-name: selfish:init
+name: afc:init
 description: "Project initial setup"
 argument-hint: "[preset: nextjs-fsd | react-spa | express-api | monorepo]"
 disable-model-invocation: true
 model: haiku
 ---
 
-# /selfish:init — Project Initial Setup
+# /afc:init — Project Initial Setup
 
-> Creates a `.claude/selfish.config.md` configuration file in the current project,
-> and injects selfish intent-based routing rules into `~/.claude/CLAUDE.md`.
+> Creates a `.claude/afc.config.md` configuration file in the current project,
+> and injects afc intent-based routing rules into `~/.claude/CLAUDE.md`.
 
 ## Arguments
 
 - `$ARGUMENTS` — (optional) Template preset name (e.g., `nextjs-fsd`)
   - If not specified: analyzes project structure and auto-infers
-  - If preset specified: uses `${CLAUDE_PLUGIN_ROOT}/templates/selfish.config.{preset}.md`
+  - If preset specified: uses `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.{preset}.md`
 
 ## Execution Steps
 
 ### 1. Check for Existing Config
 
-If `.claude/selfish.config.md` already exists:
+If `.claude/afc.config.md` already exists:
 - Ask user: "Config file already exists. Do you want to overwrite it?"
 - If declined: **abort**
 
@@ -29,8 +29,8 @@ If `.claude/selfish.config.md` already exists:
 
 #### A. Preset Specified (`$ARGUMENTS` provided)
 
-1. Verify `${CLAUDE_PLUGIN_ROOT}/templates/selfish.config.{$ARGUMENTS}.md` exists
-2. If found: copy that file to `.claude/selfish.config.md`
+1. Verify `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.{$ARGUMENTS}.md` exists
+2. If found: copy that file to `.claude/afc.config.md`
 3. If not found: print "Preset `{$ARGUMENTS}` not found. Available: {list}" then **abort**
 
 #### B. Auto-Infer (`$ARGUMENTS` not provided)
@@ -79,18 +79,18 @@ Analyze project structure and auto-infer configuration:
 
 ### 3. Generate Config File
 
-1. Generate config based on `${CLAUDE_PLUGIN_ROOT}/templates/selfish.config.template.md`
+1. Generate config based on `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.template.md`
 2. Fill in blanks with auto-inferred values
 3. For items that cannot be inferred: keep template defaults + mark with `# TODO: Adjust for your project`
-4. Save to `.claude/selfish.config.md`
+4. Save to `.claude/afc.config.md`
 
 ### 4. Scan Global CLAUDE.md and Detect Conflicts
 
 Read `~/.claude/CLAUDE.md` and analyze in the following order.
 
-#### Step 1. Check for Existing SELFISH Block
+#### Step 1. Check for Existing AFC Block
 
-Check for presence of `<!-- SELFISH:START -->` marker.
+Check for presence of `<!-- AFC:START -->` marker.
 - If found: replace with latest version (proceed to Step 3)
 - If not found: proceed to Step 2
 
@@ -104,12 +104,12 @@ Search the entire CLAUDE.md for the patterns below. **Include content inside mar
 
 **B. Agent Routing Conflict Detection**
 Find directives containing these keywords:
-- `executor`, `deep-executor` — conflicts with selfish:implement
-- `code-reviewer`, `quality-reviewer`, `style-reviewer`, `api-reviewer`, `security-reviewer`, `performance-reviewer` — conflicts with selfish:review
-- `debugger` (in agent routing context) — conflicts with selfish:debug
-- `planner` (in agent routing context) — conflicts with selfish:plan
-- `analyst`, `verifier` — conflicts with selfish:analyze
-- `test-engineer` — conflicts with selfish:test
+- `executor`, `deep-executor` — conflicts with afc:implement
+- `code-reviewer`, `quality-reviewer`, `style-reviewer`, `api-reviewer`, `security-reviewer`, `performance-reviewer` — conflicts with afc:review
+- `debugger` (in agent routing context) — conflicts with afc:debug
+- `planner` (in agent routing context) — conflicts with afc:plan
+- `analyst`, `verifier` — conflicts with afc:analyze
+- `test-engineer` — conflicts with afc:test
 
 **C. Skill Routing Conflict Detection**
 Find these patterns:
@@ -117,10 +117,10 @@ Find these patterns:
 - `delegate to`, `route to`, `always use` + agent name combinations
 - Directives related to `auto-trigger`, `intent detection`, `intent-based routing`
 
-**D. Legacy selfish Block Detection**
+**D. Legacy afc Block Detection**
 Previous versions without markers:
-- `## Selfish Auto-Trigger Rules`
-- `## Selfish Pipeline Integration`
+- `## All-for-ClaudeCode Auto-Trigger Rules`
+- `## All-for-ClaudeCode Integration`
 
 #### Step 3. Report Conflicts and User Choice
 
@@ -132,65 +132,65 @@ Previous versions without markers:
 📋 CLAUDE.md Scan Results
 ├─ Tool blocks found: {block name list} (lines {range})
 ├─ Agent routing conflicts: {conflict count}
-│   e.g., "executor" (line XX) ↔ selfish:implement
-│   e.g., "code-reviewer" (line XX) ↔ selfish:review
+│   e.g., "executor" (line XX) ↔ afc:implement
+│   e.g., "code-reviewer" (line XX) ↔ afc:review
 └─ Skill routing conflicts: {conflict count}
 ```
 
 Ask user:
 
-> "Directives overlapping with selfish were found. How would you like to proceed?"
+> "Directives overlapping with afc were found. How would you like to proceed?"
 >
-> 1. **selfish-exclusive mode** — Adds selfish override comments to conflicting agent routing directives.
->    Does not modify other tools' marker block contents; covers them with override rules in the SELFISH block.
-> 2. **coexistence mode** — Ignores conflicts and adds only the selfish block.
->    Since it's at the end of the file, selfish directives will likely take priority, but may be non-deterministic on conflict.
+> 1. **afc-exclusive mode** — Adds afc override comments to conflicting agent routing directives.
+>    Does not modify other tools' marker block contents; covers them with override rules in the AFC block.
+> 2. **coexistence mode** — Ignores conflicts and adds only the afc block.
+>    Since it's at the end of the file, afc directives will likely take priority, but may be non-deterministic on conflict.
 > 3. **manual cleanup** — Shows only the current conflict list and stops.
 >    User manually cleans up CLAUDE.md then runs init again.
 
 Based on choice:
-- **Option 1**: SELFISH block includes explicit override rules (activates `<conflict-overrides>` section from base template)
-- **Option 2**: SELFISH block added without overrides (base template as-is)
+- **Option 1**: AFC block includes explicit override rules (activates `<conflict-overrides>` section from base template)
+- **Option 2**: AFC block added without overrides (base template as-is)
 - **Option 3**: Print conflict list only and abort without modifying CLAUDE.md
 
-#### Step 4. Inject SELFISH Block
+#### Step 4. Inject AFC Block
 
 **Version resolution**: Read `${CLAUDE_PLUGIN_ROOT}/package.json` and extract the `"version"` field. Use this value as `{PLUGIN_VERSION}` in the template below.
 
 Add the following block at the **very end** of the file (later-positioned directives have higher priority).
 
-Replace existing SELFISH block if present, otherwise append.
-If legacy block (`## Selfish Auto-Trigger Rules` etc.) exists, remove it then append.
+Replace existing AFC block if present, otherwise append.
+If legacy block (`## All-for-ClaudeCode Auto-Trigger Rules` etc.) exists, remove it then append.
 
 ```markdown
-<!-- SELFISH:START -->
-<!-- SELFISH:VERSION:{PLUGIN_VERSION} -->
-<selfish-pipeline>
-IMPORTANT: For requests matching the selfish skill routing table below, always invoke the corresponding skill via the Skill tool. Do not substitute with other agents or tools.
+<!-- AFC:START -->
+<!-- AFC:VERSION:{PLUGIN_VERSION} -->
+<afc-pipeline>
+IMPORTANT: For requests matching the afc skill routing table below, always invoke the corresponding skill via the Skill tool. Do not substitute with other agents or tools.
 
 ## Skill Routing
 
 | Intent | Skill | Trigger Keywords |
 |--------|-------|-----------------|
-| Implement/Modify | `selfish:implement` | add, modify, refactor, implement |
-| Review | `selfish:review` | review, check code, check PR |
-| Debug | `selfish:debug` | bug, error, broken, fix |
-| Test | `selfish:test` | test, coverage |
-| Design | `selfish:plan` | design, plan, how to implement |
-| Analyze | `selfish:analyze` | consistency, analyze, validate |
-| Spec | `selfish:spec` | spec, specification |
-| Tasks | `selfish:tasks` | break down tasks, decompose |
-| Research | `selfish:research` | research, investigate |
-| Ambiguous | `selfish:clarify` | auto-triggered when requirements are unclear |
-| Full auto | `selfish:auto` | do it automatically, auto-run |
+| Implement/Modify | `afc:implement` | add, modify, refactor, implement |
+| Review | `afc:review` | review, check code, check PR |
+| Debug | `afc:debug` | bug, error, broken, fix |
+| Test | `afc:test` | test, coverage |
+| Design | `afc:plan` | design, plan, how to implement |
+| Analyze | `afc:analyze` | consistency, analyze, validate |
+| Spec | `afc:spec` | spec, specification |
+| Tasks | `afc:tasks` | break down tasks, decompose |
+| Research | `afc:research` | research, investigate |
+| Ambiguous | `afc:clarify` | auto-triggered when requirements are unclear |
+| Full auto | `afc:auto` | do it automatically, auto-run |
 
 User-only (not auto-triggered — inform user on request):
-- `selfish:doctor` — inform user when health check is requested
-- `selfish:architect` — inform user when architecture review is requested
-- `selfish:security` — inform user when security scan is requested
-- `selfish:checkpoint` — inform user when session save is requested
-- `selfish:resume` — inform user when session restore is requested
-- `selfish:principles` — inform user when project principles management is requested
+- `afc:doctor` — inform user when health check is requested
+- `afc:architect` — inform user when architecture review is requested
+- `afc:security` — inform user when security scan is requested
+- `afc:checkpoint` — inform user when session save is requested
+- `afc:resume` — inform user when session restore is requested
+- `afc:principles` — inform user when project principles management is requested
 
 ## Pipeline
 
@@ -198,19 +198,19 @@ spec → plan → tasks → implement → review → clean
 
 ## Override Rules
 
-NEVER use executor, deep-executor, debugger, planner, analyst, verifier, test-engineer, code-reviewer, quality-reviewer, style-reviewer, api-reviewer, security-reviewer, performance-reviewer for tasks that a selfish skill covers above. ALWAYS invoke the selfish skill instead.
-</selfish-pipeline>
-<!-- SELFISH:END -->
+NEVER use executor, deep-executor, debugger, planner, analyst, verifier, test-engineer, code-reviewer, quality-reviewer, style-reviewer, api-reviewer, security-reviewer, performance-reviewer for tasks that a afc skill covers above. ALWAYS invoke the afc skill instead.
+</afc-pipeline>
+<!-- AFC:END -->
 ```
 
-**When Option 1 (selfish-exclusive mode) is selected**, the following `<conflict-overrides>` section is added:
+**When Option 1 (afc-exclusive mode) is selected**, the following `<conflict-overrides>` section is added:
 
 Add the following directly below the Override Rules:
 
 ```markdown
 ## Detected Conflicts
 
-This environment has other agent routing tools that overlap with selfish.
+This environment has other agent routing tools that overlap with afc.
 The following rules were auto-generated to resolve conflicts:
 - The Skill Routing table above always takes priority over the agent routing directives of {detected tool blocks}
 - This block is at the end of the file and therefore has the highest priority
@@ -219,16 +219,16 @@ The following rules were auto-generated to resolve conflicts:
 ### 5. Final Output
 
 ```
-Selfish Pipeline initialization complete
-├─ Config: .claude/selfish.config.md
+All-for-ClaudeCode initialization complete
+├─ Config: .claude/afc.config.md
 ├─ Framework: {detected framework}
 ├─ Architecture: {detected style}
 ├─ Package Manager: {detected manager}
 ├─ Auto-inferred: {inferred item count}
 ├─ TODO: {items requiring manual review}
 ├─ CLAUDE.md: {injected|updated|already current|user aborted}
-│   {if conflicts found} └─ Conflict resolution: {selfish-exclusive|coexistence|user cleanup}
-└─ Next step: /selfish:spec or /selfish:auto
+│   {if conflicts found} └─ Conflict resolution: {afc-exclusive|coexistence|user cleanup}
+└─ Next step: /afc:spec or /afc:auto
 ```
 
 ## Notes
@@ -238,7 +238,7 @@ Selfish Pipeline initialization complete
 - **Preset path**: Presets are loaded from the `templates/` directory inside the plugin.
 - **`.claude/` directory**: Created automatically if it does not exist.
 - **Global CLAUDE.md principles**:
-  - Never modify content outside the `<!-- SELFISH:START/END -->` markers
+  - Never modify content outside the `<!-- AFC:START/END -->` markers
   - Never modify content inside other tools' marker blocks (`<!-- *:START/END -->`)
-  - Always place the SELFISH block at the very end of the file (ensures priority)
+  - Always place the AFC block at the very end of the file (ensures priority)
   - Conflict resolution is handled only via override rules (do not delete or modify other blocks)

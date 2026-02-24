@@ -11,8 +11,8 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
-PHASE_FLAG="$PROJECT_DIR/.claude/.selfish-phase"
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
+PHASE_FLAG="$PROJECT_DIR/.claude/.afc-phase"
 
 # Consume stdin (required -- pipe breaks if not consumed)
 cat > /dev/null

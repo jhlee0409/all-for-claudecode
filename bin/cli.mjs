@@ -4,9 +4,9 @@ import { createInterface } from "node:readline/promises";
 import { execSync } from "node:child_process";
 import { stdin, stdout, exit } from "node:process";
 
-const GITHUB_REPO = "jhlee0409/selfish-pipeline";
-const MARKETPLACE_NAME = "selfish-pipeline";
-const PLUGIN_NAME = "selfish";
+const GITHUB_REPO = "jhlee0409/all-for-claudecode";
+const MARKETPLACE_NAME = "all-for-claudecode";
+const PLUGIN_NAME = "afc";
 
 const SCOPES = [
   {
@@ -40,8 +40,8 @@ function run(cmd) {
 
 async function main() {
   console.log();
-  console.log("  Selfish Pipeline — Claude Code Plugin Installer");
-  console.log("  ================================================");
+  console.log("  All-for-ClaudeCode — Claude Code Plugin Installer");
+  console.log("  ===================================================");
   console.log();
 
   // Check claude CLI exists
@@ -97,8 +97,8 @@ async function main() {
     console.log("  ✓ Installation complete!");
     console.log();
     console.log("  Next steps:");
-    console.log("    /selfish:init                    Create project config");
-    console.log('    /selfish:auto "feature desc"      Run the pipeline');
+    console.log("    /afc:init                    Create project config");
+    console.log('    /afc:auto "feature desc"      Run the pipeline');
     console.log();
   } finally {
     rl.close();

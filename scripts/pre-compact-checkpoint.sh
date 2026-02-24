@@ -49,8 +49,8 @@ if [ -n "$ALL_STAGED" ]; then
   STAGED_COUNT=$(printf '%s' "$STAGED_RAW" | tr -d ' ')
 fi
 
-# Check selfish pipeline active status
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
+# Check afc pipeline active status
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 PIPELINE_FEATURE=""
 if [ -f "$PIPELINE_FLAG" ]; then
   PIPELINE_FEATURE=$(head -1 "$PIPELINE_FLAG" 2>/dev/null | tr -d '\n\r' || true)
@@ -59,8 +59,8 @@ fi
 # Check tasks.md progress status
 TASKS_DONE=0
 TASKS_TOTAL=0
-if [ -n "$PIPELINE_FEATURE" ] && [ -d "$PROJECT_DIR/.claude/selfish/specs/$PIPELINE_FEATURE" ]; then
-  TASKS_FILE="$PROJECT_DIR/.claude/selfish/specs/$PIPELINE_FEATURE/tasks.md"
+if [ -n "$PIPELINE_FEATURE" ] && [ -d "$PROJECT_DIR/.claude/afc/specs/$PIPELINE_FEATURE" ]; then
+  TASKS_FILE="$PROJECT_DIR/.claude/afc/specs/$PIPELINE_FEATURE/tasks.md"
   if [ -f "$TASKS_FILE" ]; then
     TASKS_DONE=$(grep -cE '\[x\]' "$TASKS_FILE" 2>/dev/null || echo 0)
     TASKS_TOTAL=$(grep -cE '\[(x| )\]' "$TASKS_FILE" 2>/dev/null || echo 0)
@@ -102,11 +102,11 @@ $STAGED_LIST
 
 ## Restore Command
 \`\`\`
-/selfish:resume
+/afc:resume
 \`\`\`
 EOF
 
 # Inject context via stdout (Claude can see this info after compaction)
-echo "Auto-checkpoint saved to .claude/selfish/memory/checkpoint.md (branch: $BRANCH, pipeline: ${PIPELINE_FEATURE:-inactive})"
+echo "Auto-checkpoint saved to .claude/afc/memory/checkpoint.md (branch: $BRANCH, pipeline: ${PIPELINE_FEATURE:-inactive})"
 
 exit 0

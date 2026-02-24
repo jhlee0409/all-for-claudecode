@@ -1,11 +1,11 @@
 ---
-name: selfish:test
+name: afc:test
 description: "Test strategy planning and test writing"
 argument-hint: "[target: file path, feature name, or coverage]"
 model: sonnet
 ---
 
-# /selfish:test — Test Strategy Planning and Test Writing
+# /afc:test — Test Strategy Planning and Test Writing
 
 > Establishes a test strategy for implemented code and writes tests.
 > Standalone command — not part of the auto pipeline. Use after implement or before review.
@@ -19,7 +19,7 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/selfish.config.md` first. Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first. Abort if config file is missing.
 Values used from config:
 - `{config.testing}` — test framework (jest, vitest, playwright, etc.)
 - `{config.architecture}` — architecture pattern

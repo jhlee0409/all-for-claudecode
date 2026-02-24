@@ -1,10 +1,10 @@
 ---
-name: selfish:auto
+name: afc:auto
 description: "Full auto pipeline"
 argument-hint: "[feature description in natural language]"
 ---
 
-# /selfish:auto — Full Auto Pipeline
+# /afc:auto — Full Auto Pipeline
 
 > Runs spec → plan → tasks → implement → review → clean fully automatically from a single feature description.
 > No intermediate confirmation. clarify/analyze are skipped. Critic Loop is performed automatically at each phase.
@@ -15,11 +15,11 @@ argument-hint: "[feature description in natural language]"
 
 ## Project Config (auto-loaded)
 
-!`cat .claude/selfish.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/selfish.config.md not found. Create it with /selfish:init."`
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
 ## Config Load
 
-**Always** read `.claude/selfish.config.md` first (read manually if not auto-loaded above). Values defined in this file are referenced below as `{config.*}`:
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above). Values defined in this file are referenced below as `{config.*}`:
 - `{config.ci}` — full CI command
 - `{config.gate}` — phase gate command
 - `{config.architecture}` — architecture style and rules
@@ -28,7 +28,7 @@ argument-hint: "[feature description in natural language]"
 - `{config.risks}` — project-specific risk patterns
 - `{config.mini_review}` — Mini-Review checklist items
 
-If config file is missing: print "`.claude/selfish.config.md` not found. Create project config with `/selfish:init`." then **abort**.
+If config file is missing: print "`.claude/afc.config.md` not found. Create project config with `/afc:init`." then **abort**.
 
 ---
 
@@ -48,19 +48,19 @@ If config file is missing: print "`.claude/selfish.config.md` not found. Create 
 3. Determine feature name (2-3 keywords → kebab-case)
 3.5. **Preflight Check**:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-preflight-check.sh"
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-preflight-check.sh"
    ```
    - If exit 1 (hard failure) → print error and **abort**
    - If warnings only (exit 0) → print warnings and continue
 4. **Activate Pipeline Flag** (hook integration):
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" start {feature}
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" start {feature}
    ```
-   - Safety Snapshot created automatically (`selfish/pre-auto` git tag)
+   - Safety Snapshot created automatically (`afc/pre-auto` git tag)
    - Stop Gate Hook activated (blocks response termination on CI failure)
    - File change tracking started
-   - Timeline log: `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" log pipeline-start "Auto pipeline: {feature}"`
-5. Create `.claude/selfish/specs/{feature}/` directory → **record path as `PIPELINE_ARTIFACT_DIR`** (for Clean scope)
+   - Timeline log: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-start "Auto pipeline: {feature}"`
+5. Create `.claude/afc/specs/{feature}/` directory → **record path as `PIPELINE_ARTIFACT_DIR`** (for Clean scope)
 6. Start notification:
    ```
    Auto pipeline started: {feature}
@@ -70,15 +70,15 @@ If config file is missing: print "`.claude/selfish.config.md` not found. Create 
 
 ### Phase 1: Spec (1/6)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase spec`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase spec`
 
-Execute `/selfish:spec` logic inline:
+Execute `/afc:spec` logic inline:
 
 1. Explore codebase for related code (Glob, Grep) — explore by `{config.architecture}` layer
-2. Create `.claude/selfish/specs/{feature}/spec.md`
+2. Create `.claude/afc/specs/{feature}/spec.md`
 3. `[NEEDS CLARIFICATION]` items are **auto-resolved with best-guess** (clarify skipped)
    - Tag auto-resolved items with `[AUTO-RESOLVED]`
-4. **Retrospective check**: if `.claude/selfish/memory/retrospectives/` exists, load and check:
+4. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
    - Were there scope-related issues in past specs? Warn about similar ambiguities.
 5. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
@@ -91,13 +91,13 @@ Execute `/selfish:spec` logic inline:
 
 ### Phase 2: Plan (2/6)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase plan`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase plan`
 
-Execute `/selfish:plan` logic inline:
+Execute `/afc:plan` logic inline:
 
 1. Load spec.md
 2. If technical uncertainties exist → auto-resolve via WebSearch/code exploration → create research.md
-3. Create `.claude/selfish/specs/{feature}/plan.md`
+3. Create `.claude/afc/specs/{feature}/plan.md`
    - **If setting numerical targets (line counts etc.), include structure-analysis-based estimates** (e.g., "function A ~50 lines, component B ~80 lines → total ~130 lines")
 4. **Critic Loop until convergence** (safety cap: 7, follow Critic Loop rules):
    - Criteria: COMPLETENESS, FEASIBILITY, ARCHITECTURE, RISK, PRINCIPLES
@@ -112,9 +112,9 @@ Execute `/selfish:plan` logic inline:
 
 ### Phase 3: Tasks (3/6)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase tasks`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase tasks`
 
-Execute `/selfish:tasks` logic inline:
+Execute `/afc:tasks` logic inline:
 
 1. Load plan.md
 2. Decompose tasks by phase (T001, T002, ...)
@@ -124,21 +124,21 @@ Execute `/selfish:tasks` logic inline:
    - Validate dependency graph is a DAG (no circular references)
    - [P] tasks **must be executed in parallel** in Phase 4 (declaring [P] then running sequentially is prohibited)
 4. Coverage mapping (FR → Task)
-5. **Retrospective check**: if `.claude/selfish/memory/retrospectives/` exists, load and check:
+5. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
    - Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
 6. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
    - COVERAGE: is every FR/NFR mapped to at least 1 task?
    - DEPENDENCIES: is the dependency graph a valid DAG? Do [P] tasks have no file overlaps?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-7. Create `.claude/selfish/specs/{feature}/tasks.md`
+7. Create `.claude/afc/specs/{feature}/tasks.md`
 8. Progress: `✓ 3/6 Tasks complete (tasks: {N}, parallel: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
 ### Phase 4: Implement (4/6)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase implement`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement`
 
-Execute `/selfish:implement` logic inline with **dependency-aware orchestration**:
+Execute `/afc:implement` logic inline with **dependency-aware orchestration**:
 
 1. Parse tasks.md — extract task IDs, [P] markers, `depends:` lists, file paths
 2. Build dependency graph per phase (validate DAG)
@@ -172,22 +172,22 @@ Execute `/selfish:implement` logic inline with **dependency-aware orchestration*
    ```
 
 6. Perform **3-step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
-   - On gate pass: create phase rollback point `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase-tag {phase_number}`
+   - On gate pass: create phase rollback point `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase-tag {phase_number}`
 7. Real-time `[x]` updates in tasks.md
 8. After full completion, run `{config.ci}` final verification
-   - On pass: `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" ci-pass` (releases Stop Gate)
-9. **Implement retrospective**: if unexpected problems arose that weren't predicted in Plan, record in `.claude/selfish/specs/{feature}/retrospective.md` (for memory update in Clean)
+   - On pass: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" ci-pass` (releases Stop Gate)
+9. **Implement retrospective**: if unexpected problems arose that weren't predicted in Plan, record in `.claude/afc/specs/{feature}/retrospective.md` (for memory update in Clean)
 10. Progress: `✓ 4/6 Implement complete ({completed}/{total} tasks, CI: ✓, Mini-Review: ✓, Checkpoint: ✓)`
 
 ### Phase 5: Review (5/6)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase review`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase review`
 
-Execute `/selfish:review` logic inline:
+Execute `/afc:review` logic inline:
 
 1. Review implemented changed files (`git diff HEAD`)
 2. Check code quality, `{config.architecture}` rules, security, performance, `{config.code_style}` pattern compliance
-3. **Retrospective check**: if `.claude/selfish/memory/retrospectives/` exists, load and check:
+3. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 4. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
@@ -201,13 +201,13 @@ Execute `/selfish:review` logic inline:
 
 ### Phase 6: Clean (6/6)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase clean`
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clean`
 
 Artifact cleanup and codebase hygiene check after implementation and review:
 
 1. **Artifact cleanup** (scope-limited):
-   - **Delete only the `.claude/selfish/specs/{feature}/` directory created by the current pipeline**
-   - If other `.claude/selfish/specs/` subdirectories exist, **do not delete them** (only inform the user of their existence)
+   - **Delete only the `.claude/afc/specs/{feature}/` directory created by the current pipeline**
+   - If other `.claude/afc/specs/` subdirectories exist, **do not delete them** (only inform the user of their existence)
    - Do not leave pipeline intermediate artifacts in the codebase
 2. **Dead code scan**:
    - Detect unused imports from the implementation process (check with `{config.ci}`)
@@ -217,12 +217,12 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - Run `{config.ci}` final execution
    - Auto-fix on failure (max 2 attempts)
 4. **Memory update** (if applicable):
-   - Reusable patterns found during pipeline → record in `.claude/selfish/memory/`
-   - If there were `[AUTO-RESOLVED]` items → record decisions in `.claude/selfish/memory/decisions/`
-   - **If retrospective.md exists** → record as patterns missed by the Plan phase Critic Loop in `.claude/selfish/memory/retrospectives/` (reuse as RISK checklist items in future runs)
-   - **If review-report.md exists** → copy to `.claude/selfish/memory/reviews/{feature}-{date}.md` before .claude/selfish/specs/ deletion
+   - Reusable patterns found during pipeline → record in `.claude/afc/memory/`
+   - If there were `[AUTO-RESOLVED]` items → record decisions in `.claude/afc/memory/decisions/`
+   - **If retrospective.md exists** → record as patterns missed by the Plan phase Critic Loop in `.claude/afc/memory/retrospectives/` (reuse as RISK checklist items in future runs)
+   - **If review-report.md exists** → copy to `.claude/afc/memory/reviews/{feature}-{date}.md` before .claude/afc/specs/ deletion
 5. **Quality report** (structured pipeline metrics):
-   - Generate `.claude/selfish/memory/quality-history/{feature}-{date}.json` with the following structure:
+   - Generate `.claude/afc/memory/quality-history/{feature}-{date}.json` with the following structure:
      ```json
      {
        "feature": "{feature}",
@@ -237,16 +237,16 @@ Artifact cleanup and codebase hygiene check after implementation and review:
        "totals": { "changed_files": N, "auto_resolved": N, "escalations": N }
      }
      ```
-   - Create `.claude/selfish/memory/quality-history/` directory if it does not exist
+   - Create `.claude/afc/memory/quality-history/` directory if it does not exist
 6. **Checkpoint reset**:
-   - Clear `.claude/selfish/memory/checkpoint.md` (pipeline complete = session goal achieved)
+   - Clear `.claude/afc/memory/checkpoint.md` (pipeline complete = session goal achieved)
 7. **Timeline finalize**:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"
    ```
 8. **Release Pipeline Flag** (hook integration):
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" end
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" end
    ```
    - Stop Gate Hook deactivated
    - Change tracking log deleted
@@ -267,7 +267,7 @@ Auto pipeline complete: {feature}
 ├─ Changed files: {N}
 ├─ Auto-resolved: {N} (review recommended)
 ├─ Retrospective: {present/absent}
-└─ .claude/selfish/specs/{feature}/ cleaned up
+└─ .claude/afc/specs/{feature}/ cleaned up
 ```
 
 ## Abort Conditions
@@ -283,10 +283,10 @@ On abort:
 Pipeline aborted (Phase {N}/6)
 ├─ Reason: {abort cause}
 ├─ Completed phases: {completed list}
-├─ Rollback: git reset --hard selfish/pre-auto (restores state before implementation)
-├─ Checkpoint: .claude/selfish/memory/checkpoint.md (last phase gate passed)
-├─ Artifacts: .claude/selfish/specs/{feature}/ (partial completion, manual deletion needed if Clean did not run)
-└─ Resume: /selfish:resume → /selfish:implement (checkpoint-based)
+├─ Rollback: git reset --hard afc/pre-auto (restores state before implementation)
+├─ Checkpoint: .claude/afc/memory/checkpoint.md (last phase gate passed)
+├─ Artifacts: .claude/afc/specs/{feature}/ (partial completion, manual deletion needed if Clean did not run)
+└─ Resume: /afc:resume → /afc:implement (checkpoint-based)
 ```
 
 ## Notes
@@ -295,7 +295,7 @@ Pipeline aborted (Phase {N}/6)
 - **Review auto-resolved items**: items tagged `[AUTO-RESOLVED]` are estimates; review after the fact is recommended.
 - **Large feature warning**: warn before starting if more than 5 User Stories are expected.
 - **Read existing code first**: always read existing files before modifying. Do not blindly generate code.
-- **Follow project rules**: project rules in `selfish.config.md` and `CLAUDE.md` take priority.
+- **Follow project rules**: project rules in `afc.config.md` and `CLAUDE.md` take priority.
 - **Critic Loop is not a ritual**: a single "PASS" line is equivalent to not running Critic at all. Always follow the format in the Critic Loop rules section. Critic uses convergence-based termination — it may finish in 1 pass or take several, depending on the output quality.
 - **ESCALATE pauses auto mode**: when a Critic finds an ambiguous issue requiring user judgment, the pipeline pauses and presents options via AskUserQuestion. Auto mode automates clear decisions but escalates ambiguous ones.
 - **[P] parallel is mandatory**: if a [P] marker is assigned in tasks.md, it must be executed in parallel. Orchestration mode (batch vs swarm) is selected automatically based on task count. Sequential substitution is prohibited.

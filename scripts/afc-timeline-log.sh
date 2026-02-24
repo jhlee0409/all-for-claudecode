@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
-# JSONL Event Logger: Appends structured events to .claude/.selfish-timeline.jsonl
+# JSONL Event Logger: Appends structured events to .claude/.afc-timeline.jsonl
 #
 # Usage:
-#   selfish-timeline-log.sh <event_type> <message> [extra_json_fields]
+#   afc-timeline-log.sh <event_type> <message> [extra_json_fields]
 #
 # event_type: phase-start, phase-end, gate-pass, gate-fail, error,
 #             pipeline-start, pipeline-end
@@ -18,8 +18,8 @@ trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 FLAG_DIR="$PROJECT_DIR/.claude"
-TIMELINE_FILE="$FLAG_DIR/.selfish-timeline.jsonl"
-ROTATE_FILE="$FLAG_DIR/.selfish-timeline.jsonl.1"
+TIMELINE_FILE="$FLAG_DIR/.afc-timeline.jsonl"
+ROTATE_FILE="$FLAG_DIR/.afc-timeline.jsonl.1"
 MAX_BYTES=1048576  # 1 MB
 
 EVENT_TYPE="${1:-}"
@@ -39,11 +39,11 @@ MESSAGE=$(printf '%s' "$MESSAGE"     | tr -d '\n\r' | cut -c1-500)
 # Read pipeline state (gracefully handle missing files)
 FEATURE="none"
 PHASE="none"
-if [ -f "$FLAG_DIR/.selfish-active" ]; then
-  FEATURE=$(head -1 "$FLAG_DIR/.selfish-active" | tr -d '\n\r' | cut -c1-100)
+if [ -f "$FLAG_DIR/.afc-active" ]; then
+  FEATURE=$(head -1 "$FLAG_DIR/.afc-active" | tr -d '\n\r' | cut -c1-100)
 fi
-if [ -f "$FLAG_DIR/.selfish-phase" ]; then
-  PHASE=$(head -1 "$FLAG_DIR/.selfish-phase" | tr -d '\n\r' | cut -c1-64)
+if [ -f "$FLAG_DIR/.afc-phase" ]; then
+  PHASE=$(head -1 "$FLAG_DIR/.afc-phase" | tr -d '\n\r' | cut -c1-64)
 fi
 
 # Timestamp (no jq dependency)

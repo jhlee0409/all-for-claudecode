@@ -1,5 +1,5 @@
 ---
-name: selfish-security
+name: afc-security
 description: "Security scanning agent — remembers vulnerability patterns and project-specific security characteristics across sessions to improve scan precision."
 tools:
   - Read
@@ -27,7 +27,7 @@ Before performing scans, read these shared reference documents:
 ## Memory Usage
 
 At the start of each scan:
-1. Read your MEMORY.md (at `.claude/agent-memory/selfish-security/MEMORY.md`) to review previously found vulnerability patterns
+1. Read your MEMORY.md (at `.claude/agent-memory/afc-security/MEMORY.md`) to review previously found vulnerability patterns
 2. Check false positive records to avoid repeated false alarms
 
 At the end of each scan:

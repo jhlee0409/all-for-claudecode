@@ -5,15 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-24
+
+### Breaking Changes
+- **Rebrand**: `selfish-pipeline` → `all-for-claudecode`
+- Package name: `selfish-pipeline` → `all-for-claudecode`
+- Plugin name: `selfish` → `afc`
+- Command prefix: `/selfish:*` → `/afc:*`
+- Script prefix: `selfish-*.sh` → `afc-*.sh`
+- Agent names: `selfish-architect` / `selfish-security` → `afc-architect` / `afc-security`
+- State files: `.selfish-*` → `.afc-*`
+- Config template: `selfish.config.*.md` → `afc.config.*.md`
+- Git tags: `selfish/pre-*` → `afc/pre-*`
+- CLAUDE.md block markers: `SELFISH:START/END` → `AFC:START/END`
+- Artifact directory: `.claude/selfish/` → `.claude/afc/`
+- GitHub repository: `jhlee0409/selfish-pipeline` → `jhlee0409/all-for-claudecode`
+
+### Migration
+See [MIGRATION.md](MIGRATION.md) for step-by-step upgrade guide from v1.x.
+
 ## [1.2.0] - 2026-02-23
 
 ### Added
 - Convergence-based critic loop — replaces fixed-pass loops with dynamic termination across 8 commands
 - 4 critic verdicts: PASS, FAIL, ESCALATE, DEFER with escalation triggers for ambiguous issues
 - Safety caps (5 rounds default, 7 max) to prevent infinite critic loops
-- Timeline logger script (`selfish-timeline-log.sh`) — JSONL event logging with auto-rotation
-- Parallel task validator script (`selfish-parallel-validate.sh`) — detects file conflicts in `[P]` batches
-- Preflight checker script (`selfish-preflight-check.sh`) — validates environment before pipeline start
+- Timeline logger script (`afc-timeline-log.sh`) — JSONL event logging with auto-rotation
+- Parallel task validator script (`afc-parallel-validate.sh`) — detects file conflicts in `[P]` batches
+- Preflight checker script (`afc-preflight-check.sh`) — validates environment before pipeline start
 - Pipeline manage: `log`, `phase-tag`, `phase-tag-clean` subcommands
 - Phase rollback support in auto.md pipeline orchestration
 - Swarm recovery logic in implement.md for failed parallel tasks
@@ -57,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CONTRIBUTING.md updated: hook protocol table, script template, quick reference
 - README.md: test badge anchor fix, badge count update
 - `.claude/rules/commands.md`: model assignment lists updated (doctor, test added)
-- Version sync now includes `commands/init.md` SELFISH block (4-file sync)
+- Version sync now includes `commands/init.md` AFC block (4-file sync)
 
 ## [1.1.0] - 2026-02-20
 
@@ -66,9 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Model routing for all 18 commands (haiku for simple tasks, sonnet for design/analysis)
 - docs/ shared reference files (critic-loop-rules.md, phase-gate-protocol.md)
 - .claude/rules/ path-specific rules (shell-scripts.md, commands.md)
-- agents/ directory with persistent memory subagents (selfish-architect, selfish-security)
+- agents/ directory with persistent memory subagents (afc-architect, afc-security)
 - `memory: project` for architect and security agents — learnings persist across sessions
-- `isolation: worktree` for selfish-security agent (isolated git worktree execution)
+- `isolation: worktree` for afc-security agent (isolated git worktree execution)
 - `skills` field for both agents (pre-loads critic-loop-rules and phase-gate-protocol)
 - PreToolUse Bash guard hook — blocks dangerous commands during pipeline
 - SubagentStart context injection — injects pipeline state into subagents
@@ -86,8 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dynamic config injection via `!`command`` syntax in command prompts
 - `context: fork` for read-only commands (analyze, architect, security)
 - Invocation control: `user-invocable: false` (3 commands), `disable-model-invocation: true` (7 commands)
-- `/selfish:doctor` project health diagnosis command
-- `/selfish:test` test generation command
+- `/afc:doctor` project health diagnosis command
+- `/afc:test` test generation command
 - 3 preset templates: react-spa, express-api, monorepo
 - `.claude/rules/development.md` general development rules
 - Hook script test framework (tests/test-hooks.sh) with 118 assertions

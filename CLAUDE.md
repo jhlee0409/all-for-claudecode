@@ -10,16 +10,16 @@ npm test              # bash tests/test-hooks.sh
 npm run test:all      # lint + test combined
 ```
 
-Single script lint: `shellcheck scripts/selfish-bash-guard.sh`
+Single script lint: `shellcheck scripts/afc-bash-guard.sh`
 
 ## Architecture
 
-Selfish Pipeline is a Claude Code plugin that automates the full development cycle (spec → plan → tasks → implement → review → clean) through markdown command prompts, bash hook scripts, and project preset templates. Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or self-organizing swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
+All-for-ClaudeCode is a Claude Code plugin that automates the full development cycle (spec → plan → tasks → implement → review → clean) through markdown command prompts, bash hook scripts, and project preset templates. Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or self-organizing swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
 
 ### Core Layers
 
 - **commands/** — 18 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `disable-model-invocation`, `context`)
-- **agents/** — 2 persistent memory subagents (selfish-architect, selfish-security) with `memory: project` for cross-session learning
+- **agents/** — 2 persistent memory subagents (afc-architect, afc-security) with `memory: project` for cross-session learning
 - **hooks/hooks.json** — Declares 15 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 2 hooks use `async: true`. Includes ConfigChange (settings audit) and TeammateIdle (Agent Teams gate)
 - **scripts/** — 20 bash scripts implementing hook logic. All follow the pattern: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
@@ -39,10 +39,10 @@ Scripts receive stdin JSON from Claude Code and respond via stdout JSON or stder
 - **Stop (agent)**: `type: "agent"` with haiku — subagent checks TODO/FIXME in changed files (supplements command CI gate)
 
 Pipeline state is managed through flag files in `$CLAUDE_PROJECT_DIR/.claude/`:
-- `.selfish-active` — contains feature name
-- `.selfish-phase` — current phase (spec/plan/tasks/implement/review/clean)
-- `.selfish-ci-passed` — CI pass timestamp
-- `.selfish-changes.log` — tracked file changes
+- `.afc-active` — contains feature name
+- `.afc-phase` — current phase (spec/plan/tasks/implement/review/clean)
+- `.afc-ci-passed` — CI pass timestamp
+- `.afc-changes.log` — tracked file changes
 
 ### Command Frontmatter Controls
 

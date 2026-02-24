@@ -1,18 +1,18 @@
-# Selfish Pipeline
+# All-for-ClaudeCode
 
 **Claude Code plugin that automates the full development cycle — spec → plan → tasks → implement → review → clean.**
 
-[![npm version](https://img.shields.io/npm/v/selfish-pipeline)](https://www.npmjs.com/package/selfish-pipeline)
-[![license](https://img.shields.io/github/license/jhlee0409/selfish-pipeline)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
+[![license](https://img.shields.io/github/license/jhlee0409/all-for-claudecode)](./LICENSE)
 [![test](https://img.shields.io/badge/tests-161%20passed-brightgreen)](#how-it-works)
 [![hooks](https://img.shields.io/badge/hooks-15%20events-blue)](#15-hook-events)
 [![commands](https://img.shields.io/badge/commands-18-orange)](#18-slash-commands)
 
-> Zero-dependency automation pipeline for Claude Code. One command (`/selfish:auto`) runs the entire cycle: write specs, design plans, break into tasks, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
+> Zero-dependency automation pipeline for Claude Code. One command (`/afc:auto`) runs the entire cycle: write specs, design plans, break into tasks, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
 
-## What is Selfish Pipeline?
+## What is All-for-ClaudeCode?
 
-Selfish Pipeline is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
+All-for-ClaudeCode is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
 
 - **18 slash commands** for every phase of development
 - **15 hook events** with 3 handler types (shell scripts, LLM prompts, subagents)
@@ -25,16 +25,16 @@ Selfish Pipeline is a **Claude Code plugin** that transforms your development wo
 ### Option A: Inside Claude Code (`/plugin`)
 
 ```
-/plugin marketplace add jhlee0409/selfish-pipeline
-/plugin install selfish@selfish-pipeline
+/plugin marketplace add jhlee0409/all-for-claudecode
+/plugin install afc@all-for-claudecode
 ```
 
-Or use the interactive UI: type `/plugin` → Manage → Add marketplace → `jhlee0409/selfish-pipeline` → Discover → install **selfish**.
+Or use the interactive UI: type `/plugin` → Manage → Add marketplace → `jhlee0409/all-for-claudecode` → Discover → install **afc**.
 
 ### Option B: One-line install (via npx)
 
 ```bash
-npx selfish-pipeline
+npx all-for-claudecode
 ```
 
 Interactive installer — choose scope (user / project / local) and done.
@@ -42,15 +42,15 @@ Interactive installer — choose scope (user / project / local) and done.
 ### Option C: Claude Code CLI
 
 ```bash
-claude plugin marketplace add jhlee0409/selfish-pipeline
-claude plugin install selfish@selfish-pipeline --scope user
+claude plugin marketplace add jhlee0409/all-for-claudecode
+claude plugin install afc@all-for-claudecode --scope user
 ```
 
 ### Then, inside Claude Code:
 
 ```
-/selfish:init                              # Detect your stack, generate config
-/selfish:auto "Add user authentication"    # Run the full pipeline
+/afc:init                              # Detect your stack, generate config
+/afc:auto "Add user authentication"    # Run the full pipeline
 ```
 
 That's it. The pipeline will:
@@ -66,7 +66,7 @@ That's it. The pipeline will:
 ### Full Auto Pipeline
 
 ```
-/selfish:auto "feature description"
+/afc:auto "feature description"
 ```
 
 Runs all 6 phases automatically with **Critic Loop** quality checks at each gate:
@@ -81,34 +81,34 @@ Spec (1/6) → Plan (2/6) → Tasks (3/6) → Implement (4/6) → Review (5/6) �
 
 | Command | Description |
 |---|---|
-| `/selfish:auto` | Full Auto pipeline — runs all 6 phases |
-| `/selfish:spec` | Write feature specification with acceptance criteria |
-| `/selfish:plan` | Design implementation plan with file change map |
-| `/selfish:implement` | Execute code implementation with CI gates |
-| `/selfish:test` | Test strategy planning and test writing |
-| `/selfish:review` | Code review with security scanning |
-| `/selfish:research` | Technical research with persistent storage |
-| `/selfish:debug` | Bug diagnosis and fix |
+| `/afc:auto` | Full Auto pipeline — runs all 6 phases |
+| `/afc:spec` | Write feature specification with acceptance criteria |
+| `/afc:plan` | Design implementation plan with file change map |
+| `/afc:implement` | Execute code implementation with CI gates |
+| `/afc:test` | Test strategy planning and test writing |
+| `/afc:review` | Code review with security scanning |
+| `/afc:research` | Technical research with persistent storage |
+| `/afc:debug` | Bug diagnosis and fix |
 
 **User-only** (`disable-model-invocation: true`):
 
 | Command | Description |
 |---|---|
-| `/selfish:init` | Project setup — detects stack and generates config |
-| `/selfish:doctor` | Diagnose project health and plugin setup |
-| `/selfish:architect` | Architecture analysis (persistent memory) |
-| `/selfish:security` | Security scan (persistent memory, isolated worktree) |
-| `/selfish:principles` | Project principles management |
-| `/selfish:checkpoint` | Save session state |
-| `/selfish:resume` | Restore session state |
+| `/afc:init` | Project setup — detects stack and generates config |
+| `/afc:doctor` | Diagnose project health and plugin setup |
+| `/afc:architect` | Architecture analysis (persistent memory) |
+| `/afc:security` | Security scan (persistent memory, isolated worktree) |
+| `/afc:principles` | Project principles management |
+| `/afc:checkpoint` | Save session state |
+| `/afc:resume` | Restore session state |
 
 **Model-only** (`user-invocable: false`):
 
 | Command | Description |
 |---|---|
-| `/selfish:tasks` | Break plan into parallelizable tasks |
-| `/selfish:analyze` | Verify artifact consistency |
-| `/selfish:clarify` | Resolve spec ambiguities |
+| `/afc:tasks` | Break plan into parallelizable tasks |
+| `/afc:analyze` | Verify artifact consistency |
+| `/afc:clarify` | Resolve spec ambiguities |
 
 ### 15 Hook Events
 
@@ -146,8 +146,8 @@ Two custom agents that **learn across sessions**:
 
 | Agent | Role | Memory |
 |---|---|---|
-| `selfish-architect` | Architecture analysis — remembers ADR decisions and patterns | `.claude/agent-memory/selfish-architect/` |
-| `selfish-security` | Security scan — remembers vulnerability patterns and false positives | `.claude/agent-memory/selfish-security/` |
+| `afc-architect` | Architecture analysis — remembers ADR decisions and patterns | `.claude/agent-memory/afc-architect/` |
+| `afc-security` | Security scan — remembers vulnerability patterns and false positives | `.claude/agent-memory/afc-security/` |
 
 ### Project Presets
 
@@ -163,7 +163,7 @@ Two custom agents that **learn across sessions**:
 
 ```
 ┌─────────────────────────────────────────────┐
-│  /selfish:auto "Add feature X"              │
+│  /afc:auto "Add feature X"              │
 ├─────────────────────────────────────────────┤
 │  Phase 1: Spec    → Critic Loop → Gate ✓    │
 │  Phase 2: Plan    → Critic Loop → Gate ✓    │
@@ -182,10 +182,10 @@ Two custom agents that **learn across sessions**:
 Initialize your project:
 
 ```bash
-/selfish:init
+/afc:init
 ```
 
-This detects your tech stack and generates `.claude/selfish.config.md` with:
+This detects your tech stack and generates `.claude/afc.config.md` with:
 - CI/lint/test commands
 - Architecture style and layers
 - Framework-specific settings
@@ -193,20 +193,20 @@ This detects your tech stack and generates `.claude/selfish.config.md` with:
 
 ## FAQ
 
-### What is selfish-pipeline?
+### What is all-for-claudecode?
 A Claude Code plugin that automates the entire development cycle (spec → plan → tasks → implement → review → clean) through 18 slash commands and 15 hook events.
 
 ### How does it compare to manual Claude Code workflows?
-Instead of manually prompting each step, selfish-pipeline orchestrates the full cycle with built-in quality gates that physically prevent skipping CI or security checks.
+Instead of manually prompting each step, all-for-claudecode orchestrates the full cycle with built-in quality gates that physically prevent skipping CI or security checks.
 
 ### Does it work with any project?
-Yes. Run `/selfish:init` to auto-detect your stack, or use one of the 5 presets (Next.js, React SPA, Express API, Monorepo, or generic template).
+Yes. Run `/afc:init` to auto-detect your stack, or use one of the 5 presets (Next.js, React SPA, Express API, Monorepo, or generic template).
 
 ### Does it require any dependencies?
 No. Zero runtime dependencies — pure markdown commands + bash hook scripts.
 
 ### How do I install it?
-Inside Claude Code, run `/plugin marketplace add jhlee0409/selfish-pipeline` then `/plugin install selfish@selfish-pipeline`. Alternatively, run `npx selfish-pipeline` from your terminal for a guided install.
+Inside Claude Code, run `/plugin marketplace add jhlee0409/all-for-claudecode` then `/plugin install afc@all-for-claudecode`. Alternatively, run `npx all-for-claudecode` from your terminal for a guided install.
 
 ### What Claude Code version is required?
 Claude Code with plugin support (2025+). The plugin uses standard hooks, commands, and agents APIs.

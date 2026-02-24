@@ -4,7 +4,7 @@ set -euo pipefail
 # Parallel Task Validator: Parse tasks.md and check for file path conflicts
 # among [P]-marked (parallel) tasks within the same phase.
 #
-# Usage: selfish-parallel-validate.sh <tasks_file_path>
+# Usage: afc-parallel-validate.sh <tasks_file_path>
 # Exit 0: valid (no overlaps, or no [P] tasks found)
 # Exit 1: overlaps detected — prints conflict details
 
@@ -14,7 +14,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# PROJECT_DIR kept for convention consistency with other selfish scripts
+# PROJECT_DIR kept for convention consistency with other afc scripts
 # shellcheck disable=SC2034
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 

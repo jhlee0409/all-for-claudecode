@@ -1,5 +1,5 @@
 ---
-name: selfish:review
+name: afc:review
 description: "Code review"
 argument-hint: "[scope: file path, PR number, or staged]"
 allowed-tools:
@@ -12,7 +12,7 @@ allowed-tools:
 model: sonnet
 ---
 
-# /selfish:review — Code Review
+# /afc:review — Code Review
 
 > Performs a comprehensive review of changed code (quality, security, performance, architecture compliance).
 > Validates completeness of the review itself with convergence-based Critic Loop.
@@ -24,11 +24,11 @@ model: sonnet
 
 ## Project Config (auto-loaded)
 
-!`cat .claude/selfish.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/selfish.config.md not found. Create it with /selfish:init."`
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
 ## Config Load
 
-**Always** read `.claude/selfish.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
 
 ## Execution Steps
 
@@ -134,7 +134,7 @@ For each changed file, examine from the following perspectives:
 
 ### 5. Retrospective Check
 
-If `.claude/selfish/memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/afc/memory/retrospectives/` directory exists, load retrospective files and check:
 - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
 - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 
@@ -157,9 +157,9 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 
 ### 7. Retrospective Entry (if new pattern found)
 
-If this review reveals a recurring pattern not previously documented in `.claude/selfish/memory/retrospectives/`:
+If this review reveals a recurring pattern not previously documented in `.claude/afc/memory/retrospectives/`:
 
-Append to `.claude/selfish/memory/retrospectives/{YYYY-MM-DD}.md`:
+Append to `.claude/afc/memory/retrospectives/{YYYY-MM-DD}.md`:
 ```markdown
 ## Pattern: {category}
 **What happened**: {concrete description}
@@ -172,9 +172,9 @@ Only write if the pattern is new and actionable. Generic observations are prohib
 
 ### 8. Archive Review Report
 
-When running inside a pipeline (.claude/selfish/specs/{feature}/ exists), persist the review results:
+When running inside a pipeline (.claude/afc/specs/{feature}/ exists), persist the review results:
 
-1. Write full review output (Summary table + Detailed Findings + Positives) to `.claude/selfish/specs/{feature}/review-report.md`
+1. Write full review output (Summary table + Detailed Findings + Positives) to `.claude/afc/specs/{feature}/review-report.md`
 2. Include metadata header:
    ```markdown
    # Review Report: {feature name}
@@ -182,7 +182,7 @@ When running inside a pipeline (.claude/selfish/specs/{feature}/ exists), persis
    > Files reviewed: {count}
    > Findings: Critical {N} / Warning {N} / Info {N}
    ```
-3. This file survives Clean phase (copied to `.claude/selfish/memory/reviews/{feature}-{date}.md` before .claude/selfish/specs/ deletion)
+3. This file survives Clean phase (copied to `.claude/afc/memory/reviews/{feature}-{date}.md` before .claude/afc/specs/ deletion)
 
 When running standalone (no active pipeline), skip archiving — display results in console only.
 
@@ -201,5 +201,5 @@ Review complete
 - **Read-only**: do not modify code. Report findings only.
 - **Full context**: read the entire file, not just the diff lines, to understand context before reviewing.
 - **Avoid false positives**: classify uncertain issues as Info.
-- **Respect patterns**: do not flag code simply because it differs from other patterns. Use CLAUDE.md and selfish.config.md as the standard.
+- **Respect patterns**: do not flag code simply because it differs from other patterns. Use CLAUDE.md and afc.config.md as the standard.
 - **NEVER use `run_in_background: true` on Task calls**: review agents must run in foreground so results are returned before consolidation.

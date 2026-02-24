@@ -10,15 +10,15 @@ set -euo pipefail
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ] && [ "$exit_code" -ne 2 ]; then
-    echo "SELFISH TEAMMATE GATE: Abnormal exit (exit code: $exit_code)" >&2
+    echo "AFC TEAMMATE GATE: Abnormal exit (exit code: $exit_code)" >&2
   fi
   exit "$exit_code"
 }
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="${PROJECT_DIR}/.claude/.selfish-active"
-PHASE_FLAG="${PROJECT_DIR}/.claude/.selfish-phase"
+PIPELINE_FLAG="${PROJECT_DIR}/.claude/.afc-active"
+PHASE_FLAG="${PROJECT_DIR}/.claude/.afc-phase"
 
 # Consume stdin (required -- pipe breaks if not consumed)
 cat > /dev/null
@@ -40,7 +40,7 @@ CURRENT_PHASE="${CURRENT_PHASE:-}"
 # Block idle during implement/review Phase -> force work to continue
 case "${CURRENT_PHASE:-}" in
   implement|review)
-    echo "SELFISH TEAMMATE GATE: Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' is active. Please complete the task." >&2
+    echo "AFC TEAMMATE GATE: Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' is active. Please complete the task." >&2
     exit 2
     ;;
   *)

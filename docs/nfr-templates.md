@@ -1,6 +1,6 @@
 # NFR Templates by Project Type
 
-This document provides Non-Functional Requirement (NFR) templates organized by project type. The `/selfish:spec` command references this document to auto-suggest NFRs based on the detected project type, helping teams establish quality baselines early in the specification phase.
+This document provides Non-Functional Requirement (NFR) templates organized by project type. The `/afc:spec` command references this document to auto-suggest NFRs based on the detected project type, helping teams establish quality baselines early in the specification phase.
 
 ## Web Application (React, Next.js, Vue, Svelte)
 - Accessibility (WCAG 2.1 AA compliance for interactive elements)

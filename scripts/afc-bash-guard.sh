@@ -2,7 +2,7 @@
 set -euo pipefail
 # PreToolUse Hook: Block dangerous Bash commands while pipeline is active
 # Prevents git push --force, reset --hard, checkout ., restore ., clean -f, etc.
-# Exception: reset --hard is allowed for selfish/pre- tag rollback
+# Exception: reset --hard is allowed for afc/pre- tag rollback
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -12,7 +12,7 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 
 # If pipeline is inactive -> allow
 if [ ! -f "$PIPELINE_FLAG" ]; then
@@ -52,8 +52,8 @@ case "$COMMAND" in
     SAFE_ALTERNATIVE="git push"
     ;;
   *"reset --hard"*)
-    # Allow selfish/pre- tag rollback
-    if [[ "$COMMAND" != *"selfish/pre-"* ]]; then
+    # Allow afc/pre- tag rollback
+    if [[ "$COMMAND" != *"afc/pre-"* ]]; then
       DENY_REASON="git reset --hard is blocked during pipeline"
       SAFE_ALTERNATIVE="git stash"
     fi
@@ -74,9 +74,9 @@ esac
 
 if [ -n "$DENY_REASON" ]; then
   if [ -n "$SAFE_ALTERNATIVE" ]; then
-    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"SELFISH GUARD: %s. Safe alternative: %s","updatedInput":{"command":"%s"}}}\n' "$DENY_REASON" "$SAFE_ALTERNATIVE" "$SAFE_ALTERNATIVE"
+    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"AFC GUARD: %s. Safe alternative: %s","updatedInput":{"command":"%s"}}}\n' "$DENY_REASON" "$SAFE_ALTERNATIVE" "$SAFE_ALTERNATIVE"
   else
-    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"SELFISH GUARD: %s"}}\n' "$DENY_REASON"
+    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"AFC GUARD: %s"}}\n' "$DENY_REASON"
   fi
 else
   printf '{"hookSpecificOutput":{"permissionDecision":"allow"}}\n'

@@ -10,7 +10,7 @@ set -euo pipefail
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ]; then
-    echo "[selfish-pipeline] session-start-context.sh exited abnormally" >&2
+    echo "[all-for-claudecode] session-start-context.sh exited abnormally" >&2
   fi
   exit "$exit_code"
 }
@@ -26,17 +26,17 @@ PROJECT_PATH=$(cd "$PROJECT_DIR" 2>/dev/null && pwd || echo "$PROJECT_DIR")
 ENCODED_PATH="${PROJECT_PATH//\//-}"
 MEMORY_DIR="$HOME/.claude/projects/$ENCODED_PATH/memory"
 CHECKPOINT="$MEMORY_DIR/checkpoint.md"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 
 OUTPUT=""
 
 # 1. Check for active pipeline
 if [ -f "$PIPELINE_FLAG" ]; then
   FEATURE=$(head -1 "$PIPELINE_FLAG" 2>/dev/null | tr -d '\n\r' || true)
-  OUTPUT="[SELFISH PIPELINE ACTIVE] Feature: $FEATURE"
+  OUTPUT="[AFC PIPELINE ACTIVE] Feature: $FEATURE"
 
   # tasks.md progress
-  TASKS_FILE="$PROJECT_DIR/.claude/selfish/specs/$FEATURE/tasks.md"
+  TASKS_FILE="$PROJECT_DIR/.claude/afc/specs/$FEATURE/tasks.md"
   if [ -f "$TASKS_FILE" ]; then
     DONE=$(grep -cE '\[x\]' "$TASKS_FILE" 2>/dev/null || echo 0)
     TOTAL=$(grep -cE '\[(x| )\]' "$TASKS_FILE" 2>/dev/null || echo 0)
@@ -44,7 +44,7 @@ if [ -f "$PIPELINE_FLAG" ]; then
   fi
 
   # CI pass status
-  CI_FLAG="$PROJECT_DIR/.claude/.selfish-ci-passed"
+  CI_FLAG="$PROJECT_DIR/.claude/.afc-ci-passed"
   if [ -f "$CI_FLAG" ]; then
     OUTPUT="$OUTPUT | Last CI: PASSED ($(cat "$CI_FLAG" 2>/dev/null || true))"
   fi
@@ -59,13 +59,13 @@ if [ -f "$CHECKPOINT" ]; then
     if [ -n "$OUTPUT" ]; then
       OUTPUT="$OUTPUT | Checkpoint: $CHECKPOINT_DATE"
     else
-      OUTPUT="[CHECKPOINT EXISTS] Date: $CHECKPOINT_DATE — Run /selfish:resume to restore"
+      OUTPUT="[CHECKPOINT EXISTS] Date: $CHECKPOINT_DATE — Run /afc:resume to restore"
     fi
   fi
 fi
 
 # 3. Check for safety tag
-HAS_SAFETY_TAG=$(cd "$PROJECT_DIR" 2>/dev/null && git tag -l 'selfish/pre-*' 2>/dev/null | head -1 || echo "")
+HAS_SAFETY_TAG=$(cd "$PROJECT_DIR" 2>/dev/null && git tag -l 'afc/pre-*' 2>/dev/null | head -1 || echo "")
 if [ -n "$HAS_SAFETY_TAG" ]; then
   if [ -n "$OUTPUT" ]; then
     OUTPUT="$OUTPUT | Safety tag: $HAS_SAFETY_TAG"

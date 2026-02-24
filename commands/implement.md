@@ -1,10 +1,10 @@
 ---
-name: selfish:implement
+name: afc:implement
 description: "Execute code implementation"
 argument-hint: "[task ID or phase specification]"
 ---
 
-# /selfish:implement — Execute Code Implementation
+# /afc:implement — Execute Code Implementation
 
 > Executes tasks from tasks.md phase by phase.
 > Uses native task orchestration with dependency-aware scheduling. Swarm mode activates for >5 parallel tasks per phase.
@@ -15,11 +15,11 @@ argument-hint: "[task ID or phase specification]"
 
 ## Project Config (auto-loaded)
 
-!`cat .claude/selfish.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/selfish.config.md not found. Create it with /selfish:init."`
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
 ## Config Load
 
-**Always** read `.claude/selfish.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
 
 ## Execution Steps
 
@@ -28,18 +28,18 @@ argument-hint: "[task ID or phase specification]"
 Before starting implementation, create a **rollback point**:
 
 ```bash
-git tag -f selfish/pre-implement
+git tag -f afc/pre-implement
 ```
 
-- On failure: immediately rollback with `git reset --hard selfish/pre-implement`
-- Tag is automatically overwritten on the next `/selfish:implement` run
-- Skip if running inside `/selfish:auto` pipeline (the `selfish/pre-auto` tag already exists)
+- On failure: immediately rollback with `git reset --hard afc/pre-implement`
+- Tag is automatically overwritten on the next `/afc:implement` run
+- Skip if running inside `/afc:auto` pipeline (the `afc/pre-auto` tag already exists)
 
 ### 1. Load Context
 
 1. **Current branch** → `BRANCH_NAME`
-2. Load the following files from `.claude/selfish/specs/{feature}/`:
-   - **tasks.md** (required) — abort if missing: "tasks.md not found. Run `/selfish:tasks` first."
+2. Load the following files from `.claude/afc/specs/{feature}/`:
+   - **tasks.md** (required) — abort if missing: "tasks.md not found. Run `/afc:tasks` first."
    - **plan.md** (required) — abort if missing
    - **spec.md** (for reference)
    - **research.md** (if present)
@@ -95,7 +95,7 @@ Execute each phase in order. Choose the orchestration mode based on the number o
 - Launch parallel sub-agents for unblocked [P] tasks in a **single message** (auto-parallel):
   ```
   Task("T003: Create UserService", subagent_type: "general-purpose",
-    prompt: "Implement the following task:\n\n## Task\n{description}\n\n## Related Files\n{file paths}\n\n## Plan Context\n{relevant section from plan.md}\n\n## Rules\n- {config.code_style}\n- {config.architecture}\n- Follow CLAUDE.md and selfish.config.md")
+    prompt: "Implement the following task:\n\n## Task\n{description}\n\n## Related Files\n{file paths}\n\n## Plan Context\n{relevant section from plan.md}\n\n## Rules\n- {config.code_style}\n- {config.architecture}\n- Follow CLAUDE.md and afc.config.md")
   Task("T004: Create AuthService", subagent_type: "general-purpose", ...)
   ```
 - Read each agent's returned output and verify completion
@@ -123,7 +123,7 @@ When a phase has more than 5 parallelizable tasks, use the **self-organizing swa
      ## Rules
      - {config.code_style} and {config.architecture}
      - Always read files before modifying
-     - Follow CLAUDE.md and selfish.config.md")
+     - Follow CLAUDE.md and afc.config.md")
    ```
 4. **Wait for all workers to exit** — workers naturally terminate when the pool is empty
 5. **Verify**: check TaskList for any incomplete tasks → re-spawn workers if needed
@@ -154,9 +154,9 @@ When a worker agent exits with error (non-zero return or timeout):
 
 After passing the gate, create a phase rollback point:
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-pipeline-manage.sh" phase-tag {phase_number}
+"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase-tag {phase_number}
 ```
-This enables granular rollback: `git reset --hard selfish/phase-{N}` restores state after Phase N completed.
+This enables granular rollback: `git reset --hard afc/phase-{N}` restores state after Phase N completed.
 
 ### 4. Task Execution Pattern
 
@@ -190,7 +190,7 @@ Implementation complete
 ├─ Phases: {phase count} complete
 ├─ CI: {config.ci} passed
 ├─ Changed files: {file count}
-└─ Next step: /selfish:review (optional)
+└─ Next step: /afc:review (optional)
 ```
 
 ## Notes

@@ -13,7 +13,7 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 
 # Consume stdin (required -- pipe breaks if not consumed)
 cat > /dev/null
@@ -27,13 +27,13 @@ fi
 FEATURE=$(head -1 "$PIPELINE_FLAG" 2>/dev/null | tr -d '\n\r' || echo "unknown")
 
 # 2. Read current phase
-PHASE=$(head -1 "$PROJECT_DIR/.claude/.selfish-phase" 2>/dev/null | tr -d '\n\r' || echo "unknown")
+PHASE=$(head -1 "$PROJECT_DIR/.claude/.afc-phase" 2>/dev/null | tr -d '\n\r' || echo "unknown")
 
 # 3. Build context string
-CONTEXT="[SELFISH PIPELINE] Feature: $FEATURE | Phase: $PHASE"
+CONTEXT="[AFC PIPELINE] Feature: $FEATURE | Phase: $PHASE"
 
-# 4. Extract config sections from selfish.config.md
-CONFIG_FILE="$PROJECT_DIR/.claude/selfish.config.md"
+# 4. Extract config sections from afc.config.md
+CONFIG_FILE="$PROJECT_DIR/.claude/afc.config.md"
 
 if [ -f "$CONFIG_FILE" ]; then
   # Extract Architecture section (## Architecture to next ##)

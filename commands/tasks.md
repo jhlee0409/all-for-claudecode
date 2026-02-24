@@ -1,11 +1,11 @@
 ---
-name: selfish:tasks
+name: afc:tasks
 description: "Task decomposition"
 argument-hint: "[constraints/priority directives]"
 user-invocable: false
 model: sonnet
 ---
-# /selfish:tasks — Task Decomposition
+# /afc:tasks — Task Decomposition
 
 > Generates an executable task list (tasks.md) based on plan.md.
 > Validates coverage with convergence-based Critic Loop.
@@ -16,14 +16,14 @@ model: sonnet
 
 ## Config Load
 
-**Must** read `.claude/selfish.config.md` first. Stop if the config file is not present.
+**Must** read `.claude/afc.config.md` first. Stop if the config file is not present.
 
 ## Execution Steps
 
 ### 1. Load Context
 
-1. Load from `.claude/selfish/specs/{feature}/`:
-   - **plan.md** (required) — stop if missing: "Run /selfish:plan first."
+1. Load from `.claude/afc/specs/{feature}/`:
+   - **plan.md** (required) — stop if missing: "Run /afc:plan first."
    - **spec.md** (required)
    - **research.md** (if present)
 2. Extract from plan.md:
@@ -73,14 +73,14 @@ Decompose tasks per Phase defined in plan.md.
 1. **1 task = 1 file** principle (where possible)
 2. **Same file = sequential**, **different files = [P] candidate**
 3. **Explicit dependencies**: Use `depends: [T001, T002]` to declare blocking dependencies. Tasks without `depends:` and with [P] marker are immediately parallelizable.
-4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-parallel-validate.sh" .claude/selfish/specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
+4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
 5. **Dependency graph must be a DAG**: no circular dependencies allowed. Validate before output.
 6. **Test tasks**: Include a verification task for each testable unit
 7. **Phase gate**: Add a `{config.gate}` validation task at the end of each Phase
 
 ### 3. Retrospective Check
 
-If `.claude/selfish/memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/afc/memory/retrospectives/` directory exists, load retrospective files and check:
 - Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
 - Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
 
@@ -93,7 +93,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | Criterion | Validation |
 |-----------|------------|
 | **COVERAGE** | Are all files in plan.md's File Change Map included in tasks? Are all FR-* in spec.md covered? |
-| **DEPENDENCIES** | Is the dependency graph a valid DAG? Do [P] tasks within the same phase have no file overlaps? Are all `depends:` targets valid task IDs? For physical validation of [P] file overlaps, reference the validation script: `"${CLAUDE_PLUGIN_ROOT}/scripts/selfish-parallel-validate.sh"` can be called with the tasks.md path to verify no conflicts exist. |
+| **DEPENDENCIES** | Is the dependency graph a valid DAG? Do [P] tasks within the same phase have no file overlaps? Are all `depends:` targets valid task IDs? For physical validation of [P] file overlaps, reference the validation script: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-parallel-validate.sh"` can be called with the tasks.md path to verify no conflicts exist. |
 
 **On FAIL**: auto-fix and continue to next pass.
 **On ESCALATE**: pause, present options to user, apply choice, resume.
@@ -116,22 +116,22 @@ Every FR-*/NFR-* must be mapped to at least one task.
 
 ### 6. Final Output
 
-Save to `.claude/selfish/specs/{feature}/tasks.md`, then:
+Save to `.claude/afc/specs/{feature}/tasks.md`, then:
 
 ```
 Tasks generated
-├─ .claude/selfish/specs/{feature}/tasks.md
+├─ .claude/afc/specs/{feature}/tasks.md
 ├─ Tasks: {total count} ({[P] count} parallelizable)
 ├─ Phases: {phase count}
 ├─ Coverage: FR {coverage}%, NFR {coverage}%
 ├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
-└─ Next step: /selfish:analyze (optional) or /selfish:implement
+└─ Next step: /afc:analyze (optional) or /afc:implement
 ```
 
 ## Notes
 
-- **Do not write implementation code**: Write task descriptions only. Actual code is the responsibility of /selfish:implement.
+- **Do not write implementation code**: Write task descriptions only. Actual code is the responsibility of /afc:implement.
 - **No over-decomposition**: Do not create separate tasks for single-line changes.
 - **Accurate file paths**: Use paths based on the actual project structure (no guessing).
 - **Use [P] sparingly**: Mark [P] only for truly independent tasks. When in doubt, keep sequential.
-- **Dependencies unlock swarm**: explicit `depends:` enables /selfish:implement to use native task orchestration with automatic dependency resolution. Tasks without dependencies can be claimed by parallel workers immediately.
+- **Dependencies unlock swarm**: explicit `depends:` enables /afc:implement to use native task orchestration with automatic dependency resolution. Tasks without dependencies can be claimed by parallel workers immediately.

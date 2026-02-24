@@ -1,11 +1,11 @@
 ---
-name: selfish:debug
+name: afc:debug
 description: "Bug diagnosis and fix"
 argument-hint: "[bug description, error message, or reproduction steps]"
 model: sonnet
 ---
 
-# /selfish:debug — Bug Diagnosis and Fix
+# /afc:debug — Bug Diagnosis and Fix
 
 > Analyzes the root cause of a bug and fixes it.
 > Validates the safety and accuracy of the fix with convergence-based Critic Loop.
@@ -16,7 +16,7 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/selfish.config.md` first. Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first. Abort if config file is missing.
 
 ## Execution Steps
 
@@ -86,9 +86,9 @@ Retry after fixing on failure (max 3 attempts).
 
 ### 7. Retrospective Entry (if new pattern found)
 
-If this debug session reveals a pattern not previously documented in `.claude/selfish/memory/retrospectives/`:
+If this debug session reveals a pattern not previously documented in `.claude/afc/memory/retrospectives/`:
 
-Append to `.claude/selfish/memory/retrospectives/{YYYY-MM-DD}.md`:
+Append to `.claude/afc/memory/retrospectives/{YYYY-MM-DD}.md`:
 ```markdown
 ## Pattern: {category}
 **What happened**: {concrete description}

@@ -1,5 +1,5 @@
 ---
-name: selfish:principles
+name: afc:principles
 description: "Manage project principles"
 argument-hint: "[action: add, remove, init]"
 disable-model-invocation: true
@@ -11,10 +11,10 @@ allowed-tools:
 model: haiku
 ---
 
-# /selfish:principles — Manage Project Principles
+# /afc:principles — Manage Project Principles
 
 > Creates and manages the project's core principles (constitution).
-> Stored in .claude/selfish/memory/principles.md and referenced across all sessions.
+> Stored in .claude/afc/memory/principles.md and referenced across all sessions.
 
 ## Arguments
 
@@ -26,13 +26,13 @@ model: haiku
 
 ## Config Load
 
-**Must** read `.claude/selfish.config.md` first. Stop if the config file is not present.
+**Must** read `.claude/afc.config.md` first. Stop if the config file is not present.
 
 ## Execution Steps
 
 ### 1. Check Current State
 
-Read `.claude/selfish/memory/principles.md`:
+Read `.claude/afc/memory/principles.md`:
 - If present: load existing principles
 - If absent: empty state (show `init` instructions)
 
@@ -101,7 +101,7 @@ Collect principles interactively:
 
 ## Notes
 
-- **Persistent storage**: Saved to .claude/selfish/memory/principles.md and maintained across sessions.
-- **Auto-referenced**: Automatically loaded and validated by /selfish:plan and /selfish:architect.
+- **Persistent storage**: Saved to .claude/afc/memory/principles.md and maintained across sessions.
+- **Auto-referenced**: Automatically loaded and validated by /afc:plan and /afc:architect.
 - **Keep it concise**: Maintain no more than 10 principles. Too many reduces effectiveness.
 - **Avoid duplication with CLAUDE.md**: Do not re-register rules already present in CLAUDE.md as principles.

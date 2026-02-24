@@ -1,5 +1,5 @@
 ---
-name: selfish-architect
+name: afc-architect
 description: "Architecture analysis agent — remembers ADR decisions and architecture patterns across sessions to provide consistent design guidance."
 tools:
   - Read
@@ -27,7 +27,7 @@ Before performing analysis, read these shared reference documents:
 ## Memory Usage
 
 At the start of each analysis:
-1. Read your MEMORY.md (at `.claude/agent-memory/selfish-architect/MEMORY.md`) to review previous architecture decisions and patterns
+1. Read your MEMORY.md (at `.claude/agent-memory/afc-architect/MEMORY.md`) to review previous architecture decisions and patterns
 2. Reference prior ADRs when making new recommendations to ensure consistency
 
 At the end of each analysis:

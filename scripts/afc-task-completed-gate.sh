@@ -10,16 +10,16 @@ set -euo pipefail
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ] && [ "$exit_code" -ne 2 ]; then
-    echo "SELFISH TASK GATE: Abnormal exit (exit code: $exit_code)" >&2
+    echo "AFC TASK GATE: Abnormal exit (exit code: $exit_code)" >&2
   fi
   exit "$exit_code"
 }
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="${PROJECT_DIR}/.claude/.selfish-active"
-CI_FLAG="${PROJECT_DIR}/.claude/.selfish-ci-passed"
-PHASE_FLAG="${PROJECT_DIR}/.claude/.selfish-phase"
+PIPELINE_FLAG="${PROJECT_DIR}/.claude/.afc-active"
+CI_FLAG="${PROJECT_DIR}/.claude/.afc-ci-passed"
+PHASE_FLAG="${PROJECT_DIR}/.claude/.afc-phase"
 
 # Consume stdin (required -- pipe breaks if not consumed)
 cat > /dev/null
@@ -47,7 +47,7 @@ esac
 
 # Implement/Review/Clean Phase (4-6) require CI to pass
 if [ ! -f "$CI_FLAG" ]; then
-  echo "SELFISH TASK GATE: CI has not been run. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires passing the CI gate. Run your CI command and record the timestamp in .claude/.selfish-ci-passed." >&2
+  echo "AFC TASK GATE: CI has not been run. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires passing the CI gate. Run your CI command and record the timestamp in .claude/.afc-ci-passed." >&2
   exit 2
 fi
 
@@ -58,7 +58,7 @@ NOW="$(date +%s)"
 if [ "$CI_TIME" -gt 0 ]; then
   DIFF=$(( NOW - CI_TIME ))
   if [ "$DIFF" -gt 600 ]; then
-    echo "SELFISH TASK GATE: CI results are stale (${DIFF} seconds ago). Please run your CI command again." >&2
+    echo "AFC TASK GATE: CI results are stale (${DIFF} seconds ago). Please run your CI command again." >&2
     exit 2
   fi
 fi

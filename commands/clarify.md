@@ -1,11 +1,11 @@
 ---
-name: selfish:clarify
+name: afc:clarify
 description: "Resolve spec ambiguities"
 argument-hint: "[focus area: security, performance, UI flow]"
 user-invocable: false
 model: sonnet
 ---
-# /selfish:clarify — Resolve Spec Ambiguities
+# /afc:clarify — Resolve Spec Ambiguities
 
 > Identifies ambiguous or incomplete areas in spec.md and resolves them through user questions.
 > Answers are applied as inline updates to spec.md.
@@ -16,13 +16,13 @@ model: sonnet
 
 ## Config Load
 
-**Must** read `.claude/selfish.config.md` first. Stop if the config file is not present.
+**Must** read `.claude/afc.config.md` first. Stop if the config file is not present.
 
 ## Execution Steps
 
 ### 1. Load Spec
 
-1. Read `.claude/selfish/specs/{feature}/spec.md` — stop if not found
+1. Read `.claude/afc/specs/{feature}/spec.md` — stop if not found
 2. If a `[NEEDS CLARIFICATION]` section exists, process it first
 3. Quickly check existing codebase for related patterns
 
@@ -67,7 +67,7 @@ Clarification complete
 ├─ spec.md updated: {changed areas}
 ├─ New requirements: {added FR count}
 ├─ Remaining [NEEDS CLARIFICATION]: {count}
-└─ Next step: /selfish:plan
+└─ Next step: /afc:plan
 ```
 
 ## Notes

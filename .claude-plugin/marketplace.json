@@ -1,19 +1,19 @@
 {
-  "name": "selfish-pipeline",
+  "name": "all-for-claudecode",
   "owner": {
     "name": "jhlee0409",
     "email": "relee6203@gmail.com"
   },
   "metadata": {
     "description": "Automated pipeline for Claude Code — spec → plan → tasks → implement → review → clean",
-    "version": "1.3.0"
+    "version": "2.0.0"
   },
   "plugins": [
     {
-      "name": "selfish",
+      "name": "afc",
       "source": "./",
       "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec → plan → tasks → implement → review → clean.",
-      "version": "1.3.0",
+      "version": "2.0.0",
       "category": "automation",
       "tags": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"]
     }

@@ -10,8 +10,8 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
-FAILURES_LOG="$PROJECT_DIR/.claude/.selfish-failures.log"
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
+FAILURES_LOG="$PROJECT_DIR/.claude/.afc-failures.log"
 
 # Parse input from stdin
 INPUT=$(cat)
@@ -64,14 +64,14 @@ esac
 if [ -n "$HINT" ]; then
   # Generate safe JSON with jq if available, otherwise strip special chars and use printf
   if command -v jq &> /dev/null; then
-    jq -n --arg ctx "[SELFISH HINT] $HINT (tool: $TOOL_NAME)" \
+    jq -n --arg ctx "[AFC HINT] $HINT (tool: $TOOL_NAME)" \
       '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":$ctx}}' 2>/dev/null || true
   else
     # shellcheck disable=SC1003
     SAFE_HINT=$(printf '%s' "$HINT" | tr -d '"' | tr -d '\\')
     # shellcheck disable=SC1003
     SAFE_TOOL=$(printf '%s' "$TOOL_NAME" | tr -d '"' | tr -d '\\')
-    printf '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":"[SELFISH HINT] %s (tool: %s)"}}\n' "$SAFE_HINT" "$SAFE_TOOL"
+    printf '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":"[AFC HINT] %s (tool: %s)"}}\n' "$SAFE_HINT" "$SAFE_TOOL"
   fi
 fi
 

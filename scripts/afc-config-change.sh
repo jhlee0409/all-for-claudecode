@@ -8,15 +8,15 @@ set -euo pipefail
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ] && [ "$exit_code" -ne 2 ]; then
-    echo "SELFISH CONFIG: Abnormal exit (exit code: $exit_code)" >&2
+    echo "AFC CONFIG: Abnormal exit (exit code: $exit_code)" >&2
   fi
   exit "$exit_code"
 }
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="${PROJECT_DIR}/.claude/.selfish-active"
-AUDIT_LOG="${PROJECT_DIR}/.claude/.selfish-config-audit.log"
+PIPELINE_FLAG="${PROJECT_DIR}/.claude/.afc-active"
+AUDIT_LOG="${PROJECT_DIR}/.claude/.afc-config-audit.log"
 
 # Read hook data from stdin
 INPUT=$(cat)
@@ -54,5 +54,5 @@ fi
 
 # Other changes: Write audit log + block
 printf '[%s] source=%s path=%s\n' "$TIMESTAMP" "$SOURCE" "$FILE_PATH" >> "$AUDIT_LOG"
-echo "SELFISH CONFIG: Config change detected while pipeline is active. source=${SOURCE} path=${FILE_PATH}" >&2
+echo "AFC CONFIG: Config change detected while pipeline is active. source=${SOURCE} path=${FILE_PATH}" >&2
 exit 2

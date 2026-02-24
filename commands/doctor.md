@@ -1,5 +1,5 @@
 ---
-name: selfish:doctor
+name: afc:doctor
 description: "Diagnose project health and plugin setup"
 argument-hint: "[--verbose]"
 disable-model-invocation: true
@@ -11,9 +11,9 @@ allowed-tools:
 model: haiku
 ---
 
-# /selfish:doctor — Project Health Diagnosis
+# /afc:doctor — Project Health Diagnosis
 
-> Runs a comprehensive health check on the selfish-pipeline setup for the current project.
+> Runs a comprehensive health check on the all-for-claudecode setup for the current project.
 > Read-only — never modifies files. Reports issues with actionable fix commands.
 
 ## Arguments
@@ -48,46 +48,46 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| Config file exists | Read `.claude/selfish.config.md` | File exists | Fix: run `/selfish:init` |
-| Required sections present | Grep for `## CI Commands`, `## Architecture`, `## Code Style`, `## Framework` | All 4 sections found | Fix: add missing section to `.claude/selfish.config.md` or re-run `/selfish:init` |
+| Config file exists | Read `.claude/afc.config.md` | File exists | Fix: run `/afc:init` |
+| Required sections present | Grep for `## CI Commands`, `## Architecture`, `## Code Style`, `## Framework` | All 4 sections found | Fix: add missing section to `.claude/afc.config.md` or re-run `/afc:init` |
 | Gate command defined | Grep for `gate:` inside `## CI Commands` section | `gate:` field found | Fix: add `gate:` field to `## CI Commands` section |
-| CI command runnable | Extract CI command from config, run it | Exits 0 | ⚠ Warning: CI command failed. Check `{config.ci}` in selfish.config.md |
-| Gate command runnable | Extract gate command from config, run it | Exits 0 | ⚠ Warning: gate command failed. Check `{config.gate}` in selfish.config.md |
+| CI command runnable | Extract CI command from config, run it | Exits 0 | ⚠ Warning: CI command failed. Check `{config.ci}` in afc.config.md |
+| Gate command runnable | Extract gate command from config, run it | Exits 0 | ⚠ Warning: gate command failed. Check `{config.gate}` in afc.config.md |
 
 ### Category 3: CLAUDE.md Integration
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| Global CLAUDE.md exists | Read `~/.claude/CLAUDE.md` | File exists | ⚠ Warning: no global CLAUDE.md. Selfish skills won't auto-trigger from intent. Fix: run `/selfish:init` |
-| SELFISH block present | Grep for `<!-- SELFISH:START -->` and `<!-- SELFISH:END -->` in `~/.claude/CLAUDE.md` | Both markers found | Fix: run `/selfish:init` to inject SELFISH block |
-| SELFISH block version | Extract version from `<!-- SELFISH:VERSION:X.Y.Z -->` in CLAUDE.md. Then read `${CLAUDE_PLUGIN_ROOT}/package.json` to get the actual plugin version. Compare the two. | Block version ≥ plugin version | ⚠ Warning: SELFISH block is outdated (found {block_version}, current {plugin_version}). Fix: run `/selfish:init` to update |
-| No conflicting routing | Grep for conflicting agent patterns (`executor`, `deep-executor`, `debugger`, `code-reviewer`) outside SELFISH block that could intercept selfish intents | No conflicts or conflicts are inside other tool blocks | ⚠ Warning: found agent routing that may conflict with selfish skills. Review `~/.claude/CLAUDE.md` |
+| Global CLAUDE.md exists | Read `~/.claude/CLAUDE.md` | File exists | ⚠ Warning: no global CLAUDE.md. All-for-ClaudeCode skills won't auto-trigger from intent. Fix: run `/afc:init` |
+| AFC block present | Grep for `<!-- AFC:START -->` and `<!-- AFC:END -->` in `~/.claude/CLAUDE.md` | Both markers found | Fix: run `/afc:init` to inject AFC block |
+| AFC block version | Extract version from `<!-- AFC:VERSION:X.Y.Z -->` in CLAUDE.md. Then read `${CLAUDE_PLUGIN_ROOT}/package.json` to get the actual plugin version. Compare the two. | Block version ≥ plugin version | ⚠ Warning: AFC block is outdated (found {block_version}, current {plugin_version}). Fix: run `/afc:init` to update |
+| No conflicting routing | Grep for conflicting agent patterns (`executor`, `deep-executor`, `debugger`, `code-reviewer`) outside AFC block that could intercept afc intents | No conflicts or conflicts are inside other tool blocks | ⚠ Warning: found agent routing that may conflict with afc skills. Review `~/.claude/CLAUDE.md` |
 
 ### Category 4: Pipeline State
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| No stale pipeline flag | Check `.claude/.selfish-active` | File does not exist (no active pipeline) | ⚠ Warning: stale pipeline flag found (feature: {name}). This may block normal operations. Fix: `rm .claude/.selfish-active .claude/.selfish-phase .claude/.selfish-ci-passed` or run `/selfish:resume` |
-| No orphaned artifacts | Glob `.claude/selfish/specs/*/spec.md` | No specs directories, or all are from active pipeline | ⚠ Warning: orphaned `.claude/selfish/specs/{name}/` found. Left over from a previous pipeline. Fix: `rm -rf .claude/selfish/specs/{name}/` |
-| No lingering safety tags | `git tag -l 'selfish/pre-*'` | No tags, or tags match active pipeline | ⚠ Warning: lingering safety tag `selfish/pre-{x}` found. Fix: `git tag -d selfish/pre-{x}` |
-| Checkpoint state | Read `.claude/selfish/memory/checkpoint.md` if exists | No checkpoint (clean), or checkpoint is from current session | ⚠ Warning: stale checkpoint from {date}. Fix: run `/selfish:resume` to continue or delete `.claude/selfish/memory/checkpoint.md` |
+| No stale pipeline flag | Check `.claude/.afc-active` | File does not exist (no active pipeline) | ⚠ Warning: stale pipeline flag found (feature: {name}). This may block normal operations. Fix: `rm .claude/.afc-active .claude/.afc-phase .claude/.afc-ci-passed` or run `/afc:resume` |
+| No orphaned artifacts | Glob `.claude/afc/specs/*/spec.md` | No specs directories, or all are from active pipeline | ⚠ Warning: orphaned `.claude/afc/specs/{name}/` found. Left over from a previous pipeline. Fix: `rm -rf .claude/afc/specs/{name}/` |
+| No lingering safety tags | `git tag -l 'afc/pre-*'` | No tags, or tags match active pipeline | ⚠ Warning: lingering safety tag `afc/pre-{x}` found. Fix: `git tag -d afc/pre-{x}` |
+| Checkpoint state | Read `.claude/afc/memory/checkpoint.md` if exists | No checkpoint (clean), or checkpoint is from current session | ⚠ Warning: stale checkpoint from {date}. Fix: run `/afc:resume` to continue or delete `.claude/afc/memory/checkpoint.md` |
 
 ### Category 5: Hook Health
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| hooks.json valid | Parse plugin's hooks.json with jq (or manual validation) | Valid JSON with `hooks` key | ✗ Fix: reinstall plugin — `claude plugin install selfish@selfish-pipeline` |
+| hooks.json valid | Parse plugin's hooks.json with jq (or manual validation) | Valid JSON with `hooks` key | ✗ Fix: reinstall plugin — `claude plugin install afc@all-for-claudecode` |
 | All scripts exist | For each script referenced in hooks.json, check file exists | All scripts found | ✗ Fix: reinstall plugin |
 | Scripts executable | Check execute permission on each script in plugin's scripts/ | All have +x | Fix: `chmod +x` on the missing scripts, or reinstall plugin |
 
 ### Category 6: Version Sync (development only)
 
-> Only run if current directory is the selfish-pipeline source repo (check for `package.json` with `"name": "selfish-pipeline"`).
+> Only run if current directory is the all-for-claudecode source repo (check for `package.json` with `"name": "all-for-claudecode"`).
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
 | Version triple match | Compare versions in `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both `metadata.version` and `plugins[0].version`) | All identical | ✗ Fix: update mismatched files to the same version |
-| Cache in sync | Compare `commands/auto.md` content between source and `~/.claude/plugins/cache/selfish-pipeline/selfish/{version}/commands/auto.md` | Content matches | ⚠ Warning: plugin cache is stale. Fix: copy source files to cache directory |
+| Cache in sync | Compare `commands/auto.md` content between source and `~/.claude/plugins/cache/all-for-claudecode/afc/{version}/commands/auto.md` | Content matches | ⚠ Warning: plugin cache is stale. Fix: copy source files to cache directory |
 
 ---
 
@@ -95,7 +95,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 1. Print header:
    ```
-   Selfish Pipeline Doctor
+   All-for-ClaudeCode Doctor
    =======================
    ```
 
@@ -120,7 +120,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 ## Example Output
 
 ```
-Selfish Pipeline Doctor
+All-for-ClaudeCode Doctor
 =======================
 
 Environment
@@ -129,16 +129,16 @@ Environment
     Fix: brew install jq
 
 Project Config
-  ✓ .claude/selfish.config.md exists
+  ✓ .claude/afc.config.md exists
   ✓ Required sections: ci, gate, architecture, code_style
   ✓ CI command runnable
   ✓ Gate command runnable
 
 CLAUDE.md Integration
   ✓ Global ~/.claude/CLAUDE.md exists
-  ✓ SELFISH block present
-  ⚠ SELFISH block version outdated (1.0.0 → 1.1.0)
-    Fix: /selfish:init
+  ✓ AFC block present
+  ⚠ AFC block version outdated (1.0.0 → 1.1.0)
+    Fix: /afc:init
   ✓ No conflicting routing
 
 Pipeline State
@@ -163,4 +163,4 @@ Results: 14 passed, 2 warnings, 0 failures
 - **Always run all checks**: do not stop on first failure. The full picture is the value.
 - **Actionable fixes**: every non-pass result must include a Fix line. Never report a problem without a solution.
 - **Fast execution**: skip CI/gate command checks if `--fast` is in arguments (these are the slowest checks).
-- **Development checks**: Category 6 (Version Sync) only runs when inside the selfish-pipeline source repo.
+- **Development checks**: Category 6 (Version Sync) only runs when inside the all-for-claudecode source repo.

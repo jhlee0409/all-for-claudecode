@@ -5,9 +5,9 @@ set -euo pipefail
 # Track which files have changed for the CI gate
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
-CHANGES_LOG="$PROJECT_DIR/.claude/.selfish-changes.log"
-CI_FLAG="$PROJECT_DIR/.claude/.selfish-ci-passed"
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
+CHANGES_LOG="$PROJECT_DIR/.claude/.afc-changes.log"
+CI_FLAG="$PROJECT_DIR/.claude/.afc-ci-passed"
 
 # shellcheck disable=SC2329
 cleanup() {

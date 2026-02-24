@@ -1,5 +1,5 @@
 ---
-name: selfish:checkpoint
+name: afc:checkpoint
 description: "Save session state"
 argument-hint: "[checkpoint message]"
 disable-model-invocation: true
@@ -11,9 +11,9 @@ allowed-tools:
   - Bash
 ---
 
-# /selfish:checkpoint — Save Session State
+# /afc:checkpoint — Save Session State
 
-> Saves the current work state to .claude/selfish/memory/checkpoint.md.
+> Saves the current work state to .claude/afc/memory/checkpoint.md.
 > Preserves progress even if the session is interrupted.
 
 ## Arguments
@@ -41,7 +41,7 @@ Collect automatically:
 
 ### 2. Save Checkpoint
 
-**Overwrite** `.claude/selfish/memory/checkpoint.md` (keep only the latest state):
+**Overwrite** `.claude/afc/memory/checkpoint.md` (keep only the latest state):
 
 ````markdown
 # Session Checkpoint
@@ -78,7 +78,7 @@ Checkpoint saved
 ├─ Branch: {branch name}
 ├─ Active features: {count}
 ├─ Progress: {completed tasks}/{total tasks}
-└─ Restore: /selfish:resume
+└─ Restore: /afc:resume
 ```
 
 ## Notes

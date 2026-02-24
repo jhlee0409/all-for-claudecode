@@ -1,10 +1,10 @@
 ---
-name: selfish:plan
+name: afc:plan
 description: "Implementation design"
 argument-hint: "[additional context or constraints]"
 model: sonnet
 ---
-# /selfish:plan — Implementation Design
+# /afc:plan — Implementation Design
 
 > Generates an implementation plan (plan.md) based on the feature specification (spec.md).
 > Ensures quality with convergence-based Critic Loop and runs research in parallel when needed.
@@ -15,29 +15,29 @@ model: sonnet
 
 ## Project Config (auto-loaded)
 
-!`cat .claude/selfish.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/selfish.config.md not found. Create it with /selfish:init."`
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
 ## Config Load
 
-**Always** read `.claude/selfish.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
 
 ## Execution Steps
 
 ### 1. Load Context
 
 1. Check **current branch** → `BRANCH_NAME`
-2. Find **.claude/selfish/specs/{feature}/spec.md**:
-   - Search under `.claude/selfish/specs/` for a directory matching the current branch name or `$ARGUMENTS`
-   - If not found: print "spec.md not found. Run `/selfish:spec` first." then **abort**
+2. Find **.claude/afc/specs/{feature}/spec.md**:
+   - Search under `.claude/afc/specs/` for a directory matching the current branch name or `$ARGUMENTS`
+   - If not found: print "spec.md not found. Run `/afc:spec` first." then **abort**
 3. Read full **spec.md**
-4. Read **.claude/selfish/memory/principles.md** (if present)
+4. Read **.claude/afc/memory/principles.md** (if present)
 5. Read **CLAUDE.md** project context
 
 ### 2. Clarification Check
 
 - If spec.md contains `[NEEDS CLARIFICATION]` tags:
   - Warn user: "There are unresolved clarification items. Do you want to continue?"
-  - If user chooses to stop → guide to `/selfish:clarify` then **abort**
+  - If user chooses to stop → guide to `/afc:clarify` then **abort**
 
 ### 3. Phase 0 — Research (ReWOO pattern, if needed)
 
@@ -69,7 +69,7 @@ List all research topics as a numbered list:
 - For 1-2 topics: resolve directly via WebSearch/codebase exploration (no delegation needed)
 
 #### Step 3: Solve (consolidate all results)
-Collect all results and record in `.claude/selfish/specs/{feature}/research.md`:
+Collect all results and record in `.claude/afc/specs/{feature}/research.md`:
 ```markdown
 ## {topic}
 **Decision**: {chosen approach}
@@ -80,7 +80,7 @@ Collect all results and record in `.claude/selfish/specs/{feature}/research.md`:
 
 ### 4. Phase 1 — Write Design
 
-Create `.claude/selfish/specs/{feature}/plan.md`. **Must** follow the structure below:
+Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure below:
 
 ```markdown
 # Implementation Plan: {feature name}
@@ -89,7 +89,7 @@ Create `.claude/selfish/specs/{feature}/plan.md`. **Must** follow the structure 
 {summary of core requirements from spec + technical approach, 3-5 sentences}
 
 ## Technical Context
-{summary of project settings loaded from selfish.config.md}
+{summary of project settings loaded from afc.config.md}
 - **Language**: {config.code_style.language}
 - **Framework**: {config.framework.name}
 - **State**: {config.state_management summary}
@@ -99,7 +99,7 @@ Create `.claude/selfish/specs/{feature}/plan.md`. **Must** follow the structure 
 - **Constraints**: {constraints extracted from spec}
 
 ## Principles Check
-{if .claude/selfish/memory/principles.md exists: validation results against MUST principles}
+{if .claude/afc/memory/principles.md exists: validation results against MUST principles}
 {if violations possible: state explicitly + justification}
 
 ## Architecture Decision
@@ -168,7 +168,7 @@ Run the critic loop until convergence. Safety cap: 7 passes.
 | **COMPLETENESS** | Are all requirements (FR-*) from spec.md reflected in the plan? |
 | **FEASIBILITY** | Is it compatible with the existing codebase? Are dependencies available? |
 | **ARCHITECTURE** | Does it comply with {config.architecture} rules? |
-| **RISK** | Are there any unidentified risks? Additionally, if `.claude/selfish/memory/retrospectives/` directory contains files from previous pipeline runs, load each file and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
+| **RISK** | Are there any unidentified risks? Additionally, if `.claude/afc/memory/retrospectives/` directory contains files from previous pipeline runs, load each file and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
 | **PRINCIPLES** | Does it not violate the MUST principles in principles.md? |
 
 **On FAIL**: auto-fix and continue to next pass.
@@ -181,10 +181,10 @@ Run the critic loop until convergence. Safety cap: 7 passes.
 
 ```
 Plan generated
-├─ .claude/selfish/specs/{feature}/plan.md
-├─ .claude/selfish/specs/{feature}/research.md (if research was performed)
+├─ .claude/afc/specs/{feature}/plan.md
+├─ .claude/afc/specs/{feature}/research.md (if research was performed)
 ├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
-└─ Next step: /selfish:tasks
+└─ Next step: /afc:tasks
 ```
 
 ## Notes

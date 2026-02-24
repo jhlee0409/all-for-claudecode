@@ -1,31 +1,31 @@
 #!/bin/bash
 set -euo pipefail
 
-# Pipeline Management: Manage selfish pipeline state flags
+# Pipeline Management: Manage afc pipeline state flags
 # Manages flag files referenced by other hook scripts
 #
 # Usage:
-#   selfish-pipeline-manage.sh start <feature-name>
-#   selfish-pipeline-manage.sh phase <phase-name>
-#   selfish-pipeline-manage.sh ci-pass
-#   selfish-pipeline-manage.sh end [--force]
-#   selfish-pipeline-manage.sh status
-#   selfish-pipeline-manage.sh log <event_type> <message>
-#   selfish-pipeline-manage.sh phase-tag <phase_number>
-#   selfish-pipeline-manage.sh phase-tag-clean
+#   afc-pipeline-manage.sh start <feature-name>
+#   afc-pipeline-manage.sh phase <phase-name>
+#   afc-pipeline-manage.sh ci-pass
+#   afc-pipeline-manage.sh end [--force]
+#   afc-pipeline-manage.sh status
+#   afc-pipeline-manage.sh log <event_type> <message>
+#   afc-pipeline-manage.sh phase-tag <phase_number>
+#   afc-pipeline-manage.sh phase-tag-clean
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 FLAG_DIR="$PROJECT_DIR/.claude"
-PIPELINE_FLAG="$FLAG_DIR/.selfish-active"
-PHASE_FLAG="$FLAG_DIR/.selfish-phase"
-CI_FLAG="$FLAG_DIR/.selfish-ci-passed"
-CHANGES_LOG="$FLAG_DIR/.selfish-changes.log"
+PIPELINE_FLAG="$FLAG_DIR/.afc-active"
+PHASE_FLAG="$FLAG_DIR/.afc-phase"
+CI_FLAG="$FLAG_DIR/.afc-ci-passed"
+CHANGES_LOG="$FLAG_DIR/.afc-changes.log"
 
 # shellcheck disable=SC2329
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ]; then
-    echo "selfish-pipeline-manage: exited with code $exit_code" >&2
+    echo "afc-pipeline-manage: exited with code $exit_code" >&2
   fi
   exit "$exit_code"
 }
@@ -66,10 +66,10 @@ case "$COMMAND" in
 
     # Safety snapshot
     if cd "$PROJECT_DIR" 2>/dev/null; then
-      git tag -f "selfish/pre-auto" 2>/dev/null || true
+      git tag -f "afc/pre-auto" 2>/dev/null || true
     fi
 
-    echo "Pipeline started: $FEATURE (safety tag: selfish/pre-auto)"
+    echo "Pipeline started: $FEATURE (safety tag: afc/pre-auto)"
     ;;
 
   phase)
@@ -103,12 +103,12 @@ case "$COMMAND" in
     fi
 
     rm -f "$PIPELINE_FLAG" "$PHASE_FLAG" "$CI_FLAG" "$CHANGES_LOG"
-    rm -f "$FLAG_DIR/.selfish-failures.log" "$FLAG_DIR/.selfish-task-results.log" "$FLAG_DIR/.selfish-config-audit.log"
+    rm -f "$FLAG_DIR/.afc-failures.log" "$FLAG_DIR/.afc-task-results.log" "$FLAG_DIR/.afc-config-audit.log"
 
     # Clean up safety tag and phase tags (on successful completion)
     if cd "$PROJECT_DIR" 2>/dev/null; then
-      git tag -d "selfish/pre-auto" 2>/dev/null || true
-      for TAG in $(git tag -l 'selfish/phase-*' 2>/dev/null || true); do
+      git tag -d "afc/pre-auto" 2>/dev/null || true
+      for TAG in $(git tag -l 'afc/phase-*' 2>/dev/null || true); do
         git tag -d "$TAG" 2>/dev/null || true
       done
     fi
@@ -138,7 +138,7 @@ case "$COMMAND" in
       exit 1
     fi
     SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    "$SCRIPT_DIR/selfish-timeline-log.sh" "$EVENT" "$MSG"
+    "$SCRIPT_DIR/afc-timeline-log.sh" "$EVENT" "$MSG"
     ;;
 
   phase-tag)
@@ -150,8 +150,8 @@ case "$COMMAND" in
       exit 1
     fi
     if cd "$PROJECT_DIR" 2>/dev/null; then
-      git tag -f "selfish/phase-${PHASE_NUM}" 2>/dev/null || true
-      echo "Phase tag created: selfish/phase-${PHASE_NUM}"
+      git tag -f "afc/phase-${PHASE_NUM}" 2>/dev/null || true
+      echo "Phase tag created: afc/phase-${PHASE_NUM}"
     else
       echo "Cannot create tag: not a git repo" >&2
       exit 1
@@ -160,7 +160,7 @@ case "$COMMAND" in
 
   phase-tag-clean)
     if cd "$PROJECT_DIR" 2>/dev/null; then
-      TAGS=$(git tag -l 'selfish/phase-*' 2>/dev/null || true)
+      TAGS=$(git tag -l 'afc/phase-*' 2>/dev/null || true)
       if [ -n "$TAGS" ]; then
         COUNT=0
         for TAG in $TAGS; do

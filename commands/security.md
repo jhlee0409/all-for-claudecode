@@ -1,10 +1,10 @@
 ---
-name: selfish:security
+name: afc:security
 description: "Security scan (read-only)"
 argument-hint: "[scan scope: file/directory path or full]"
 disable-model-invocation: true
 context: fork
-agent: selfish-security
+agent: afc-security
 allowed-tools:
   - Read
   - Grep
@@ -15,7 +15,7 @@ allowed-tools:
 model: sonnet
 ---
 
-# /selfish:security — Security Scan
+# /afc:security — Security Scan
 
 > Detects and reports security vulnerabilities in the codebase.
 > Inspects against OWASP Top 10. **Read-only** — does not modify code.

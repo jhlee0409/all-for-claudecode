@@ -3,12 +3,12 @@
 node_modules/
 *.tgz
 
-# Selfish pipeline state files (runtime artifacts)
-.claude/.selfish-*
+# AFC pipeline state files (runtime artifacts)
+.claude/.afc-*
 
-# Selfish pipeline artifacts (specs, memory, config)
-.claude/selfish/
-.claude/selfish.config.md
+# AFC pipeline artifacts (specs, memory, config)
+.claude/afc/
+.claude/afc.config.md
 .claude/agent-memory/
 
 # IDE / tool artifacts

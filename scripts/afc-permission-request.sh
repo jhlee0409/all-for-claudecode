@@ -11,8 +11,8 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.selfish-active"
-PHASE_FLAG="$PROJECT_DIR/.claude/.selfish-phase"
+PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
+PHASE_FLAG="$PROJECT_DIR/.claude/.afc-phase"
 
 # Read hook data from stdin
 INPUT=$(cat)

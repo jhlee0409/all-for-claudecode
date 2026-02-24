@@ -5,11 +5,11 @@ paths:
 
 # Command Prompt Rules
 
-Markdown command files define slash commands for the selfish pipeline plugin.
+Markdown command files define slash commands for the afc pipeline plugin.
 
 ## Frontmatter Requirements
 Every command must have YAML frontmatter with:
-- `name:` — selfish:{command-name} format
+- `name:` — afc:{command-name} format
 - `description:` — concise English description
 - `argument-hint:` — usage hint in brackets
 

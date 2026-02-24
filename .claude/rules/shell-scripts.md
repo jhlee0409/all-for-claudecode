@@ -20,8 +20,8 @@ Scripts in this project follow strict conventions for Claude Code hook compatibi
 - Truncate long values: `cut -c1-500` for messages, `cut -c1-100` for identifiers
 
 ## Pipeline Flag Pattern
-- Check `.claude/.selfish-active` for pipeline state
-- Check `.claude/.selfish-phase` for current phase
+- Check `.claude/.afc-active` for pipeline state
+- Check `.claude/.afc-phase` for current phase
 - Exit 0 immediately if pipeline inactive (minimal overhead)
 
 ## Shellcheck

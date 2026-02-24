@@ -1,7 +1,7 @@
-# Selfish Configuration
+# AFC Configuration
 
-> This file defines project-specific settings for the selfish command system.
-> All selfish commands reference this file to determine project-specific behavior.
+> This file defines project-specific settings for the afc command system.
+> All afc commands reference this file to determine project-specific behavior.
 
 ## CI Commands
 

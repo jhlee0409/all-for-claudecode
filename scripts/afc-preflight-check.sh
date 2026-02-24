@@ -56,14 +56,14 @@ printf 'Preflight Check:\n'
 
 # ── Check 1: CI command (4-tier cascade) ─────────────────
 
-# 1a. selfish.config.md — most explicit, user-configured
-CONFIG_FILE="$PROJECT_DIR/.claude/selfish.config.md"
+# 1a. afc.config.md — most explicit, user-configured
+CONFIG_FILE="$PROJECT_DIR/.claude/afc.config.md"
 if [[ -z "$CI_COMMAND" && -f "$CONFIG_FILE" ]]; then
   CI_COMMAND=$(grep -E '^\s*ci:\s*"[^"]*"' "$CONFIG_FILE" 2>/dev/null | head -1 | sed 's/.*ci: *"\([^"]*\)".*/\1/' || true)
   if [[ -z "$CI_COMMAND" ]]; then
     CI_COMMAND=$(grep -E '^\s*gate:\s*"[^"]*"' "$CONFIG_FILE" 2>/dev/null | head -1 | sed 's/.*gate: *"\([^"]*\)".*/\1/' || true)
   fi
-  [[ -n "$CI_COMMAND" ]] && CI_SOURCE="selfish.config.md"
+  [[ -n "$CI_COMMAND" ]] && CI_SOURCE="afc.config.md"
 fi
 
 # 1b. Monorepo tools (turbo, nx, pnpm workspaces)
@@ -118,7 +118,7 @@ elif [[ -f "$PROJECT_DIR/package.json" ]]; then
   FAIL_COUNT=$((FAIL_COUNT + 1))
 else
   # No recognizable ecosystem — warn instead of fail
-  printf '  \xe2\x9a\xa0 CI command: not detected (configure ci: in selfish.config.md)\n'
+  printf '  \xe2\x9a\xa0 CI command: not detected (configure ci: in afc.config.md)\n'
   WARN_COUNT=$((WARN_COUNT + 1))
 fi
 
@@ -165,7 +165,7 @@ fi
 
 # ── Check 5: No active pipeline ──────────────────────────
 
-ACTIVE_FILE="$PROJECT_DIR/.claude/.selfish-active"
+ACTIVE_FILE="$PROJECT_DIR/.claude/.afc-active"
 if [[ -f "$ACTIVE_FILE" ]]; then
   ACTIVE_NAME=$(head -1 "$ACTIVE_FILE" 2>/dev/null | tr -d '\n\r' | cut -c1-100 || printf 'unknown')
   printf '  \xe2\x9c\x97 No active pipeline: pipeline already running (%s)\n' "$ACTIVE_NAME"

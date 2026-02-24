@@ -3,7 +3,7 @@ set -euo pipefail
 # Session End Hook: Warn about incomplete pipeline on session end
 # Notify user of in-progress work when leaving the session
 #
-# Gap fix: Ensures resumability via /selfish:resume even after session ends
+# Gap fix: Ensures resumability via /afc:resume even after session ends
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -13,7 +13,7 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="${PROJECT_DIR}/.claude/.selfish-active"
+PIPELINE_FLAG="${PROJECT_DIR}/.claude/.afc-active"
 
 # Consume stdin early (required -- pipe breaks if not consumed)
 INPUT=$(cat)
@@ -35,7 +35,7 @@ else
 fi
 
 # Compose warning message (stderr -> displayed to user in SessionEnd)
-MSG="SELFISH PIPELINE: Session ending with feature '${FEATURE}' incomplete. Use /selfish:resume to continue."
+MSG="AFC PIPELINE: Session ending with feature '${FEATURE}' incomplete. Use /afc:resume to continue."
 if [ -n "$REASON" ]; then
   MSG="${MSG} (end reason: ${REASON})"
 fi

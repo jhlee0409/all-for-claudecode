@@ -34,11 +34,11 @@ Quantitatively inspect `{config.mini_review}` items for files changed within the
 After passing the Phase gate, automatically save session state:
 
 ```markdown
-# .claude/selfish/memory/checkpoint.md auto-update
+# .claude/afc/memory/checkpoint.md auto-update
 Current Phase: {N}/{total}
 Completed tasks: {list of completed IDs}
 Changed files: {file list}
 Last CI: ✓
 ```
 
-- Even if the session is interrupted, resume from this point with `/selfish:resume`
+- Even if the session is interrupted, resume from this point with `/afc:resume`

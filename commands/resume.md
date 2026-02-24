@@ -1,5 +1,5 @@
 ---
-name: selfish:resume
+name: afc:resume
 description: "Restore session"
 argument-hint: "[no arguments]"
 disable-model-invocation: true
@@ -10,9 +10,9 @@ allowed-tools:
   - Bash
 ---
 
-# /selfish:resume — Restore Session
+# /afc:resume — Restore Session
 
-> Restores the previous session state from .claude/selfish/memory/checkpoint.md and resumes work.
+> Restores the previous session state from .claude/afc/memory/checkpoint.md and resumes work.
 
 ## Arguments
 
@@ -22,7 +22,7 @@ allowed-tools:
 
 ### 1. Load Checkpoint
 
-Read `.claude/selfish/memory/checkpoint.md`:
+Read `.claude/afc/memory/checkpoint.md`:
 - If not found: output "No saved checkpoint found." then **stop**
 - If found: parse the full contents
 
@@ -34,7 +34,7 @@ Compare the checkpoint state against the current environment:
    - If different: warn + suggest switching
 2. **File state**: Have any files changed since the checkpoint?
    - Check for new commits with `git log {checkpoint hash}..HEAD --oneline`
-3. **Feature directory**: Does .claude/selfish/specs/{feature}/ still exist?
+3. **Feature directory**: Does .claude/afc/specs/{feature}/ still exist?
 
 ### 3. Report State
 
@@ -59,9 +59,9 @@ Compare the checkpoint state against the current environment:
 
 ### Recommended Next Steps
 {recommended commands based on state}
-- Tasks in progress → resume `/selfish:implement`
-- Plan complete → `/selfish:tasks`
-- Spec only → `/selfish:plan`
+- Tasks in progress → resume `/afc:implement`
+- Plan complete → `/afc:tasks`
+- Spec only → `/afc:plan`
 ```
 
 ### 4. Final Output

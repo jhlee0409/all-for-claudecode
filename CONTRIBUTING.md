@@ -1,6 +1,6 @@
-# Contributing to Selfish Pipeline
+# Contributing to All-for-ClaudeCode
 
-Development guidelines for adding features, modifying behavior, upgrading, and maintaining the selfish-pipeline project.
+Development guidelines for adding features, modifying behavior, upgrading, and maintaining the all-for-claudecode project.
 
 ## Project Map
 
@@ -21,7 +21,7 @@ tests/      bash test suite bin/        ESM CLI installer
 |---------------|-----------------|-------------|
 | Add a new slash command | `commands/{name}.md` | CLAUDE.md (command count), README.md (badge + table), `tests/test-hooks.sh` if hooks involved |
 | Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | CLAUDE.md (hook count), README.md (badge + table), `tests/test-hooks.sh` |
-| Add a new project template | `templates/selfish.config.{name}.md` | `commands/init.md` (template list) |
+| Add a new project template | `templates/afc.config.{name}.md` | `commands/init.md` (template list) |
 | Add a new agent | `agents/{name}.md` | CLAUDE.md (agent count) |
 | Modify pipeline flow | `commands/auto.md` | Related phase commands, `docs/phase-gate-protocol.md` |
 | Change critic loop behavior | `docs/critic-loop-rules.md` | All commands that reference it |
@@ -38,7 +38,7 @@ Create `commands/{name}.md` with required YAML frontmatter:
 
 ```yaml
 ---
-name: selfish:{name}
+name: afc:{name}
 description: "Short description in English"
 argument-hint: "[hint for arguments]"
 model: haiku|sonnet          # haiku for mechanical, sonnet for design/analysis, omit for orchestrators
@@ -76,11 +76,11 @@ hooks:
     - matcher: "Edit|Write"
       hooks:
         - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-selfish-changes.sh"
+          command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-afc-changes.sh"
   Stop:
     - hooks:
         - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/scripts/selfish-stop-gate.sh"
+          command: "${CLAUDE_PLUGIN_ROOT}/scripts/afc-stop-gate.sh"
 ```
 
 Note: Global hooks in `hooks/hooks.json` are always active. Command-level hooks in frontmatter should only be used when a command needs behavior that differs from the global hooks. Avoid duplicating global hooks in frontmatter (causes double execution).
@@ -89,7 +89,7 @@ Note: Global hooks in `hooks/hooks.json` are always active. Command-level hooks 
 
 Follow this structure:
 ```markdown
-# /selfish:{name} — {Title}
+# /afc:{name} — {Title}
 
 > One-line description of what this command does.
 
@@ -106,12 +106,12 @@ Follow this structure:
 
 - **CLAUDE.md**: Update command count (the `N markdown files` figure in Architecture section)
 - **commands/auto.md**: If the new command is a pipeline phase, add it to the auto pipeline
-- **Global CLAUDE.md SELFISH block** (in `commands/init.md` template): Add to skill routing table if user-invocable
+- **Global CLAUDE.md AFC block** (in `commands/init.md` template): Add to skill routing table if user-invocable
 - **Tests**: Add test cases if the command involves hooks or scripts
 
 ### Naming conventions
 
-- Command name: `selfish:{kebab-case}` (e.g., `selfish:code-gen`)
+- Command name: `afc:{kebab-case}` (e.g., `afc:code-gen`)
 - File name: `commands/{kebab-case}.md` (e.g., `commands/code-gen.md`)
 - Description: English, imperative or noun phrase
 
@@ -237,12 +237,12 @@ Key testing patterns:
 
 ### Step 1: Create the template
 
-Create `templates/selfish.config.{name}.md` following the structure:
+Create `templates/afc.config.{name}.md` following the structure:
 
 ```markdown
-# Selfish Configuration
+# AFC Configuration
 
-> This file defines project-specific settings for the selfish command system.
+> This file defines project-specific settings for the afc command system.
 
 ## CI Commands
 
@@ -322,7 +322,7 @@ Create `agents/{name}.md`:
 
 ```yaml
 ---
-name: selfish-{name}
+name: afc-{name}
 description: "Description of the agent's role and memory behavior"
 tools:
   - Read
@@ -351,9 +351,9 @@ If the agent is used by a specific command:
 
 ```yaml
 ---
-name: selfish:{command}
+name: afc:{command}
 context: fork
-agent: selfish-{name}
+agent: afc-{name}
 ---
 ```
 
@@ -377,10 +377,10 @@ The pipeline is `spec → plan → tasks → implement → review → clean`.
    - Add the new phase section
    - Update phase numbering (e.g., `Phase N/7`)
    - Update the progress notification format
-   - Add `selfish-pipeline-manage.sh phase {name}` call
-3. Update `scripts/selfish-pipeline-manage.sh` to handle the new phase name
+   - Add `afc-pipeline-manage.sh phase {name}` call
+3. Update `scripts/afc-pipeline-manage.sh` to handle the new phase name
 4. Update `CLAUDE.md` pipeline description
-5. Update the SELFISH block template in `commands/init.md`
+5. Update the AFC block template in `commands/init.md`
 
 ### Modifying orchestration (implement phase)
 
@@ -421,10 +421,10 @@ After bumping, update `CHANGELOG.md`.
 
 ## 7. Plugin Cache Sync
 
-After modifying source files, the plugin cache at `~/.claude/plugins/cache/selfish-pipeline/selfish/{version}/` must be updated for changes to take effect in the current Claude Code session.
+After modifying source files, the plugin cache at `~/.claude/plugins/cache/all-for-claudecode/afc/{version}/` must be updated for changes to take effect in the current Claude Code session.
 
 ```bash
-CACHE="$HOME/.claude/plugins/cache/selfish-pipeline/selfish/$(jq -r .version package.json)"
+CACHE="$HOME/.claude/plugins/cache/all-for-claudecode/afc/$(jq -r .version package.json)"
 SRC="$(pwd)"
 
 # Sync specific files
@@ -543,7 +543,7 @@ git diff --cached --name-only | xargs grep -l '[가-힣]' 2>/dev/null
 Use `TEST_DIR` as the variable name, never `TMPDIR` (conflicts with system environment variable).
 
 ### Destructive git commands during pipeline
-The `selfish-bash-guard.sh` hook blocks dangerous git commands (`push --force`, `reset --hard`, `clean -f`) when the pipeline is active. Rollback commands targeting `selfish/pre-*` tags are whitelisted.
+The `afc-bash-guard.sh` hook blocks dangerous git commands (`push --force`, `reset --hard`, `clean -f`) when the pipeline is active. Rollback commands targeting `afc/pre-*` tags are whitelisted.
 
 ---
 

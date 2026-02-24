@@ -1,10 +1,10 @@
 ---
-name: selfish:spec
+name: afc:spec
 description: "Generate feature specification"
 argument-hint: "[feature description in natural language]"
 model: sonnet
 ---
-# /selfish:spec — Generate Feature Specification
+# /afc:spec — Generate Feature Specification
 
 > Converts a natural language feature description into a structured specification (spec.md).
 > Validates completeness with convergence-based Critic Loop. Operates on pure prompts without external scripts.
@@ -15,11 +15,11 @@ model: sonnet
 
 ## Project Config (auto-loaded)
 
-!`cat .claude/selfish.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/selfish.config.md not found. Create it with /selfish:init."`
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
 ## Config Load
 
-**Always** read `.claude/selfish.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
 
 ## Execution Steps
 
@@ -29,7 +29,7 @@ model: sonnet
 2. Determine **feature name**:
    - Extract 2-3 key keywords from `$ARGUMENTS`
    - Convert to kebab-case (e.g., "add user authentication" → `user-auth`)
-3. **Create directory**: `.claude/selfish/specs/{feature-name}/` (create parent `.claude/selfish/specs/` directory if it does not exist)
+3. **Create directory**: `.claude/afc/specs/{feature-name}/` (create parent `.claude/afc/specs/` directory if it does not exist)
 4. If already exists, confirm with user: "Overwrite existing spec?"
 
 ### 2. Explore Codebase
@@ -42,7 +42,7 @@ Before writing the spec, understand the current project structure:
 
 ### 3. Write Spec
 
-Create `.claude/selfish/specs/{feature-name}/spec.md`:
+Create `.claude/afc/specs/{feature-name}/spec.md`:
 
 ```markdown
 # Feature Spec: {feature name}
@@ -78,7 +78,7 @@ Create `.claude/selfish/specs/{feature-name}/spec.md`:
 - **NFR-001**: {performance/security/accessibility etc.}
 
 ### Auto-Suggested NFRs
-{Load `${CLAUDE_PLUGIN_ROOT}/docs/nfr-templates.md` and select 3-5 relevant NFRs based on the project type detected from selfish.config.md}
+{Load `${CLAUDE_PLUGIN_ROOT}/docs/nfr-templates.md` and select 3-5 relevant NFRs based on the project type detected from afc.config.md}
 - **NFR-A01** [AUTO-SUGGESTED]: {suggestion from matching project type template}
 - **NFR-A02** [AUTO-SUGGESTED]: {suggestion}
 - **NFR-A03** [AUTO-SUGGESTED]: {suggestion}
@@ -106,7 +106,7 @@ Create `.claude/selfish/specs/{feature-name}/spec.md`:
 
 ### 4. Retrospective Check
 
-If `.claude/selfish/memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/afc/memory/retrospectives/` directory exists, load retrospective files and check:
 - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
 - Were there scope-related issues in past specs? Warn about similar ambiguities.
 
@@ -133,11 +133,11 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 
 ```
 Spec generated
-├─ .claude/selfish/specs/{feature-name}/spec.md
+├─ .claude/afc/specs/{feature-name}/spec.md
 ├─ User Stories: {count}
 ├─ Requirements: FR {count}, NFR {count}
 ├─ Unresolved: {[NEEDS CLARIFICATION] count}
-└─ Next step: /selfish:clarify (if unresolved) or /selfish:plan
+└─ Next step: /afc:clarify (if unresolved) or /afc:plan
 ```
 
 ## Notes
@@ -146,4 +146,4 @@ Spec generated
 - Specify **actual paths** for entities related to existing code.
 - If `$ARGUMENTS` is empty, ask user for a feature description.
 - Do not pack too many features into one spec. Suggest splitting if User Stories exceed 5.
-- When running `/selfish:auto`, `[AUTO-SUGGESTED]` NFRs are included automatically. Review after completion is recommended.
+- When running `/afc:auto`, `[AUTO-SUGGESTED]` NFRs are included automatically. Review after completion is recommended.

@@ -1,12 +1,12 @@
 # Development Rules
 
-When adding or modifying features in selfish-pipeline, follow these rules.
+When adding or modifying features in all-for-claudecode, follow these rules.
 
 ## Change Impact Matrix
 
 Before making changes, identify the blast radius:
 
-- **Command change** → also update: auto.md (if pipeline phase), CLAUDE.md (counts), init.md SELFISH block (if routing changed)
+- **Command change** → also update: auto.md (if pipeline phase), CLAUDE.md (counts), init.md AFC block (if routing changed)
 - **Hook script change** → also update: tests/test-hooks.sh (mandatory), hooks.json (if new event)
 - **Shared doc change** (critic-loop-rules.md, phase-gate-protocol.md) → affects ALL commands that reference it
 - **Version change** → must sync: package.json + plugin.json + marketplace.json (all 3)
@@ -22,7 +22,7 @@ Before making changes, identify the blast radius:
 
 Source changes don't take effect until synced to cache during development:
 ```bash
-cp commands/{file}.md ~/.claude/plugins/cache/selfish-pipeline/selfish/$(jq -r .version package.json)/commands/{file}.md
+cp commands/{file}.md ~/.claude/plugins/cache/all-for-claudecode/afc/$(jq -r .version package.json)/commands/{file}.md
 ```
 
 ## Command Design Rules

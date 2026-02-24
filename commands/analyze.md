@@ -1,5 +1,5 @@
 ---
-name: selfish:analyze
+name: afc:analyze
 description: "Artifact consistency validation (read-only)"
 argument-hint: "[validation scope: spec-plan, tasks-only]"
 user-invocable: false
@@ -11,7 +11,7 @@ allowed-tools:
 model: haiku
 ---
 
-# /selfish:analyze — Artifact Consistency Validation
+# /afc:analyze — Artifact Consistency Validation
 
 > Validates consistency and quality across spec.md, plan.md, and tasks.md.
 > **Read-only** — does not modify any files.
@@ -34,7 +34,7 @@ config.architecture = the architecture pattern used in the project
 
 ### 1. Load Artifacts
 
-From `.claude/selfish/specs/{feature}/`:
+From `.claude/afc/specs/{feature}/`:
 - **spec.md** (required)
 - **plan.md** (required)
 - **tasks.md** (if present)
@@ -66,7 +66,7 @@ Validate across 6 categories:
 - Mismatches between technical decisions in plan and execution in tasks
 
 #### E. Principles Compliance (PRINCIPLES)
-- Validate against MUST principles in .claude/selfish/memory/principles.md if present
+- Validate against MUST principles in .claude/afc/memory/principles.md if present
 - Potential violations of {config.architecture} rules
 
 #### F. Unidentified Risks (RISK)
