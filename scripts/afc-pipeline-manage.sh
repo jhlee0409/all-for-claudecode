@@ -74,7 +74,7 @@ case "$COMMAND" in
   phase)
     PHASE="${2:?Phase name required}"
     case "$PHASE" in
-      spec|plan|tasks|implement|review|clean|clarify|test-pre-gen|blast-radius)
+      spec|plan|tasks|implement|review|clean|clarify|test-pre-gen|blast-radius|fast-path)
         afc_state_write "phase" "$PHASE"
         afc_state_invalidate_ci
         echo "Phase: $PHASE"

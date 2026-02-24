@@ -80,7 +80,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| No stale pipeline flag | Check `.claude/.afc-active` | File does not exist (no active pipeline) | ⚠ Warning: stale pipeline flag found (feature: {name}). This may block normal operations. Fix: `rm .claude/.afc-active .claude/.afc-phase .claude/.afc-ci-passed` or run `/afc:resume` |
+| No stale pipeline state | Check `.claude/.afc-state.json` via `afc-pipeline-manage.sh status` | File does not exist (no active pipeline) | ⚠ Warning: stale pipeline state found (feature: {name}, phase: {phase}). This may block normal operations. Fix: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" end --force` or run `/afc:resume` |
 | No orphaned artifacts | Glob `.claude/afc/specs/*/spec.md` | No specs directories, or all are from active pipeline | ⚠ Warning: orphaned `.claude/afc/specs/{name}/` found. Left over from a previous pipeline. Fix: `rm -rf .claude/afc/specs/{name}/` |
 | No lingering safety tags | `git tag -l 'afc/pre-*'` | No tags, or tags match active pipeline | ⚠ Warning: lingering safety tag `afc/pre-{x}` found. Fix: `git tag -d afc/pre-{x}` |
 | Checkpoint state | Read `.claude/afc/memory/checkpoint.md` if exists | No checkpoint (clean), or checkpoint is from current session | ⚠ Warning: stale checkpoint from {date}. Fix: run `/afc:resume` to continue or delete `.claude/afc/memory/checkpoint.md` |
@@ -176,4 +176,4 @@ Results: 14 passed, 2 warnings, 0 failures
 - **Always run all checks**: do not stop on first failure. The full picture is the value.
 - **Actionable fixes**: every non-pass result must include a Fix line. Never report a problem without a solution.
 - **Fast execution**: skip CI/gate command checks if `--fast` is in arguments (these are the slowest checks).
-- **Development checks**: Category 6 (Version Sync) only runs when inside the all-for-claudecode source repo.
+- **Development checks**: Category 7 (Version Sync) only runs when inside the all-for-claudecode source repo.

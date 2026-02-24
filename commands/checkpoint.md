@@ -31,7 +31,7 @@ Collect automatically:
    - Last commit hash + message
    - List of changed files (`git status --short`)
 2. **Active Features**:
-   - Check subdirectories under `specs/`
+   - Check subdirectories under `.claude/afc/specs/`
    - Progress state of each feature (spec only? through plan? through tasks? implementing?)
 3. **Tasks Progress**:
    - If tasks.md exists, count `[x]`/`[ ]` items

@@ -51,6 +51,11 @@ Before writing the spec, understand the current project structure:
 1. Check key directories by `{config.architecture}` layer
 2. Explore existing code related to the feature description (Grep/Glob)
 3. Identify related type definitions, APIs, and components
+4. **Necessity & scope check** — evaluate whether the request warrants a full spec:
+   - **Already exists?** If the feature substantially exists → report: "This feature appears to already exist at {path}." Ask user: enhance existing, replace entirely, or abort.
+   - **Over-scoped?** If `$ARGUMENTS` implies 10+ files or multiple unrelated concerns → warn and suggest splitting into separate specs.
+   - **Trivial?** If the change is small enough to implement directly (typo, config value, single-line fix) → suggest: "This can be implemented directly without a full spec. Proceed with direct edit?"
+   - If user chooses abort → end with `"No spec generated — {reason}."` and suggest the appropriate alternative.
 
 ### 2.5. Research Gate (conditional)
 

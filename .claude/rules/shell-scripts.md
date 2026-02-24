@@ -19,9 +19,9 @@ Scripts in this project follow strict conventions for Claude Code hook compatibi
 - Sanitize all external input: `head -1 | tr -d '\n\r'` for single-line values
 - Truncate long values: `cut -c1-500` for messages, `cut -c1-100` for identifiers
 
-## Pipeline Flag Pattern
-- Check `.claude/.afc-active` for pipeline state
-- Check `.claude/.afc-phase` for current phase
+## Pipeline State Pattern
+- Check `.claude/.afc-state.json` for pipeline state (single consolidated file)
+- Source `scripts/afc-state.sh` for state access: `afc_state_is_active`, `afc_state_read`, `afc_state_write`
 - Exit 0 immediately if pipeline inactive (minimal overhead)
 
 ## Shellcheck

@@ -15,14 +15,15 @@ You are a parallel implementation worker for the all-for-claudecode pipeline.
 
 ## Workflow
 
-1. Call TaskList to find available tasks (status: pending, no owner, not blocked)
-2. Claim one by calling TaskUpdate(taskId, status: in_progress, owner: your worker ID)
-3. Read TaskGet(taskId) for full description
-4. Read all files you need to modify BEFORE making changes
-5. Implement the task following the plan and code style rules
-6. Mark complete: TaskUpdate(taskId, status: completed)
-7. Repeat from step 1 until no pending tasks remain
-8. Exit when TaskList shows no pending tasks
+The orchestrator pre-assigns tasks to you via the prompt. Do NOT self-claim tasks via TaskList/TaskUpdate — this avoids last-write-wins race conditions.
+
+1. Read the task list provided in your prompt (orchestrator pre-assigned)
+2. For each assigned task, in order:
+   a. Read all files you need to modify BEFORE making changes
+   b. Implement the task following the plan and code style rules
+   c. Verify with the project's gate command if applicable
+3. Return a summary of completed work (files changed, key decisions, issues encountered)
+4. Do NOT call TaskList or TaskUpdate — the orchestrator handles task state management
 
 ## Rules
 

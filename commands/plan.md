@@ -123,10 +123,10 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 |-------|------|------|
 | {entities/features/widgets/shared} | {path} | {description} |
 
-### State Management Strategy
+### State Management Strategy (omit if not applicable)
 {what combination of Zustand store / React Query / Context is used where}
 
-### API Design
+### API Design (omit if not applicable)
 {plan for new API endpoints or use of existing APIs}
 
 ## File Change Map
@@ -141,19 +141,26 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 | {risk} | {H/M/L} | {approach} |
 
 ## Alternative Design
+### Approach 0: No Change (status quo)
+{Why might the current state be sufficient? What is the cost of doing nothing?}
+{If no change is clearly inferior: state specific reason — "Status quo lacks X, which is required by FR-001"}
+{If no change is viable: recommend it — avoid implementing for the sake of implementing}
+
 ### Approach A: {chosen approach name}
 {Brief description — this is the approach detailed above}
 
 ### Approach B: {alternative approach name}
 {Brief description of a meaningfully different approach}
 
-| Criterion | Approach A | Approach B |
-|-----------|-----------|-----------|
-| Complexity | {evaluation} | {evaluation} |
-| Risk | {evaluation} | {evaluation} |
-| Maintainability | {evaluation} | {evaluation} |
+| Criterion | No Change | Approach A | Approach B |
+|-----------|-----------|-----------|-----------|
+| Complexity | None | {evaluation} | {evaluation} |
+| Risk | None | {evaluation} | {evaluation} |
+| Maintainability | Current | {evaluation} | {evaluation} |
+| Justification | {why not enough} | {why this} | {why this} |
 
-**Decision**: Approach {A/B} — {1-sentence rationale}
+**Decision**: Approach {0/A/B} — {1-sentence rationale}
+{If Approach 0 chosen: abort plan, report: "No implementation needed — current state satisfies requirements."}
 
 ## Phase Breakdown
 ### Phase 1: Setup
@@ -201,6 +208,7 @@ Plan generated
 
 ## Notes
 
+- **"No Change" is a valid outcome**: If Approach 0 (status quo) is the best option, recommend it. Do not implement for the sake of implementing.
 - Write plan.md to an **actionable level**. Vague expressions like "handle appropriately" are prohibited.
 - File paths in the File Change Map must be based on the **actual project structure** (no guessing).
 - Place files according to {config.architecture} rules; verify by checking existing codebase patterns.

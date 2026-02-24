@@ -63,18 +63,19 @@ Task("Review: {file3, file4}", subagent_type: "general-purpose")
 Read each agent's returned output, then write consolidated review.
 
 #### 11+ files: Review Swarm
-Create a review task pool and spawn self-organizing review workers:
-```
-// 1. Register each file as a review task via TaskCreate
-TaskCreate({ subject: "Review: src/auth/login.ts", description: "Review for quality, security, architecture, performance..." })
-TaskCreate({ subject: "Review: src/auth/session.ts", ... })
-// ... for all changed files
+Create a review task pool and spawn pre-assigned review workers:
 
+> **Note**: Unlike implement swarm (which prohibits self-claiming due to write conflicts), review workers use orchestrator pre-assignment by file group. This is safe because review is read-only — no write race conditions.
+
+```
+// 1. Group files into batches (2-3 files per worker)
 // 2. Spawn N review workers in a single message (N = min(5, file count / 2))
-Task("Review Worker 1", subagent_type: "general-purpose",
-  prompt: "You are a review worker. Loop: TaskList → claim pending → read file + diff → review → record findings → repeat until empty.
+Task("Review Worker 1: src/auth/login.ts, src/auth/session.ts", subagent_type: "general-purpose",
+  prompt: "Review the following files for quality, security, architecture, performance.
+  Files: src/auth/login.ts, src/auth/session.ts
   Review criteria: {config.code_style}, {config.architecture}, security, performance.
   Output findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix.")
+Task("Review Worker 2: src/api/routes.ts, src/api/middleware.ts", subagent_type: "general-purpose", ...)
 ```
 Collect all worker outputs, then write consolidated review.
 

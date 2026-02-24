@@ -5,6 +5,8 @@ argument-hint: "[focus area: security, performance, UI flow]"
 user-invocable: false
 allowed-tools:
   - Read
+  - Write
+  - Edit
   - Glob
   - Grep
 model: sonnet
@@ -36,6 +38,7 @@ Scan across 10 categories:
 
 | # | Category | What to find |
 |---|----------|-------------|
+| 0 | Necessity | Is this feature truly needed? Does it already exist? Is the cost justified by the benefit? |
 | 1 | Feature scope | Features with unclear boundaries |
 | 2 | Domain/data | Incomplete entity relationships or field definitions |
 | 3 | UX flow | Missing user journey steps |

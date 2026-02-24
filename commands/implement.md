@@ -84,7 +84,7 @@ Execute each phase in order. Choose the orchestration mode based on the number o
 |---------------------|------|----------|
 | 0 | Sequential | Execute tasks one by one |
 | 1–5 | Parallel Batch | Launch Task() calls in parallel (current batch approach) |
-| 6+ | Swarm | Create task pool → spawn worker agents that self-organize |
+| 6+ | Swarm | Create task pool → orchestrator pre-assigns tasks to worker agents |
 
 #### Sequential Mode (no P marker)
 

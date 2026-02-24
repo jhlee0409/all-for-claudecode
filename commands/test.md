@@ -47,7 +47,12 @@ Values used from config:
    - **Feature name** → explore related files, read code
    - **coverage** → scan all existing tests, identify coverage gaps
 
-2. Determine characteristics of target code:
+2. **Existing coverage check**: Before writing new tests, evaluate what already exists:
+   - Are there existing test files for the target? What do they cover?
+   - If existing tests already provide adequate coverage → report: "Existing tests in {path} already cover the core scenarios. No additional tests needed." Ask user: "(1) Add edge case tests only (2) Rewrite tests (3) Abort"
+   - If partially covered → identify specific gaps and target only those
+
+3. Determine characteristics of target code:
    - Public interface (function signatures, component props)
    - Dependencies (external APIs, DB, state management)
    - Branch points (conditionals, error handling)
