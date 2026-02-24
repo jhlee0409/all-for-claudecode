@@ -3,10 +3,12 @@
 **Claude Code plugin that automates the full development cycle — spec → plan → implement → review → clean.**
 
 [![npm version](https://img.shields.io/npm/v/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
+[![npm downloads](https://img.shields.io/npm/dm/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
 [![license](https://img.shields.io/github/license/jhlee0409/all-for-claudecode)](./LICENSE)
 [![test](https://img.shields.io/badge/tests-125%20passed-brightgreen)](#how-it-works)
-[![hooks](https://img.shields.io/badge/hooks-15%20events-blue)](#15-hook-events)
+[![hooks](https://img.shields.io/badge/hooks-17%20events-blue)](#17-hook-events)
 [![commands](https://img.shields.io/badge/commands-18-orange)](#18-slash-commands)
+[![zero dependencies](https://img.shields.io/badge/dependencies-0-success)](#)
 
 > Zero-dependency automation pipeline for Claude Code. One command (`/afc:auto`) runs the entire cycle: write specs, design plans, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
 
@@ -15,7 +17,7 @@
 all-for-claudecode is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
 
 - **18 slash commands** for every phase of development
-- **15 hook events** with 3 handler types (shell scripts, LLM prompts, subagents)
+- **17 hook events** with 3 handler types (shell scripts, LLM prompts, subagents)
 - **5 project presets** for popular stacks (Next.js, React SPA, Express API, Monorepo)
 - **Persistent memory agents** that learn across sessions
 - **Built-in CI gates** that physically prevent skipping quality checks
@@ -59,6 +61,18 @@ That's it. The pipeline will:
 3. Implement each task with CI verification (tasks auto-generated from plan)
 4. Run a code review with security scan
 5. Clean up artifacts and prepare for commit
+
+## When to Use all-for-claudecode
+
+| Scenario | Without afc | With `/afc:auto` |
+|----------|-------------|-------------------|
+| Add a new feature | 5+ manual prompts, no quality checks | One command, full pipeline with CI gates |
+| Implement across 10+ files | Track changes manually, easy to miss files | Auto task decomposition + parallel execution |
+| Ensure code quality | Remember to run linter, hope for the best | CI gates physically block if checks fail |
+| Resume after session timeout | Re-explain everything from scratch | `/afc:resume` restores full context |
+| Security review | Manual or skip entirely | Persistent memory agent flags known patterns |
+
+**Use all-for-claudecode when you want consistent, repeatable development phases with quality enforcement. Use manual workflow for quick one-off tasks.**
 
 ## Features
 
@@ -109,7 +123,7 @@ Spec (1/5) → Plan (2/5) → Implement (3/5) → Review (4/5) → Clean (5/5)
 | `/afc:analyze` | Verify artifact consistency |
 | `/afc:clarify` | Resolve spec ambiguities |
 
-### 15 Hook Events
+### 17 Hook Events
 
 Every hook fires automatically — no configuration needed after install.
 
@@ -192,22 +206,34 @@ This detects your tech stack and generates `.claude/afc.config.md` with:
 ## FAQ
 
 ### What is all-for-claudecode?
-A Claude Code plugin that automates the entire development cycle (spec → plan → implement → review → clean) through 18 slash commands and 15 hook events.
+A Claude Code plugin that automates the entire development cycle (spec → plan → implement → review → clean) through 18 slash commands and 17 hook events. It turns a feature description into working, reviewed code with one command.
 
 ### How does it compare to manual Claude Code workflows?
-Instead of manually prompting each step, all-for-claudecode orchestrates the full cycle with built-in quality gates that physically prevent skipping CI or security checks.
+Instead of manually prompting each step, all-for-claudecode orchestrates the full cycle with built-in quality gates that physically prevent skipping CI or security checks. You describe the feature once, and the pipeline handles spec writing, implementation planning, code generation, and review automatically.
 
 ### Does it work with any project?
-Yes. Run `/afc:init` to auto-detect your stack, or use one of the 5 presets (Next.js, React SPA, Express API, Monorepo, or generic template).
+Yes. Run `/afc:init` to auto-detect your stack, or use one of the 5 presets (Next.js, React SPA, Express API, Monorepo, or generic template). The plugin works with any language or framework that Claude Code supports.
 
 ### Does it require any dependencies?
-No. Zero runtime dependencies — pure markdown commands + bash hook scripts.
+No. Zero runtime dependencies — pure markdown commands + bash hook scripts. Nothing to install beyond the plugin itself.
 
 ### How do I install it?
 Inside Claude Code, run `/plugin marketplace add jhlee0409/all-for-claudecode` then `/plugin install afc@all-for-claudecode`. Alternatively, run `npx all-for-claudecode` from your terminal for a guided install.
 
 ### What Claude Code version is required?
 Claude Code with plugin support (2025+). The plugin uses standard hooks, commands, and agents APIs.
+
+### How does task orchestration work?
+The plugin automatically selects the best execution strategy based on task count: sequential for simple tasks, parallel batch for 2-5 independent tasks, or swarm mode with multiple workers for 6+ tasks. Dependencies are tracked via a DAG (directed acyclic graph) so tasks execute in the correct order.
+
+### What happens if CI fails during the pipeline?
+The pipeline runs debug-based root cause analysis (not blind retry). It traces the error, forms a hypothesis, applies a targeted fix, and re-runs the check. After 3 failed attempts, it halts and reports the diagnosis to you.
+
+### Can I run individual phases instead of the full pipeline?
+Yes. Each phase has its own command (`/afc:spec`, `/afc:plan`, `/afc:implement`, `/afc:review`). Use `/afc:auto` for the full pipeline or run phases individually for more control.
+
+### What are Critic Loops?
+Critic Loops are convergence-based quality checks that run after each phase. They evaluate the output against specific criteria (completeness, feasibility, architecture compliance, etc.) and auto-fix issues until no more problems are found. This replaces fixed-pass reviews with intelligent, adaptive verification.
 
 ## License
 
