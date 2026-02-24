@@ -71,7 +71,10 @@ If `.claude/afc/specs/{feature}/tasks.md` does not exist, generate it from plan.
    - Assign `[P]` to tasks in the same Phase with no file dependency overlap
    - Map `Depends On` column to `depends: [TXXX]` references
    - Include phase gate validation task per phase
-   - Include coverage mapping (FR/NFR → tasks) at the bottom
+   - Include coverage mapping at the bottom:
+     - FR/NFR → tasks (every FR-*/NFR-* maps to at least one task)
+     - Entity → tasks (every spec Key Entity maps to at least one task)
+     - Constraint → tasks (every spec Constraint is addressed by at least one task)
 3. **Validate** (script-based, no critic loop):
    ```bash
    "${CLAUDE_PLUGIN_ROOT}/scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md

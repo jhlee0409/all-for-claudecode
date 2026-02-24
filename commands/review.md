@@ -171,7 +171,8 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
-| **COMPLETENESS** | Were all changed files reviewed? Are there any missed perspectives? |
+| **COMPLETENESS** | Were all changed files reviewed? Are there any missed perspectives (A through H)? |
+| **SPEC_ALIGNMENT** | Cross-check implementation against spec.md: (1) every SC (success criterion) is satisfied — provide `{M}/{N} SC verified` count, (2) every acceptance scenario (GWT) has corresponding code path, (3) no spec constraint is violated by the implementation |
 | **PRECISION** | Are the findings actual issues, not false positives? |
 
 **On FAIL**: auto-fix and continue to next pass.

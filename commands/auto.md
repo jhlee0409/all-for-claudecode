@@ -195,7 +195,13 @@ Execute `/afc:plan` logic inline:
 4. Create `.claude/afc/specs/{feature}/plan.md`
    - **If setting numerical targets (line counts etc.), include structure-analysis-based estimates** (e.g., "function A ~50 lines, component B ~80 lines → total ~130 lines")
 5. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
-   - Criteria: COMPLETENESS, FEASIBILITY, ARCHITECTURE, RISK, PRINCIPLES
+   - Criteria: COMPLETENESS, FEASIBILITY, ARCHITECTURE, **CROSS_CONSISTENCY**, RISK, PRINCIPLES
+   - **CROSS_CONSISTENCY criterion** (spec↔plan cross-validation, check all 5):
+     1. Entity coverage: every spec Key Entity → File Change Map row. `{M}/{N} entities covered`
+     2. NFR traceability: every NFR-* → Architecture Decision or Risk mitigation. `{M}/{N} NFRs traced`
+     3. Terminology consistency: same concept = same name across spec and plan
+     4. Constraint propagation: every spec Constraint → Risk & Mitigation or Implementation Context Must NOT. `{M}/{N} constraints propagated`
+     5. Acceptance anchor alignment: Implementation Context Acceptance Anchors faithfully reflect spec acceptance scenarios
    - **RISK criterion mandatory checks**:
      - Enumerate **at least 3** `{config.ci}` failure scenarios and describe mitigation
      - Check each pattern in `{config.risks}` one by one
@@ -326,7 +332,8 @@ Execute `/afc:review` logic inline — **follow all review perspectives defined 
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 6. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
-   - COMPLETENESS: cross-check every SC (success criterion) from spec.md one by one. Provide specific metrics if falling short.
+   - COMPLETENESS: were all changed files reviewed across all 8 perspectives (A-H)?
+   - SPEC_ALIGNMENT: cross-check implementation against spec.md — (1) every SC verified with `{M}/{N}` count, (2) every acceptance scenario (GWT) has corresponding code path, (3) no spec constraint is violated
    - PRECISION: are there unnecessary changes? Are there out-of-scope modifications?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 7. **Handling SC shortfalls**:

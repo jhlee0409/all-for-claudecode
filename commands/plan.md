@@ -206,8 +206,16 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | **COMPLETENESS** | Are all requirements (FR-*) from spec.md reflected in the plan? |
 | **FEASIBILITY** | Is it compatible with the existing codebase? Are dependencies available? |
 | **ARCHITECTURE** | Does it comply with {config.architecture} rules? |
+| **CROSS_CONSISTENCY** | Spec↔Plan cross-artifact validation (see checklist below) |
 | **RISK** | Are there any unidentified risks? Additionally, if `.claude/afc/memory/retrospectives/` directory contains files from previous pipeline runs, load each file and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
 | **PRINCIPLES** | Does it not violate the MUST principles in principles.md? |
+
+**CROSS_CONSISTENCY checklist** (mandatory, check all 5):
+1. **Entity coverage**: every entity in spec.md `Key Entities` table appears in at least one File Change Map row. Report: `{M}/{N} entities covered`.
+2. **NFR traceability**: every NFR-* in spec.md has a corresponding Architecture Decision, Risk mitigation, or Implementation Context entry. Report: `{M}/{N} NFRs traced`.
+3. **Terminology consistency**: same concept uses the same name in spec and plan. Flag any drift (e.g., spec says "user profile", plan says "account settings").
+4. **Constraint propagation**: every item in spec.md `Constraints` section is addressed in Risk & Mitigation or Implementation Context `Must NOT`. Report: `{M}/{N} constraints propagated`.
+5. **Acceptance anchor alignment**: Implementation Context `Acceptance Anchors` faithfully reflect spec.md's acceptance scenarios (no omissions, no misinterpretations).
 
 **On FAIL**: auto-fix and continue to next pass.
 **On ESCALATE**: pause, present options to user, apply choice, resume.
