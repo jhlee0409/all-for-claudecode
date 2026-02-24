@@ -14,6 +14,8 @@ model: sonnet
 
 > Generates an executable task list (tasks.md) based on plan.md.
 > Validates coverage with convergence-based Critic Loop.
+>
+> **Note**: In `/afc:auto` pipeline, task generation is handled automatically at implement start (no separate tasks phase). This command is for standalone use when manual task decomposition control is needed.
 
 ## Arguments
 

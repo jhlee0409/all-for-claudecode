@@ -227,7 +227,7 @@ User-only (not auto-triggered — inform user on request):
 
 ## Pipeline
 
-spec → plan → tasks → implement → review → clean
+spec → plan → implement → review → clean
 
 ## Override Rules
 

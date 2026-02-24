@@ -134,10 +134,25 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 {plan for new API endpoints or use of existing APIs}
 
 ## File Change Map
-{list of files to change/create. for each file:}
-| File | Action | Description |
-|------|--------|-------------|
-| {path} | create/modify/delete | {summary of change} |
+
+| File | Action | Description | Depends On | Phase |
+|------|--------|-------------|------------|-------|
+| {path} | create/modify/delete | {summary} | {file(s) or "—"} | {1-N} |
+
+> - **Depends On**: list file(s) that must be created/modified first (enables dependency-aware task generation in /afc:implement).
+> - **Phase**: implementation phase number. Same-phase + no dependency + different file = parallelizable.
+
+## Implementation Context
+
+> Auto-generated section for implementation agents. Compress to under 500 words.
+> This section travels with every sub-agent prompt during /afc:implement.
+
+- **Objective**: {1-sentence feature purpose from spec Overview}
+- **Key Constraints**: {NFR summaries + spec Constraints section, compressed}
+- **Critical Edge Cases**: {top 3 edge cases from spec, 1 line each}
+- **Risk Watchpoints**: {top risks from Risk & Mitigation table}
+- **Must NOT**: {explicit prohibitions — from spec constraints, principles.md, or CLAUDE.md}
+- **Acceptance Anchors**: {key acceptance criteria from spec that implementation must satisfy}
 
 ## Risk & Mitigation
 | Risk | Impact | Mitigation |
@@ -184,7 +199,7 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 
 > **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
-Run the critic loop until convergence. Safety cap: 7 passes.
+Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
@@ -212,8 +227,9 @@ When not running inside `/afc:auto`, save progress for `/afc:resume`:
 Plan generated
 ├─ .claude/afc/specs/{feature}/plan.md
 ├─ .claude/afc/specs/{feature}/research.md (if research was performed)
+├─ Implementation Context: generated ({W} words)
 ├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
-└─ Next step: /afc:tasks
+└─ Next step: /afc:implement (tasks generated automatically at implement start)
 ```
 
 ## Notes

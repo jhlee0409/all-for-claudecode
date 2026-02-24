@@ -6,7 +6,8 @@ When adding or modifying features in all-for-claudecode, follow these rules.
 
 Before making changes, identify the blast radius:
 
-- **Command change** → also update: auto.md (if pipeline phase), CLAUDE.md (counts), init.md all-for-claudecode block (if routing changed)
+- **Command change** → also update: auto.md (if pipeline phase), CLAUDE.md (architecture description), init.md all-for-claudecode block (if routing changed)
+- **Pipeline structure change** → also update: auto.md (phase numbering), CLAUDE.md (pipeline description), init.md (CLAUDE.md block template), implement.md (task generation)
 - **Hook script change** → also update: spec/{script}_spec.sh (mandatory), hooks.json (if new event)
 - **Shared doc change** (critic-loop-rules.md, phase-gate-protocol.md) → affects ALL commands that reference it
 - **Version change** → must sync: package.json + plugin.json + marketplace.json (all 3)

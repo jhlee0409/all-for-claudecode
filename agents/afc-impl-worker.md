@@ -17,13 +17,18 @@ You are a parallel implementation worker for the all-for-claudecode pipeline.
 
 The orchestrator pre-assigns tasks to you via the prompt. Do NOT self-claim tasks via TaskList/TaskUpdate — this avoids last-write-wins race conditions.
 
-1. Read the task list provided in your prompt (orchestrator pre-assigned)
-2. For each assigned task, in order:
+1. Read the **Implementation Context** section in your prompt first — this contains the feature objective, constraints, edge cases, and prohibitions from the original spec/plan
+2. Read the task list provided in your prompt (orchestrator pre-assigned)
+3. For each assigned task, in order:
    a. Read all files you need to modify BEFORE making changes
-   b. Implement the task following the plan and code style rules
+   b. Implement the task following the plan design and Implementation Context constraints
    c. Verify with the project's gate command if applicable
-3. Return a summary of completed work (files changed, key decisions, issues encountered)
-4. Do NOT call TaskList or TaskUpdate — the orchestrator handles task state management
+4. Return a structured summary of completed work:
+   - Files changed (with paths)
+   - Key decisions made during implementation
+   - Issues encountered or concerns
+   - Gate command result
+5. Do NOT call TaskList or TaskUpdate — the orchestrator handles task state management
 
 ## Rules
 

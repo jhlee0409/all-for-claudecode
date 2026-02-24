@@ -16,7 +16,7 @@ Single spec run: `vendor/shellspec/shellspec spec/afc-bash-guard_spec.sh`
 
 ## Architecture
 
-all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → tasks → implement → review → clean) through markdown command prompts, bash hook scripts, and project preset templates. Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or self-organizing swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
+all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → implement → review → clean) through markdown command prompts, bash hook scripts, and project preset templates. Tasks are generated automatically at implement start from plan.md's File Change Map (no separate tasks phase). Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or orchestrator-managed swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
 
 ### Core Layers
 

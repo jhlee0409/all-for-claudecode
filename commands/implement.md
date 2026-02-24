@@ -6,8 +6,8 @@ argument-hint: "[task ID or phase specification]"
 
 # /afc:implement — Execute Code Implementation
 
-> Executes tasks from tasks.md phase by phase.
-> Uses native task orchestration with dependency-aware scheduling. Swarm mode activates for >5 parallel tasks per phase.
+> Executes implementation phase by phase with dependency-aware scheduling.
+> Generates tasks.md automatically from plan.md if absent. Swarm mode activates for >5 parallel tasks per phase.
 
 ## Arguments
 
@@ -52,19 +52,44 @@ This enables Stop Gate and CI Gate hooks during standalone implementation. Relea
 
 1. **Current branch** → `BRANCH_NAME`
 2. Load the following files from `.claude/afc/specs/{feature}/`:
-   - **tasks.md** (required) — abort if missing: "tasks.md not found. Run `/afc:tasks` first."
-   - **plan.md** (required) — abort if missing
+   - **plan.md** (required) — abort if missing: "plan.md not found. Run `/afc:plan` first."
    - **spec.md** (for reference)
    - **research.md** (if present)
-3. Parse tasks.md:
+   - **tasks.md** (if present — may be generated in Step 1.3)
+3. **Recent changes**: run `git log --oneline -20` to understand what changed recently (context for implementation)
+4. **Smoke test**: run `{config.gate}` before starting implementation:
+   - If it fails → diagnose before implementing (existing code is broken — fix first or report to user)
+   - If it passes → baseline confirmed, proceed
+
+### 1.3. Task List Generation (if tasks.md absent)
+
+If `.claude/afc/specs/{feature}/tasks.md` does not exist, generate it from plan.md:
+
+1. **Parse plan.md File Change Map**: extract files, actions, descriptions, `Depends On`, `Phase`
+2. **Generate tasks.md**:
+   - Convert each row to task format: `- [ ] T{NNN} {[P]} {description} \`{file}\` {depends: [TXXX]}`
+   - Assign `[P]` to tasks in the same Phase with no file dependency overlap
+   - Map `Depends On` column to `depends: [TXXX]` references
+   - Include phase gate validation task per phase
+   - Include coverage mapping (FR/NFR → tasks) at the bottom
+3. **Validate** (script-based, no critic loop):
+   ```bash
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md
+   ```
+4. If validation fails → fix tasks.md and re-validate (max 2 attempts)
+5. Save to `.claude/afc/specs/{feature}/tasks.md`
+
+If tasks.md already exists (e.g., from standalone `/afc:tasks` run): use as-is, skip generation.
+
+### 1.5. Parse Task List
+
+1. Parse tasks.md:
    - Extract each task's ID, [P] marker, [US*] label, description, file paths, `depends:` list
    - Group by phase
    - Build dependency graph (validate DAG — abort if circular)
    - Identify already-completed `[x]` tasks
-4. **Recent changes**: run `git log --oneline -20` to understand what changed recently (context for implementation)
-5. **Smoke test**: run `{config.gate}` before starting implementation:
-   - If it fails → diagnose before implementing (existing code is broken — fix first or report to user)
-   - If it passes → baseline confirmed, proceed to implementation
+2. Load **Implementation Context** section from plan.md (used in sub-agent prompts)
 
 ### 1.5. Retrospective Check
 
@@ -115,7 +140,27 @@ TaskUpdate({ taskId: "T004", addBlockedBy: ["T002"] })  // if T004 depends on T0
 ```
 Task("T003: Create UserService", subagent_type: "afc-impl-worker",
   isolation: "worktree",
-  prompt: "Implement the following task:\n\n## Task\n{description}\n\n## Related Files\n{file paths}\n\n## Plan Context\n{relevant section from plan.md}\n\n## Rules\n- {config.code_style}\n- {config.architecture}\n- Follow CLAUDE.md and afc.config.md\n\n## Context Budget\nReturn a summary of max 2000 characters. Include: files changed, key decisions, any issues encountered. Do not return full file contents.")
+  prompt: "Implement the following task:
+
+  ## Task
+  {task ID}: {description} — `{file path}`
+
+  ## Implementation Context
+  {paste full ## Implementation Context section from plan.md}
+
+  ## Plan Context
+  {relevant Phase section from plan.md for this task}
+
+  ## Rules
+  - {config.code_style} and {config.architecture}
+  - Follow CLAUDE.md and afc.config.md
+
+  ## Output
+  Return a structured summary (max 2000 chars):
+  - Files changed: {list}
+  - Key decisions: {any design choices made}
+  - Issues: {blockers or concerns, if any}
+  - Verification: {config.gate} result")
 Task("T004: Create AuthService", subagent_type: "afc-impl-worker", isolation: "worktree", ...)
 ```
 
@@ -160,6 +205,9 @@ Task("Worker 1: T007, T009, T011", subagent_type: "afc-impl-worker",
   2. T009: {description} — `{file path}`
   3. T011: {description} — `{file path}`
 
+  ## Implementation Context
+  {paste full ## Implementation Context section from plan.md}
+
   For each task:
   - Read the target file before modifying
   - Implement following plan.md design
@@ -169,8 +217,9 @@ Task("Worker 1: T007, T009, T011", subagent_type: "afc-impl-worker",
   - {config.code_style} and {config.architecture}
   - Follow CLAUDE.md and afc.config.md
 
-  ## Context Budget
-  Return a summary of max 2000 characters total. Include: files changed per task, key decisions, any issues. Do not return full file contents.")
+  ## Output
+  Return a structured summary per task (max 2000 chars total):
+  - Files changed, key decisions, issues encountered per task.")
 
 Task("Worker 2: T008, T010, T012", subagent_type: "afc-impl-worker", isolation: "worktree", ...)
 ```
@@ -250,7 +299,7 @@ After CI passes, run a convergence-based Critic Loop to verify design alignment 
 
 > **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
-**Critic Loop until convergence** (safety cap: 3):
+**Critic Loop until convergence** (safety cap: 5):
 
 - **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change List. Flag any file modified that is NOT in the plan. Flag any planned file NOT modified. Provide "M of N files match" count.
 - **ARCHITECTURE**: Validate changed files against `{config.architecture}` rules (layer boundaries, naming conventions, import paths). Provide "N of M rules checked" count.

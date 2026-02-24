@@ -100,14 +100,33 @@ For each changed file, examine from the following perspectives:
 - SQL/Command injection
 
 #### D. Performance
-- Unnecessary re-renders (missing useCallback/useMemo)
-- Infinite loop potential (useEffect dependencies)
-- Large data processing
+- Startup/response latency concerns
+- Unnecessary computation or redundant operations
+- Resource management (memory, file handles, connections, subprocesses)
+- {config.framework}-specific performance patterns
 
 #### E. Project Pattern Compliance
-- {config.state_management} usage patterns
-- Server/client state management patterns (see {config.state_management})
-- Component structure (Props type location, hook order)
+- {config.code_style} naming and structure conventions
+- {config.architecture} layer rules and boundaries
+- {config.framework}-specific idioms and best practices
+
+#### F. Reusability
+- Duplicate or near-duplicate logic across files
+- Opportunities to extract shared utilities or helpers
+- DRY principle adherence (same logic repeated in multiple places)
+- Appropriate abstraction level (not premature, not missing)
+
+#### G. Maintainability
+- Function/file size — can a developer or LLM understand each unit in isolation?
+- Naming clarity — do names reveal intent without requiring surrounding context?
+- Self-contained files — minimal cross-file dependencies for comprehension
+- Comments where logic is non-obvious (present where needed, absent where redundant)
+
+#### H. Extensibility
+- Can new variants or features be added without modifying existing code?
+- Are there clear extension points (configuration, plugin hooks, strategy patterns)?
+- Open/Closed principle adherence where applicable
+- Future modification cost — would a reasonable feature request require rewriting or only extending?
 
 ### 4. Review Output
 
