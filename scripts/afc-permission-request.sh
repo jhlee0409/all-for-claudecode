@@ -54,13 +54,50 @@ case "$COMMAND" in
   *$'\n'*) exit 0 ;;
 esac
 
+# Build dynamic whitelist from afc.config.md (CI/gate/test commands)
+DYNAMIC_WHITELIST=""
+CONFIG_FILE="$PROJECT_DIR/.claude/afc.config.md"
+if [ -f "$CONFIG_FILE" ]; then
+  # Extract ci, gate, test values from YAML code block
+  # Handles both quoted and unquoted: ci: "npm run lint" or ci: npm run lint
+  for key in ci gate test; do
+    val=$(grep -E "^${key}:" "$CONFIG_FILE" 2>/dev/null | head -1 | sed 's/^[^:]*:[[:space:]]*//;s/^"//;s/"[[:space:]]*$//' || true)
+    if [ -n "$val" ] && [ "$val" != '""' ]; then
+      DYNAMIC_WHITELIST="${DYNAMIC_WHITELIST:+${DYNAMIC_WHITELIST}|}${val}"
+      # Generate PM-agnostic variants (npm → pnpm, yarn, bun)
+      case "$val" in
+        "npm run "*)
+          suffix="${val#npm run }"
+          DYNAMIC_WHITELIST="${DYNAMIC_WHITELIST}|pnpm run ${suffix}|yarn run ${suffix}|bun run ${suffix}"
+          ;;
+        "npm test"*)
+          suffix="${val#npm test}"
+          DYNAMIC_WHITELIST="${DYNAMIC_WHITELIST}|pnpm test${suffix}|yarn test${suffix}|bun test${suffix}"
+          ;;
+      esac
+    fi
+  done
+fi
+
 # Whitelist exact match (uses space + $ to prevent prefix matching)
 ALLOWED=false
-case "$COMMAND" in
-  "npm run lint"|"npm test"|"npm run test:all")
+
+# Check dynamic whitelist first (from afc.config.md)
+if [ -n "$DYNAMIC_WHITELIST" ]; then
+  # Use printf + grep for safe matching (no eval)
+  if printf '%s\n' "$DYNAMIC_WHITELIST" | tr '|' '\n' | grep -qxF "$COMMAND"; then
     ALLOWED=true
-    ;;
-esac
+  fi
+fi
+
+# Hardcoded fallback whitelist (always active for backward compatibility)
+if [ "$ALLOWED" = "false" ]; then
+  case "$COMMAND" in
+    "npm run lint"|"npm test"|"npm run test:all")
+      ALLOWED=true
+      ;;
+  esac
+fi
 
 # Prefix matching (allow paths after shellcheck, prettier, chmod +x)
 if [ "$ALLOWED" = "false" ]; then

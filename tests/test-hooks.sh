@@ -758,6 +758,154 @@ cleanup_tmpdir "$TEST_DIR"
 echo ""
 
 # ============================================================
+echo "=== afc-permission-request.sh (dynamic whitelist) ==="
+# ============================================================
+
+# 1. Dynamic whitelist from afc.config.md allows configured command
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+mkdir -p "$TEST_DIR/.claude"
+cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## CI Commands
+
+```yaml
+ci: "pnpm run lint"
+gate: "pnpm run lint"
+test: "pnpm test"
+```
+CFGEOF
+OUTPUT=$(echo '{"tool_input":{"command":"pnpm run lint"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "dynamic whitelist pnpm run lint → exit 0" "0" "$CODE"
+assert_stdout_contains "dynamic whitelist pnpm run lint → allow" "allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 2. PM-agnostic: config has npm, yarn variant also allowed
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+mkdir -p "$TEST_DIR/.claude"
+cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## CI Commands
+
+```yaml
+ci: "npm run lint"
+gate: "npm run lint"
+test: "npm test"
+```
+CFGEOF
+OUTPUT=$(echo '{"tool_input":{"command":"yarn run lint"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "PM-agnostic yarn run lint → exit 0" "0" "$CODE"
+assert_stdout_contains "PM-agnostic yarn run lint → allow" "allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 3. PM-agnostic: bun test variant
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+mkdir -p "$TEST_DIR/.claude"
+cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## CI Commands
+
+```yaml
+ci: "npm run lint"
+test: "npm test"
+```
+CFGEOF
+OUTPUT=$(echo '{"tool_input":{"command":"bun test"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "PM-agnostic bun test → exit 0" "0" "$CODE"
+assert_stdout_contains "PM-agnostic bun test → allow" "allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 4. Fallback: no config file → hardcoded npm whitelist still works
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+OUTPUT=$(echo '{"tool_input":{"command":"npm run lint"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "no config fallback npm run lint → exit 0" "0" "$CODE"
+assert_stdout_contains "no config fallback npm run lint → allow" "allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 5. Dynamic whitelist + chaining still blocked
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+mkdir -p "$TEST_DIR/.claude"
+cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## CI Commands
+
+```yaml
+ci: "pnpm run lint"
+```
+CFGEOF
+OUTPUT=$(echo '{"tool_input":{"command":"pnpm run lint && rm -rf /"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "dynamic + chaining → exit 0" "0" "$CODE"
+assert_stdout_empty "dynamic + chaining → no allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 6. Non-whitelisted command still blocked with config present
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+mkdir -p "$TEST_DIR/.claude"
+cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## CI Commands
+
+```yaml
+ci: "pnpm run lint"
+```
+CFGEOF
+OUTPUT=$(echo '{"tool_input":{"command":"rm -rf /"}}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-permission-request.sh" 2>/dev/null); CODE=$?
+assert_exit "dynamic + dangerous → exit 0" "0" "$CODE"
+assert_stdout_empty "dynamic + dangerous → no allow" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+echo ""
+
+# ============================================================
+echo "=== afc-subagent-context.sh (expanded context) ==="
+# ============================================================
+
+# 1. Verify head -15 provides more context lines
+TEST_DIR=$(setup_tmpdir)
+echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+mkdir -p "$TEST_DIR/.claude"
+# Create config with >5 lines of architecture content
+cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## Architecture
+
+```yaml
+style: "FSD"
+layers:
+  - app
+  - pages
+  - widgets
+  - features
+  - entities
+  - shared
+import_rule: "top-down only"
+segments: ["ui", "model", "api", "lib"]
+path_alias: "@/"
+```
+
+## Code Style
+
+```yaml
+language: "TypeScript"
+strict_mode: true
+```
+CFGEOF
+OUTPUT=$(echo '{}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-subagent-context.sh" 2>/dev/null); CODE=$?
+assert_exit "expanded context → exit 0" "0" "$CODE"
+# Verify it contains deep architecture items (line 7+)
+assert_stdout_contains "expanded context has entities layer" "entities" "$OUTPUT"
+assert_stdout_contains "expanded context has shared layer" "shared" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+echo ""
+
+# ============================================================
 echo "=== agents/ + hooks.json type validation ==="
 # ============================================================
 

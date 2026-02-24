@@ -188,6 +188,13 @@ Execute `/afc:implement` logic inline with **dependency-aware orchestration**:
    // 5. Read all worker results before proceeding to gate
    ```
 
+   **Swarm Worker Failure Recovery**: When a worker agent exits with error:
+   1. Scan TaskList for tasks with status `in_progress` that have no active worker
+   2. Reset each orphaned task: `TaskUpdate(taskId, status: "pending", owner: "")`
+   3. Track retry count per task via `TaskUpdate(taskId, metadata: { retryCount: N })` (max 2 retries)
+   4. If retryCount >= 3 → mark as `failed`, report to user: `"T{ID} failed after 3 attempts: {last error}"`
+   5. Re-spawn replacement workers for remaining tasks
+
 6. Perform **3-step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
    - On gate pass: create phase rollback point `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase-tag {phase_number}`
 7. Real-time `[x]` updates in tasks.md

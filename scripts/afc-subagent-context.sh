@@ -38,14 +38,14 @@ CONFIG_FILE="$PROJECT_DIR/.claude/afc.config.md"
 if [ -f "$CONFIG_FILE" ]; then
   # Extract Architecture section (## Architecture to next ##)
   # shellcheck disable=SC2001
-  ARCH=$(sed -n '/^## Architecture/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -5 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
+  ARCH=$(sed -n '/^## Architecture/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -15 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
   if [ -n "$ARCH" ]; then
     CONTEXT="$CONTEXT | Architecture: $ARCH"
   fi
 
   # Extract Code Style section (## Code Style to next ##)
   # shellcheck disable=SC2001
-  STYLE=$(sed -n '/^## Code Style/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -5 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
+  STYLE=$(sed -n '/^## Code Style/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -15 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
   if [ -n "$STYLE" ]; then
     CONTEXT="$CONTEXT | Code Style: $STYLE"
   fi

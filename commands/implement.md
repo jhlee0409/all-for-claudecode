@@ -154,8 +154,8 @@ When a phase has more than 5 parallelizable tasks, use the **self-organizing swa
 When a worker agent exits with error (non-zero return or timeout):
 1. Scan TaskList for tasks with status `in_progress` that have no active worker
 2. Reset each orphaned task: `TaskUpdate(taskId, status: "pending", owner: "")`
-3. Track retry count per task (max 2 retries)
-4. If a task fails 3 times → mark as `failed`, report to user: `"T{ID} failed after 3 attempts: {last error}"`
+3. Track retry count per task via `TaskUpdate(taskId, metadata: { retryCount: N })` (max 2 retries)
+4. If retryCount >= 3 → mark as `failed`, report to user: `"T{ID} failed after 3 attempts: {last error}"`
 5. Re-spawn replacement workers for remaining tasks
 
 > Workers should wrap their implement-complete loop in error handling so a single task failure doesn't crash the entire worker.
