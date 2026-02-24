@@ -209,7 +209,27 @@ Execute `/afc:plan` logic inline:
    - **ARCHITECTURE criterion**: explicitly describe import paths for moved/created files and pre-validate against `{config.architecture}` rules
    - Each pass must **explicitly explore what was missed in the previous pass** ("Pass 2: {X} was missed in pass 1. Further review: ...")
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-6. **Session context preservation**: Save key decisions and constraints for context compaction resilience:
+6. **Research persistence**: If research.md was created in step 2, persist a copy to long-term memory:
+   - Copy research findings to `.claude/afc/memory/research/{feature}.md`
+   - This enables future pipelines to reference prior research decisions
+7. **ADR recording via architect agent**: After plan.md is written, invoke the architect agent to record architectural decisions:
+   ```
+   Task("ADR: Record architecture decisions for {feature}", subagent_type: "afc:afc-architect",
+     prompt: "Review the following plan and record key architecture decisions to your persistent memory.
+
+     ## Plan Summary
+     {paste Architecture Decision + File Change Map sections from plan.md}
+
+     ## Instructions
+     1. Read your MEMORY.md for prior ADR history
+     2. Check for conflicts between new decisions and existing ADRs
+     3. If conflicts found: return CONFLICT with details (orchestrator will ESCALATE)
+     4. If no conflicts: record new ADRs to your MEMORY.md
+     5. Return: { decisions_recorded: N, conflicts: [] }")
+   ```
+   - If architect returns conflicts → **ESCALATE** to user with conflict details
+   - If no conflicts → proceed (ADR recorded for future reference)
+8. **Session context preservation**: Save key decisions and constraints for context compaction resilience:
    ```
    save_session_context({
      goal: { original_request: "$ARGUMENTS", current_objective: "Implement {feature}" },
@@ -217,8 +237,8 @@ Execute `/afc:plan` logic inline:
      discoveries: [{ file: "{path}", insight: "{finding}" }]
    })
    ```
-7. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase plan` at phase start
-8. Progress: `✓ 2/5 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N}, Implementation Context: {W} words)`
+9. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase plan` at phase start
+10. Progress: `✓ 2/5 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N}, ADR: {N} recorded, Implementation Context: {W} words)`
 
 ### Phase 3: Implement (3/5)
 
@@ -290,8 +310,35 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 4. Real-time `[x]` updates in tasks.md
 5. After full completion, run `{config.ci}` final verification
    - On pass: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" ci-pass` (releases Stop Gate)
+   - **On fail: Debug-based RCA** (replaces blind retry):
+     1. Execute `/afc:debug` logic inline with the CI error output as input
+     2. Debug performs RCA: error trace → data flow → hypothesis → targeted fix
+     3. Re-run `{config.ci}` after fix
+     4. If debug-fix cycle fails 3 times → **abort** (not a simple fix — requires user intervention)
+     5. This replaces the previous "retry max 3 attempts" pattern with intelligent diagnosis
 
-#### Step 3.5: Implement Critic Loop
+#### Step 3.5: Acceptance Test Generation (conditional)
+
+**Trigger condition**: spec.md contains acceptance scenarios (Given/When/Then blocks) AND `{config.test}` is configured (non-empty).
+
+**If triggered**:
+1. Extract all GWT (Given/When/Then) acceptance scenarios from spec.md
+2. Execute `/afc:test` logic inline — generate test cases from acceptance scenarios:
+   ```
+   For each acceptance scenario in spec.md:
+   - Map GWT to a test case: Given → Arrange, When → Act, Then → Assert
+   - Target file: determined by the component/module referenced in the scenario
+   - Test file location: follows project convention ({config.testing} framework patterns)
+   ```
+3. Run `{config.test}` to verify tests pass against the implementation
+   - If tests fail → this reveals a gap between spec and implementation:
+     - Fixable implementation issue → apply targeted fix
+     - Spec-implementation mismatch → record as SC shortfall for Review phase
+4. Progress: `  ├─ Acceptance tests: {N} generated, {M} passing`
+
+**If not triggered** (no GWT scenarios or no test framework configured): skip silently.
+
+#### Step 3.6: Implement Critic Loop
 
 > **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
@@ -317,18 +364,52 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 Execute `/afc:review` logic inline — **follow all review perspectives defined in `commands/review.md`** (A through H). The review command is the single source of truth for review criteria.
 
 1. Review implemented changed files (`git diff HEAD`)
-2. Check across **8 perspectives** (A-H as defined in review.md):
-   - A. Code Quality — `{config.code_style}` compliance
-   - B. Architecture — `{config.architecture}` rules
-   - C. Security — injection, exposure, command safety
-   - D. Performance — `{config.framework}`-specific patterns
-   - E. Project Pattern Compliance — conventions and idioms
-   - **F. Reusability** — DRY, shared utilities, abstraction level
-   - **G. Maintainability** — AI/human comprehension, naming clarity, self-contained files
-   - **H. Extensibility** — extension points, OCP, future modification cost
-3. **Auto-resolved validation**: Check all `[AUTO-RESOLVED]` items from spec phase — does the implementation match the guess? Flag mismatches as Critical.
-4. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns across past review reports. Prioritize those areas.
-5. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
+2. **Specialist agent delegation** (parallel, perspectives B and C):
+   Launch architect and security agents in a **single message** to leverage their persistent memory:
+   ```
+   Task("Architecture Review: {feature}", subagent_type: "afc:afc-architect",
+     prompt: "Review the following changed files for architecture compliance.
+
+     ## Changed Files
+     {list of changed files from git diff}
+
+     ## Architecture Rules
+     {config.architecture}
+
+     ## Instructions
+     1. Read your MEMORY.md for prior architecture patterns and ADRs
+     2. Check each file against architecture rules (layer boundaries, naming, placement)
+     3. Cross-reference with ADRs recorded during Plan phase — any violations?
+     4. Return findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix
+     5. Update your MEMORY.md with any new architecture patterns discovered")
+
+   Task("Security Review: {feature}", subagent_type: "afc:afc-security",
+     prompt: "Scan the following changed files for security vulnerabilities.
+
+     ## Changed Files
+     {list of changed files from git diff}
+
+     ## Instructions
+     1. Read your MEMORY.md for known vulnerability patterns and false positives
+     2. Check for: command injection, path traversal, unvalidated input, sensitive data exposure
+     3. Skip patterns recorded as false positives in your memory
+     4. Return findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix
+     5. Update your MEMORY.md with new patterns or confirmed false positives")
+   ```
+   - Collect agent outputs and merge into the consolidated review
+   - Agent findings inherit their severity classification directly
+3. Check across **8 perspectives** (A-H as defined in review.md):
+   - A. Code Quality — `{config.code_style}` compliance (direct review)
+   - B. Architecture — **delegated to afc-architect agent** (persistent memory, ADR-aware)
+   - C. Security — **delegated to afc-security agent** (persistent memory, false-positive-aware)
+   - D. Performance — `{config.framework}`-specific patterns (direct review)
+   - E. Project Pattern Compliance — conventions and idioms (direct review)
+   - **F. Reusability** — DRY, shared utilities, abstraction level (direct review)
+   - **G. Maintainability** — AI/human comprehension, naming clarity, self-contained files (direct review)
+   - **H. Extensibility** — extension points, OCP, future modification cost (direct review)
+4. **Auto-resolved validation**: Check all `[AUTO-RESOLVED]` items from spec phase — does the implementation match the guess? Flag mismatches as Critical.
+5. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns across past review reports. Prioritize those areas.
+6. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 6. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
@@ -364,6 +445,8 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - If there were `[AUTO-RESOLVED]` items → record decisions in `.claude/afc/memory/decisions/`
    - **If retrospective.md exists** → record as patterns missed by the Plan phase Critic Loop in `.claude/afc/memory/retrospectives/` (reuse as RISK checklist items in future runs)
    - **If review-report.md exists** → copy to `.claude/afc/memory/reviews/{feature}-{date}.md` before .claude/afc/specs/ deletion
+   - **If research.md exists** and was not already persisted in Plan phase → copy to `.claude/afc/memory/research/{feature}.md`
+   - **Agent memory consolidation**: architect and security agents have already updated their persistent MEMORY.md during Review phase — no additional action needed (agent memory survives across sessions independently)
 5. **Quality report** (structured pipeline metrics):
    - Generate `.claude/afc/memory/quality-history/{feature}-{date}.json` with the following structure:
      ```json
@@ -373,15 +456,20 @@ Artifact cleanup and codebase hygiene check after implementation and review:
        "phases": {
          "clarify": { "triggered": true/false, "questions": N, "auto_resolved": N },
          "spec": { "user_stories": N, "requirements": { "FR": N, "NFR": N }, "researched": N, "auto_resolved": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
-         "plan": { "files_planned": N, "implementation_context_words": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
+         "plan": { "files_planned": N, "implementation_context_words": N, "adr_recorded": N, "adr_conflicts": N, "research_persisted": true/false, "critic_passes": N, "critic_fixes": N, "escalations": N },
          "implement": {
            "tasks": { "total": N, "parallel": N, "phases": N },
            "test_pre_gen": { "triggered": true/false, "skeletons": N },
            "blast_radius": { "triggered": true/false, "dependents": N, "high_fan_out": N },
            "completed": N, "total": N, "ci_passes": N, "ci_failures": N,
+           "acceptance_tests": { "triggered": true/false, "generated": N, "passing": N },
+           "debug_rca": { "triggered": true/false, "cycles": N },
            "critic_passes": N, "critic_fixes": N, "escalations": N
          },
-         "review": { "critical": N, "warning": N, "info": N, "sc_shortfalls": N, "auto_resolved_mismatches": N, "critic_passes": N, "critic_fixes": N, "escalations": N }
+         "review": { "critical": N, "warning": N, "info": N, "sc_shortfalls": N, "auto_resolved_mismatches": N,
+           "architect_agent": { "invoked": true/false, "findings": N },
+           "security_agent": { "invoked": true/false, "findings": N },
+           "critic_passes": N, "critic_fixes": N, "escalations": N }
        },
        "totals": { "changed_files": N, "auto_resolved": N, "escalations": N }
      }
@@ -409,15 +497,18 @@ Artifact cleanup and codebase hygiene check after implementation and review:
 ```
 Auto pipeline complete: {feature}
 ├─ 1/5 Spec: US {N}, FR {N}, researched {N}
-├─ 2/5 Plan: Critic converged ({N} passes), Implementation Context {W} words
+├─ 2/5 Plan: Critic converged ({N} passes), ADR {N} recorded, Implementation Context {W} words
 ├─ 3/5 Implement: {completed}/{total} tasks ({P} parallel), CI ✓
 │   ├─ TDD: {triggered/skipped}, Blast Radius: {triggered/skipped}
+│   ├─ Acceptance Tests: {N} generated ({M} passing) / skipped
 │   └─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 ├─ 4/5 Review: Critical:{N} Warning:{N} Info:{N}
-│   └─ Perspectives: Quality, Architecture, Security, Performance, Patterns, Reusability, Maintainability, Extensibility
+│   ├─ Perspectives: Quality, Architecture*, Security*, Performance, Patterns, Reusability, Maintainability, Extensibility
+│   └─ (* = delegated to persistent-memory agent)
 ├─ 5/5 Clean: {N} artifacts deleted, {N} dead code removed
 ├─ Changed files: {N}
 ├─ Auto-resolved: {N} ({M} validated in review)
+├─ Agent memory: architect {updated/skipped}, security {updated/skipped}
 ├─ Retrospective: {present/absent}
 └─ .claude/afc/specs/{feature}/ cleaned up
 ```
@@ -456,5 +547,9 @@ Pipeline aborted (Phase {N}/5)
 - **Swarm mode is automatic**: when a phase has 6+ [P] tasks, the orchestrator pre-assigns tasks to swarm workers. Do not manually batch.
 - **Implementation Context travels with workers**: every sub-agent prompt includes the Implementation Context section from plan.md, ensuring spec intent propagates to parallel workers.
 - **Session context resilience**: key decisions are saved via `save_session_context` at Plan completion and restored at Implement start, surviving context compaction.
+- **Specialist agents enhance review**: afc-architect and afc-security agents are invoked during Review to provide persistent-memory-aware analysis. Their findings are merged into the consolidated review. Agent memory updates happen automatically during the agent call.
+- **Debug-based RCA replaces blind retry**: CI failures trigger `/afc:debug` logic (hypothesis → targeted fix) instead of generic "retry 3 times". This produces better fixes and records patterns via retrospective.
+- **Acceptance tests close the spec-to-code gap**: When spec contains GWT scenarios and a test framework is configured, acceptance tests are auto-generated after implementation, verifying spec intent is met.
+- **Research and ADR persist across sessions**: Research findings are saved to `.claude/afc/memory/research/`, ADRs to architect agent memory. Future pipelines can reference these to avoid re-research and detect conflicts.
 - **No out-of-scope deletion**: do not delete files/directories in Clean that were not created by the current pipeline.
 - **NEVER use `run_in_background: true` on Task calls**: agents must run in foreground so results are returned before the next step.

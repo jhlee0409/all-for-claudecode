@@ -94,6 +94,10 @@ Collect all results and record in `.claude/afc/specs/{feature}/research.md`:
 **Source**: {URL or file path}
 ```
 
+#### Step 4: Persist (long-term memory)
+Copy research findings to `.claude/afc/memory/research/{feature}.md` for cross-session reuse.
+Future pipelines can reference prior research to avoid redundant investigation.
+
 ### 4. Phase 1 — Write Design
 
 Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure below:
@@ -223,7 +227,19 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 **On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
 **On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
-### 5.5. Auto-Checkpoint (standalone only)
+### 5.5. ADR Recording (optional)
+
+When the `afc-architect` agent is available, invoke it to record architecture decisions:
+```
+Task("ADR: Record decisions for {feature}", subagent_type: "afc:afc-architect",
+  prompt: "Review the plan and record key architecture decisions to your persistent memory.
+  Plan sections: Architecture Decision + File Change Map.
+  Check for conflicts with existing ADRs. Return: { decisions_recorded: N, conflicts: [] }")
+```
+- If conflicts detected → warn user
+- If agent unavailable → skip (decisions still exist in plan.md for reference)
+
+### 5.6. Auto-Checkpoint (standalone only)
 
 When not running inside `/afc:auto`, save progress for `/afc:resume`:
 - Write/update `.claude/afc/memory/checkpoint.md` with: branch, last commit, feature name, current phase (plan complete), next step (`/afc:implement`)

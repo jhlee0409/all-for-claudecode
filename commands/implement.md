@@ -294,7 +294,12 @@ After all tasks are complete:
 ```
 
 - **Pass**: output final report
-- **Fail**: attempt to fix errors (max 3 attempts)
+- **Fail**: **Debug-based RCA** (replaces blind retry):
+  1. Execute `/afc:debug` logic inline with the CI error output as input
+  2. Debug performs RCA: error trace → data flow → hypothesis → targeted fix
+  3. Re-run `{config.ci}` after fix
+  4. If debug-fix cycle fails 3 times → report to user with diagnosis details (not a simple fix)
+  5. This produces targeted fixes instead of blind retries
 
 ### 6. Implement Critic Loop
 

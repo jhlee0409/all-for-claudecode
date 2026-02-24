@@ -79,6 +79,28 @@ Task("Review Worker 2: src/api/routes.ts, src/api/middleware.ts", subagent_type:
 ```
 Collect all worker outputs, then write consolidated review.
 
+### 2.5. Specialist Agent Delegation (optional, parallel)
+
+When the `afc-architect` and `afc-security` agents are available, delegate perspectives B and C for deeper analysis:
+
+```
+Task("Architecture Review", subagent_type: "afc:afc-architect",
+  prompt: "Review changed files for architecture compliance.
+  Files: {changed file list}
+  Rules: {config.architecture}
+  Return findings as: severity, file:line, issue, suggested fix.")
+
+Task("Security Review", subagent_type: "afc:afc-security",
+  prompt: "Scan changed files for security vulnerabilities.
+  Files: {changed file list}
+  Return findings as: severity, file:line, issue, suggested fix.")
+```
+
+- Launch both in a **single message** (parallel execution)
+- Merge agent findings into the consolidated review (Step 4)
+- Agents update their persistent memory automatically (ADR patterns, vulnerability patterns, false positives)
+- If agents are unavailable (e.g., standalone mode without plugin): fall back to direct review for B and C
+
 ### 3. Perform Review
 
 For each changed file, examine from the following perspectives:
@@ -89,15 +111,17 @@ For each changed file, examine from the following perspectives:
 - Duplicate code
 - Unnecessary complexity
 
-#### B. {config.architecture}
+#### B. {config.architecture} (agent-enhanced when available)
 - Layer dependency direction violations (lower→upper imports)
 - Segment rules (api/, model/, ui/, lib/)
 - Appropriate layer placement
+- **Agent bonus**: ADR conflict detection, cross-session pattern recognition
 
-#### C. Security
+#### C. Security (agent-enhanced when available)
 - XSS vulnerabilities (dangerouslySetInnerHTML, unvalidated user input)
 - Sensitive data exposure
 - SQL/Command injection
+- **Agent bonus**: false positive filtering, known vulnerability pattern matching
 
 #### D. Performance
 - Startup/response latency concerns
