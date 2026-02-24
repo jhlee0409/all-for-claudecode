@@ -3,6 +3,11 @@ name: afc:tasks
 description: "Task decomposition"
 argument-hint: "[constraints/priority directives]"
 user-invocable: false
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Write
 model: sonnet
 ---
 # /afc:tasks — Task Decomposition

@@ -2,6 +2,13 @@
 name: afc:spec
 description: "Generate feature specification"
 argument-hint: "[feature description in natural language]"
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - WebSearch
+  - WebFetch
 model: sonnet
 ---
 # /afc:spec — Generate Feature Specification

@@ -3,6 +3,11 @@ name: afc:init
 description: "Project initial setup"
 argument-hint: "[preset: nextjs-fsd | react-spa | express-api | monorepo]"
 disable-model-invocation: true
+allowed-tools:
+  - Read
+  - Write
+  - Bash
+  - Glob
 model: haiku
 ---
 

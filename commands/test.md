@@ -2,6 +2,13 @@
 name: afc:test
 description: "Test strategy planning and test writing"
 argument-hint: "[target: file path, feature name, or coverage]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 model: sonnet
 ---
 

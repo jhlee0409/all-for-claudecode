@@ -2,6 +2,13 @@
 name: afc:plan
 description: "Implementation design"
 argument-hint: "[additional context or constraints]"
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - WebSearch
+  - WebFetch
 model: sonnet
 ---
 # /afc:plan — Implementation Design

@@ -1101,6 +1101,82 @@ assert_stdout_contains "parallel-validate: mixed backticks valid" "Valid:" "$OUT
 cleanup_tmpdir "$TEST_DIR"
 
 # ============================================================
+echo "=== afc-dag-validate.sh ==="
+# ============================================================
+
+# 1. Valid DAG with dependencies → exit 0
+TEST_DIR=$(setup_tmpdir)
+cat > "$TEST_DIR/tasks.md" <<'TASKS_EOF'
+## Phase 1: Setup
+- [ ] T001 [P] Task one `file1.sh`
+- [ ] T002 [P] Task two `file2.sh` depends: [T001]
+- [ ] T003 [P] Task three `file3.sh` depends: [T002]
+TASKS_EOF
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-dag-validate.sh" "$TEST_DIR/tasks.md" 2>/dev/null); CODE=$?
+assert_exit "dag-validate: valid DAG → exit 0" "0" "$CODE"
+assert_stdout_contains "dag-validate: reports valid" "Valid:" "$OUTPUT"
+assert_stdout_contains "dag-validate: task count" "3 tasks" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 2. Circular dependency → exit 1
+TEST_DIR=$(setup_tmpdir)
+cat > "$TEST_DIR/tasks.md" <<'TASKS_EOF'
+## Phase 1: Setup
+- [ ] T001 [P] Task one `file1.sh` depends: [T003]
+- [ ] T002 [P] Task two `file2.sh` depends: [T001]
+- [ ] T003 [P] Task three `file3.sh` depends: [T002]
+TASKS_EOF
+set +e
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-dag-validate.sh" "$TEST_DIR/tasks.md" 2>&1); CODE=$?
+set -e
+assert_exit "dag-validate: cycle → exit 1" "1" "$CODE"
+assert_stdout_contains "dag-validate: reports CYCLE" "CYCLE" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 3. No dependencies → exit 0
+TEST_DIR=$(setup_tmpdir)
+cat > "$TEST_DIR/tasks.md" <<'TASKS_EOF'
+## Phase 1: Setup
+- [ ] T001 [P] Task one `file1.sh`
+- [ ] T002 [P] Task two `file2.sh`
+TASKS_EOF
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-dag-validate.sh" "$TEST_DIR/tasks.md" 2>/dev/null); CODE=$?
+assert_exit "dag-validate: no deps → exit 0" "0" "$CODE"
+assert_stdout_contains "dag-validate: no deps valid" "Valid:" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# 4. Missing file → exit 1
+TEST_DIR=$(setup_tmpdir)
+set +e
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-dag-validate.sh" "$TEST_DIR/nonexistent.md" 2>&1); CODE=$?
+set -e
+assert_exit "dag-validate: missing file → exit 1" "1" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+# 5. Empty file → exit 0
+TEST_DIR=$(setup_tmpdir)
+: > "$TEST_DIR/tasks.md"
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-dag-validate.sh" "$TEST_DIR/tasks.md" 2>/dev/null); CODE=$?
+assert_exit "dag-validate: empty file → exit 0" "0" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+# 6. Complex valid DAG (diamond pattern)
+TEST_DIR=$(setup_tmpdir)
+cat > "$TEST_DIR/tasks.md" <<'TASKS_EOF'
+## Phase 1
+- [ ] T001 [P] Root `file1.sh`
+- [ ] T002 [P] Left `file2.sh` depends: [T001]
+- [ ] T003 [P] Right `file3.sh` depends: [T001]
+- [ ] T004 Join `file4.sh` depends: [T002, T003]
+TASKS_EOF
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-dag-validate.sh" "$TEST_DIR/tasks.md" 2>/dev/null); CODE=$?
+assert_exit "dag-validate: diamond DAG → exit 0" "0" "$CODE"
+assert_stdout_contains "dag-validate: diamond valid" "4 tasks" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+echo ""
+
+# ============================================================
 echo "=== afc-preflight-check.sh ==="
 # ============================================================
 

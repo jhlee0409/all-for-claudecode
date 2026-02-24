@@ -3,6 +3,10 @@ name: afc:clarify
 description: "Resolve spec ambiguities"
 argument-hint: "[focus area: security, performance, UI flow]"
 user-invocable: false
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
 model: sonnet
 ---
 # /afc:clarify — Resolve Spec Ambiguities

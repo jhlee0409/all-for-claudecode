@@ -157,7 +157,9 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-subagent-stop.sh\"",
-            "statusMessage": "Logging agent result..."
+            "statusMessage": "Logging agent result...",
+            "async": true,
+            "timeout": 30
           }
         ]
       }
@@ -224,7 +226,9 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-worktree-remove.sh\"",
-            "statusMessage": "Archiving worktree results..."
+            "statusMessage": "Archiving worktree results...",
+            "async": true,
+            "timeout": 30
           }
         ]
       }

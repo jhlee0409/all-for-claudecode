@@ -2,6 +2,13 @@
 name: afc:debug
 description: "Bug diagnosis and fix"
 argument-hint: "[bug description, error message, or reproduction steps]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 model: sonnet
 ---
 
