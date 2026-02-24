@@ -49,7 +49,7 @@ Decompose tasks per Phase defined in plan.md.
 | Component | Required | Description |
 |-----------|----------|-------------|
 | `T{NNN}` | Yes | 3-digit sequential ID (T001, T002, ...) |
-| `[P]` | No | Parallelizable — no file overlap with other [P] tasks in the same phase |
+| `[P]` | No | **Mandatory parallel execution** — task MUST run in parallel with other [P] tasks in the same phase. Requires: (1) no file overlap with other [P] tasks in the same phase, (2) different target files per task (enforced by `afc-parallel-validate.sh`). Sequential substitution of [P] tasks is prohibited. |
 | `[US*]` | No | User Story label (US1, US2, ... from spec.md) |
 | description | Yes | Clear task description (start with a verb) |
 | file path | Yes | Primary target file (wrapped in backticks) |
@@ -79,7 +79,7 @@ Decompose tasks per Phase defined in plan.md.
 2. **Same file = sequential**, **different files = [P] candidate**
 3. **Explicit dependencies**: Use `depends: [T001, T002]` to declare blocking dependencies. Tasks without `depends:` and with [P] marker are immediately parallelizable.
 4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
-5. **Dependency graph must be a DAG**: no circular dependencies allowed. Validate before output.
+5. **Dependency graph must be a DAG**: no circular dependencies allowed. **Mandatory validation**: run `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md` before output. Abort if cycle detected.
 6. **Test tasks**: Include a verification task for each testable unit
 7. **Phase gate**: Add a `{config.gate}` validation task at the end of each Phase
 
@@ -139,4 +139,6 @@ Tasks generated
 - **No over-decomposition**: Do not create separate tasks for single-line changes.
 - **Accurate file paths**: Use paths based on the actual project structure (no guessing).
 - **Use [P] sparingly**: Mark [P] only for truly independent tasks. When in doubt, keep sequential.
-- **Dependencies unlock swarm**: explicit `depends:` enables /afc:implement to use native task orchestration with automatic dependency resolution. Tasks without dependencies can be claimed by parallel workers immediately.
+- **Dependencies unlock orchestration**: explicit `depends:` enables /afc:implement to use dependency-aware scheduling. Note: `addBlockedBy` auto-unblocking is only guaranteed in Agent Teams mode. In sub-agent mode, the orchestrator must poll TaskList and manually check blockedBy status after each task completion.
+- **Cross-phase dependencies prohibited**: `depends:` may only reference task IDs within the same phase or a previous phase. Phase N tasks are registered only when Phase N begins — this prevents workers from claiming future-phase tasks.
+- **[P] is mandatory, not optional**: once a [P] marker is assigned, the task MUST execute in parallel. Do not mark [P] unless you are certain the task has no file overlap and no implicit ordering requirement.
