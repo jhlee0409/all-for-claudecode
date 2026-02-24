@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.0] - 2026-02-25
 
 ### Breaking Changes
 - **Pipeline restructured from 6-phase to 5-phase**: tasks phase absorbed into implement (auto-generated from plan.md File Change Map)
