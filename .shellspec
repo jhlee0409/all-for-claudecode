@@ -1,0 +1,6 @@
+--shell bash
+--jobs 4
+--format documentation
+--color
+--no-banner
+--require spec_helper

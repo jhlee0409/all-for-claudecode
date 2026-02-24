@@ -6,11 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run lint          # shellcheck scripts/*.sh
-npm test              # bash tests/test-hooks.sh
+npm test              # ShellSpec BDD suite (vendor/shellspec/shellspec)
 npm run test:all      # lint + test combined
+npm run setup:test    # install ShellSpec to vendor/shellspec/ (first-time setup)
 ```
 
 Single script lint: `shellcheck scripts/afc-bash-guard.sh`
+Single spec run: `vendor/shellspec/shellspec spec/afc-bash-guard_spec.sh`
 
 ## Architecture
 
@@ -68,4 +70,13 @@ Three files must have matching versions: `package.json`, `.claude-plugin/plugin.
 
 ## Testing
 
-Tests use tmpdir isolation — each scenario creates `$(mktemp -d)` with `.claude/` subdirectory, sets `CLAUDE_PROJECT_DIR` to it, and cleans up after. Variable name `TEST_DIR` (not `TMPDIR` to avoid system env conflict). Use `set +e` / `set -e` around scripts that exit non-zero (e.g., stop-gate exit 2).
+Tests use ShellSpec 0.28.1 (pinned in `vendor/shellspec/`) with BDD-style specs in `spec/`. Each spec file covers one script. Shared helpers live in `spec/spec_helper.sh` (auto-loaded via `--require spec_helper` in `.shellspec`).
+
+Key patterns:
+- `setup_tmpdir VAR_NAME` — creates isolated tmpdir, exports `CLAUDE_PROJECT_DIR` and `HOME` (named-variable pattern avoids subshell export issues)
+- `setup_tmpdir_with_git VAR_NAME` — same + initializes a bare git repo
+- `setup_config_fixture DIR [ci_cmd]` — writes a minimal `afc.config.md` fixture
+- `Data '{"key":"val"}'` — pipes JSON to script stdin
+- `The path "$path" should be exist` — file/dir existence check
+- `The contents of file "$path" should include "..."` — file content check
+- Exit 2 scripts (stop-gate, config-change): ShellSpec handles non-zero exits automatically; add explicit `The status should eq 2`

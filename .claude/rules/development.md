@@ -7,7 +7,7 @@ When adding or modifying features in all-for-claudecode, follow these rules.
 Before making changes, identify the blast radius:
 
 - **Command change** → also update: auto.md (if pipeline phase), CLAUDE.md (counts), init.md all-for-claudecode block (if routing changed)
-- **Hook script change** → also update: tests/test-hooks.sh (mandatory), hooks.json (if new event)
+- **Hook script change** → also update: spec/{script}_spec.sh (mandatory), hooks.json (if new event)
 - **Shared doc change** (critic-loop-rules.md, phase-gate-protocol.md) → affects ALL commands that reference it
 - **Version change** → must sync: package.json + plugin.json + marketplace.json (all 3)
 
@@ -16,7 +16,7 @@ Before making changes, identify the blast radius:
 1. `npm run test:all` must pass
 2. No Korean text in tracked files: `git diff --cached --name-only | xargs grep -l '[가-힣]' 2>/dev/null` should return empty
 3. New shell scripts must have: `set -euo pipefail`, `trap cleanup EXIT`, jq-first parsing
-4. New shell scripts must have test coverage in tests/test-hooks.sh
+4. New shell scripts must have test coverage in spec/{script}_spec.sh (ShellSpec BDD)
 
 ## Plugin Cache
 
