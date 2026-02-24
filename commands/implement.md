@@ -58,6 +58,13 @@ git tag -f afc/pre-implement
    - If it fails → diagnose before implementing (existing code is broken — fix first or report to user)
    - If it passes → baseline confirmed, proceed to implementation
 
+### 1.5. Retrospective Check
+
+If `.claude/afc/memory/retrospectives/` exists, load and check:
+- Were there implementation issues in past pipelines (e.g., file conflicts, unexpected dependencies, CI failures after parallel execution)?
+- Flag similar patterns in the current task list. Warn before implementation begins.
+- Skip gracefully if directory is empty or absent.
+
 ### 2. Check Progress
 
 - If completed tasks exist, display status:
@@ -106,6 +113,13 @@ Execute each phase in order. Choose the orchestration mode based on the number o
   ```
 - Read each agent's returned output and verify completion
 - Mark TaskUpdate(status: "completed") for each finished task
+- **Batch Worker Failure Recovery**: When a parallel Task() call returns an error:
+  1. Identify the failed task from the agent's return
+  2. Reset the task: `TaskUpdate(taskId, status: "pending")`
+  3. Track retry count per task via `TaskUpdate(taskId, metadata: { retryCount: N })`
+  4. If retryCount < 3 → re-launch the failed task (in the next batch alongside newly-unblocked tasks)
+  5. If retryCount >= 3 → mark as failed, report to user: `"T{ID} failed after 3 attempts: {last error}"`
+  6. Continue with remaining tasks — a single failure does not block the entire phase
 - Any newly-unblocked tasks from dependency resolution → launch next batch
 
 #### Swarm Mode (6+ [P] tasks)

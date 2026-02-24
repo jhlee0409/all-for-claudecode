@@ -913,6 +913,45 @@ set -e
 assert_exit "parallel-validate: missing file → exit 1" "1" "$CODE"
 cleanup_tmpdir "$TEST_DIR"
 
+# T013-6. Multi-file [P] tasks with no overlap
+TEST_DIR=$(setup_tmpdir)
+cat > "$TEST_DIR/tasks.md" <<'TASKS_EOF'
+## Phase 1: Setup
+- [ ] T001 [P] Create models `src/user.ts` `src/auth.ts`
+- [ ] T002 [P] Create services `src/svc.ts` `src/helper.ts`
+TASKS_EOF
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-parallel-validate.sh" "$TEST_DIR/tasks.md" 2>/dev/null); CODE=$?
+assert_exit "parallel-validate: multi-file no overlap → exit 0" "0" "$CODE"
+assert_stdout_contains "parallel-validate: multi-file valid" "Valid:" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T013-7. Multi-file [P] tasks with overlap on second path
+TEST_DIR=$(setup_tmpdir)
+cat > "$TEST_DIR/tasks.md" <<'TASKS_EOF'
+## Phase 1: Setup
+- [ ] T001 [P] Create models `src/user.ts` `src/shared.ts`
+- [ ] T002 [P] Create services `src/svc.ts` `src/shared.ts`
+TASKS_EOF
+set +e
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-parallel-validate.sh" "$TEST_DIR/tasks.md" 2>/dev/null); CODE=$?
+set -e
+assert_exit "parallel-validate: multi-file overlap → exit 1" "1" "$CODE"
+assert_stdout_contains "parallel-validate: multi-file CONFLICT" "CONFLICT" "$OUTPUT"
+assert_stdout_contains "parallel-validate: identifies shared file" "src/shared.ts" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T013-8. Mixed backtick content (code keywords + file paths)
+TEST_DIR=$(setup_tmpdir)
+cat > "$TEST_DIR/tasks.md" <<'TASKS_EOF'
+## Phase 1: Setup
+- [ ] T001 [P] Set `enabled` to `true` in `src/config.ts`
+- [ ] T002 [P] Update `src/app.ts` with `exit` handler
+TASKS_EOF
+OUTPUT=$("$SCRIPT_DIR/scripts/afc-parallel-validate.sh" "$TEST_DIR/tasks.md" 2>/dev/null); CODE=$?
+assert_exit "parallel-validate: mixed backticks → exit 0" "0" "$CODE"
+assert_stdout_contains "parallel-validate: mixed backticks valid" "Valid:" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
 # ============================================================
 echo "=== afc-preflight-check.sh ==="
 # ============================================================

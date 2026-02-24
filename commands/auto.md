@@ -100,9 +100,13 @@ Execute `/afc:plan` logic inline:
 
 1. Load spec.md
 2. If technical uncertainties exist → auto-resolve via WebSearch/code exploration → create research.md
-3. Create `.claude/afc/specs/{feature}/plan.md`
+3. **Memory loading** (skip gracefully if directories are empty or absent):
+   - **Quality history**: if `.claude/afc/memory/quality-history/*.json` exists, load recent entries and display trend summary: "Last {N} pipelines: avg critic_fixes {X}, avg ci_failures {Y}, avg escalations {Z}". Use trends to inform plan risk assessment.
+   - **Decisions**: if `.claude/afc/memory/decisions/` exists, load ADR entries and check for conflicts with the current feature's design direction. Flag any contradictions.
+   - **Reviews**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns (same file/category appearing in 2+ reviews). Flag as known risk areas.
+4. Create `.claude/afc/specs/{feature}/plan.md`
    - **If setting numerical targets (line counts etc.), include structure-analysis-based estimates** (e.g., "function A ~50 lines, component B ~80 lines → total ~130 lines")
-4. **Critic Loop until convergence** (safety cap: 7, follow Critic Loop rules):
+5. **Critic Loop until convergence** (safety cap: 7, follow Critic Loop rules):
    - Criteria: COMPLETENESS, FEASIBILITY, ARCHITECTURE, RISK, PRINCIPLES
    - **RISK criterion mandatory checks**:
      - Enumerate **at least 3** `{config.ci}` failure scenarios and describe mitigation
@@ -111,7 +115,7 @@ Execute `/afc:plan` logic inline:
    - **ARCHITECTURE criterion**: explicitly describe import paths for moved/created files and pre-validate against `{config.architecture}` rules
    - Each pass must **explicitly explore what was missed in the previous pass** ("Pass 2: {X} was missed in pass 1. Further review: ...")
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-5. Progress: `✓ 2/6 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N})`
+6. Progress: `✓ 2/6 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N})`
 
 ### Phase 3: Tasks (3/6)
 
@@ -160,8 +164,16 @@ Execute `/afc:implement` logic inline with **dependency-aware orchestration**:
    TaskUpdate({ taskId: "T013", addBlockedBy: ["T011"] })  // if dependency exists
    → launch unblocked tasks as parallel Task() calls in a single message
      (each with isolation: "worktree" and subagent_type: "afc-impl-worker")
-   → read results → launch newly-unblocked → repeat until phase complete
+   → read results → handle failures (see below) → launch newly-unblocked → repeat until phase complete
    ```
+
+   **Batch Worker Failure Recovery**: When a parallel Task() call returns an error:
+   1. Identify the failed task from the agent's return
+   2. Reset the task: `TaskUpdate(taskId, status: "pending")`
+   3. Track retry count per task via `TaskUpdate(taskId, metadata: { retryCount: N })`
+   4. If retryCount < 3 → re-launch the failed task (in the next batch alongside newly-unblocked tasks)
+   5. If retryCount >= 3 → mark as failed, report to user: `"T{ID} failed after 3 attempts: {last error}"`
+   6. Continue with remaining tasks — a single failure does not block the entire phase
 
 5. **Swarm mode** (6+ [P] tasks):
    ```
@@ -203,17 +215,18 @@ Execute `/afc:review` logic inline:
 
 1. Review implemented changed files (`git diff HEAD`)
 2. Check code quality, `{config.architecture}` rules, security, performance, `{config.code_style}` pattern compliance
-3. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
+3. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns across past review reports. Identify files/categories that appear in 2+ reviews — prioritize those areas in current review.
+4. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
-4. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
+5. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
    - COMPLETENESS: cross-check every SC (success criterion) from spec.md one by one. Provide specific metrics if falling short.
    - PRECISION: are there unnecessary changes? Are there out-of-scope modifications?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-5. **Handling SC shortfalls**:
+6. **Handling SC shortfalls**:
    - Fixable → attempt auto-fix → re-run `{config.ci}` verification
    - Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
-6. Progress: `✓ 5/6 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
+7. Progress: `✓ 5/6 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
 
 ### Phase 6: Clean (6/6)
 

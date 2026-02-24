@@ -82,34 +82,47 @@ while IFS= read -r line || [ -n "$line" ]; do
   task_id="$(printf '%s\n' "$line" | grep -oE 'T[0-9]+' | head -1)"
   [ -z "$task_id" ] && continue
 
-  # Extract backtick-wrapped file path (first occurrence)
-  file_path="$(printf '%s\n' "$line" | sed "s/.*\`\([^\`]*\)\`.*/\1/" | head -1)"
+  # Extract ALL backtick-wrapped strings, then filter for file-path-like patterns
+  # (containing / or .) to exclude inline code like `true`, `exit 0`
+  # shellcheck disable=SC2016
+  file_paths_raw="$(printf '%s\n' "$line" | grep -oE '`[^`]+`' | sed 's/`//g' || true)"
+  file_paths=""
+  if [ -n "$file_paths_raw" ]; then
+    file_paths="$(printf '%s\n' "$file_paths_raw" | grep -E '[/.]' || true)"
+  fi
 
-  # Skip if no file path found or extraction failed (line unchanged means no backtick)
-  if [ -z "$file_path" ] || [ "$file_path" = "$line" ]; then
+  # Skip if no file paths found
+  if [ -z "$file_paths" ]; then
     total_p_tasks=$((total_p_tasks + 1))
     continue
   fi
 
   total_p_tasks=$((total_p_tasks + 1))
 
-  # Look for this file_path in current phase index
-  existing_task="$(grep -F "${file_path}	" "$phase_index" | cut -f2 | head -1 || true)"
+  # Check each extracted file path for conflicts
+  while IFS= read -r file_path; do
+    [ -z "$file_path" ] && continue
 
-  if [ -n "$existing_task" ]; then
-    # Conflict detected
-    conflict_found=1
-    msg="CONFLICT: Phase ${current_phase} — ${existing_task} and ${task_id} both target ${file_path}"
-    if [ -z "$conflict_messages" ]; then
-      conflict_messages="$msg"
-    else
-      conflict_messages="${conflict_messages}
+    # Look for this file_path in current phase index
+    existing_task="$(grep -F "${file_path}	" "$phase_index" | cut -f2 | head -1 || true)"
+
+    if [ -n "$existing_task" ]; then
+      # Conflict detected
+      conflict_found=1
+      msg="CONFLICT: Phase ${current_phase} — ${existing_task} and ${task_id} both target ${file_path}"
+      if [ -z "$conflict_messages" ]; then
+        conflict_messages="$msg"
+      else
+        conflict_messages="${conflict_messages}
 ${msg}"
+      fi
+    else
+      # Record this file path for the current phase
+      printf '%s\t%s\n' "$file_path" "$task_id" >> "$phase_index"
     fi
-  else
-    # Record this file path for the current phase
-    printf '%s\t%s\n' "$file_path" "$task_id" >> "$phase_index"
-  fi
+  done <<EOF_PATHS
+$file_paths
+EOF_PATHS
 
 done < "$TASKS_FILE"
 
