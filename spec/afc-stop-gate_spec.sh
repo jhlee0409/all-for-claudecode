@@ -21,8 +21,7 @@ Describe "afc-stop-gate.sh"
   Context "when pipeline is active in spec phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
-      echo "spec" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "feature-name" "spec"
     }
 
     It "exits 0 for spec phase (no CI required)"
@@ -35,24 +34,21 @@ Describe "afc-stop-gate.sh"
   Context "when pipeline is active in implement phase with no CI passed"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "feature-name" "implement"
     }
 
     It "exits 2 blocking stop"
       Data '{}'
       When run script scripts/afc-stop-gate.sh
       The status should eq 2
-      The stderr should include "AFC GATE"
+      The stderr should include "[afc:gate]"
     End
   End
 
   Context "when pipeline is active in implement phase with fresh CI passed"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
-      date +%s > "$TEST_DIR/.claude/.afc-ci-passed"
+      setup_state_with_ci "$TEST_DIR" "feature-name" "implement"
     }
 
     It "exits 0 when CI passed recently"
@@ -65,9 +61,7 @@ Describe "afc-stop-gate.sh"
   Context "when pipeline is active in implement phase with stale CI timestamp"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
-      echo "1000000000" > "$TEST_DIR/.claude/.afc-ci-passed"
+      setup_state_with_ci "$TEST_DIR" "feature-name" "implement" "1000000000"
     }
 
     It "exits 2 for stale CI results"
@@ -81,8 +75,7 @@ Describe "afc-stop-gate.sh"
   Context "when stop_hook_active is true"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "feature-name" "implement"
     }
 
     It "exits 0 to prevent infinite loop"

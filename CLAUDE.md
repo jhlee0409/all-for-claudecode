@@ -23,7 +23,8 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 - **commands/** — 18 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `disable-model-invocation`, `context`)
 - **agents/** — 3 subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
 - **hooks/hooks.json** — Declares 17 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 4 hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
-- **scripts/** — 23 bash scripts implementing hook logic. All follow the pattern: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
+- **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
+- **scripts/** — 23 bash scripts + 2 Node.js ESM validators (.mjs) + 1 shared state library (afc-state.sh). Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
 - **templates/** — 5 project preset configs (nextjs-fsd, react-spa, express-api, monorepo, template)
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
@@ -40,11 +41,11 @@ Scripts receive stdin JSON from Claude Code and respond via stdout JSON or stder
 - **TaskCompleted (prompt)**: `type: "prompt"` with haiku — LLM verifies acceptance criteria (supplements command CI gate)
 - **Stop (agent)**: `type: "agent"` with haiku — subagent checks TODO/FIXME in changed files (supplements command CI gate)
 
-Pipeline state is managed through flag files in `$CLAUDE_PROJECT_DIR/.claude/`:
-- `.afc-active` — contains feature name
-- `.afc-phase` — current phase (spec/plan/tasks/implement/review/clean)
-- `.afc-ci-passed` — CI pass timestamp
-- `.afc-changes.log` — tracked file changes
+Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claude/.afc-state.json`:
+- All scripts source `scripts/afc-state.sh` for state access (afc_state_is_active, afc_state_read, afc_state_write)
+- Fields: `feature`, `phase`, `ciPassedAt`, `changes[]`, `startedAt`
+- When inactive: file does not exist
+- jq-first with grep/sed fallback for jq-less environments
 
 ### Command Frontmatter Controls
 

@@ -6,6 +6,9 @@ set -euo pipefail
 #
 # Gap fix: Subagents do not inherit parent context, so explicit injection is required
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   :
@@ -13,21 +16,20 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 
 # Consume stdin (required -- pipe breaks if not consumed)
 cat > /dev/null
 
 # Exit silently if pipeline is inactive
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 
 # 1. Read feature name
-FEATURE=$(head -1 "$PIPELINE_FLAG" 2>/dev/null | tr -d '\n\r' || echo "unknown")
+FEATURE=$(afc_state_read feature || echo "unknown")
 
 # 2. Read current phase
-PHASE=$(head -1 "$PROJECT_DIR/.claude/.afc-phase" 2>/dev/null | tr -d '\n\r' || echo "unknown")
+PHASE=$(afc_state_read phase || echo "unknown")
 
 # 3. Build context string
 CONTEXT="[AFC PIPELINE] Feature: $FEATURE | Phase: $PHASE"

@@ -22,7 +22,7 @@ Describe "afc-worktree-remove.sh"
   Context "when pipeline is active but worktree has no results log"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "my-feature"
     }
 
     It "exits 0 without creating task-results.log"
@@ -36,7 +36,7 @@ Describe "afc-worktree-remove.sh"
   Context "when pipeline is active and worktree has results log"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "my-feature"
       # Create a mock worktree with a task results log
       mkdir -p "$TEST_DIR/worktree/.claude"
       echo "agent-result: T001 complete" > "$TEST_DIR/worktree/.claude/.afc-task-results.log"

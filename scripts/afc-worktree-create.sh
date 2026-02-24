@@ -4,6 +4,9 @@ set -euo pipefail
 # WorktreeCreate Hook: Inject pipeline context into new worktrees
 # Ensures worker worktrees have access to pipeline state and config
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   :
@@ -11,13 +14,12 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 
 # Read hook data from stdin
 INPUT=$(cat)
 
 # Exit silently if pipeline is inactive
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 
@@ -35,11 +37,8 @@ if [ -z "$WORKTREE_PATH" ]; then
 fi
 
 # Read pipeline state
-FEATURE=$(head -1 "$PIPELINE_FLAG" 2>/dev/null | tr -d '\n\r' || echo "unknown")
-PHASE=""
-if [ -f "$PROJECT_DIR/.claude/.afc-phase" ]; then
-  PHASE=$(head -1 "$PROJECT_DIR/.claude/.afc-phase" 2>/dev/null | tr -d '\n\r' || echo "unknown")
-fi
+FEATURE=$(afc_state_read feature || echo "unknown")
+PHASE=$(afc_state_read phase || echo "unknown")
 
 # Inject pipeline context into worktree
 CONTEXT="[AFC WORKTREE] Feature: $FEATURE | Phase: ${PHASE:-unknown} | Source: $PROJECT_DIR"

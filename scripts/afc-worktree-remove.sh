@@ -4,6 +4,9 @@ set -euo pipefail
 # WorktreeRemove Hook: Archive worker results when worktree is removed
 # Ensures task results are preserved in the main project log
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   :
@@ -11,14 +14,13 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 RESULTS_LOG="$PROJECT_DIR/.claude/.afc-task-results.log"
 
 # Read hook data from stdin
 INPUT=$(cat)
 
 # Exit silently if pipeline is inactive (also handles race condition on pipeline end)
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 

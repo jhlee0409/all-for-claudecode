@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   :
@@ -165,9 +168,9 @@ fi
 
 # ── Check 5: No active pipeline ──────────────────────────
 
-ACTIVE_FILE="$PROJECT_DIR/.claude/.afc-active"
-if [[ -f "$ACTIVE_FILE" ]]; then
-  ACTIVE_NAME=$(head -1 "$ACTIVE_FILE" 2>/dev/null | tr -d '\n\r' | cut -c1-100 || printf 'unknown')
+if afc_state_is_active; then
+  ACTIVE_NAME=$(afc_state_read feature 2>/dev/null || printf 'unknown')
+  ACTIVE_NAME=$(printf '%s' "$ACTIVE_NAME" | cut -c1-100)
   printf '  \xe2\x9c\x97 No active pipeline: pipeline already running (%s)\n' "$ACTIVE_NAME"
   FAIL_COUNT=$((FAIL_COUNT + 1))
 else

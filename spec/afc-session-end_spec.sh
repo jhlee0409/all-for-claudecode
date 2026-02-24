@@ -22,7 +22,7 @@ Describe "afc-session-end.sh"
   Context "when pipeline is active"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "session-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "session-feature"
     }
 
     It "exits 0 and warns with feature name in stderr"
@@ -36,7 +36,7 @@ Describe "afc-session-end.sh"
   Context "when pipeline is active and reason is logout"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "session-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "session-feature"
     }
 
     It "exits 0 and includes logout reason in stderr"

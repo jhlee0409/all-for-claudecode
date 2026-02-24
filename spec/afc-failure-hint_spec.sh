@@ -11,11 +11,11 @@ Describe "afc-failure-hint.sh"
   After "cleanup"
 
   Context "when error is EACCES"
-    It "exits 0 and stdout contains AFC HINT"
+    It "exits 0 and stdout contains afc:hint"
       Data '{"tool_name":"Write","error":"EACCES: permission denied"}'
       When run script scripts/afc-failure-hint.sh
       The status should eq 0
-      The output should include "AFC HINT"
+      The output should include "afc:hint"
     End
   End
 
@@ -31,14 +31,14 @@ Describe "afc-failure-hint.sh"
   Context "when pipeline is active and error is ENOENT"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "feature-name"
     }
 
     It "exits 0 and creates .afc-failures.log"
       Data '{"tool_name":"Bash","error":"ENOENT: no such file or directory"}'
       When run script scripts/afc-failure-hint.sh
       The status should eq 0
-      The output should include "AFC HINT"
+      The output should include "afc:hint"
       The path "$TEST_DIR/.claude/.afc-failures.log" should be exist
     End
   End

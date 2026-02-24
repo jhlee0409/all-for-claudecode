@@ -21,8 +21,7 @@ Describe "afc-teammate-idle.sh"
   Context "when pipeline is active in spec phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "spec" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "my-feature" "spec"
     }
 
     It "exits 0 allowing idle"
@@ -35,15 +34,14 @@ Describe "afc-teammate-idle.sh"
   Context "when pipeline is active in implement phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "my-feature" "implement"
     }
 
     It "exits 2 blocking idle"
       Data '{}'
       When run script scripts/afc-teammate-idle.sh
       The status should eq 2
-      The stderr should include "AFC TEAMMATE GATE"
+      The stderr should include "[afc:teammate]"
     End
   End
 End

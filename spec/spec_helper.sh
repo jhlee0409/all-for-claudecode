@@ -53,3 +53,28 @@ test: "npm test"
 \`\`\`
 EOF
 }
+
+# Create a .afc-state.json fixture for an active pipeline.
+# Usage: setup_state_fixture <dir> <feature> [phase]
+setup_state_fixture() {
+  local dir="$1"
+  local feature="$2"
+  local phase="${3:-implement}"
+  mkdir -p "$dir/.claude"
+  cat > "$dir/.claude/.afc-state.json" << EOF
+{"feature": "$feature", "phase": "$phase", "startedAt": $(date +%s)}
+EOF
+}
+
+# Create a .afc-state.json fixture with CI passed timestamp.
+# Usage: setup_state_with_ci <dir> <feature> <phase> [ci_timestamp]
+setup_state_with_ci() {
+  local dir="$1"
+  local feature="$2"
+  local phase="$3"
+  local ci_ts="${4:-$(date +%s)}"
+  mkdir -p "$dir/.claude"
+  cat > "$dir/.claude/.afc-state.json" << EOF
+{"feature": "$feature", "phase": "$phase", "ciPassedAt": $ci_ts, "startedAt": $(date +%s)}
+EOF
+}

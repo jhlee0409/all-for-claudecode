@@ -22,8 +22,7 @@ Describe "afc-worktree-create.sh"
   Context "when pipeline is active with worktree_path"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "my-feature" "implement"
     }
 
     It "exits 0 and outputs additionalContext with pipeline info"
@@ -39,7 +38,7 @@ Describe "afc-worktree-create.sh"
   Context "when pipeline is active but no worktree_path"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "my-feature"
     }
 
     It "exits 0 with no output"

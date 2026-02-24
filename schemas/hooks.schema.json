@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Claude Code Plugin Hooks",
+  "description": "Schema for hooks/hooks.json — declares hook event handlers for a Claude Code plugin",
+  "type": "object",
+  "required": ["hooks"],
+  "additionalProperties": false,
+  "properties": {
+    "hooks": {
+      "type": "object",
+      "patternProperties": {
+        "^(SessionStart|PreCompact|PreToolUse|PostToolUse|SubagentStart|Stop|SessionEnd|PostToolUseFailure|Notification|TaskCompleted|SubagentStop|UserPromptSubmit|PermissionRequest|ConfigChange|TeammateIdle|WorktreeCreate|WorktreeRemove)$": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hookGroup"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "hookGroup": {
+      "type": "object",
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Tool name pattern (pipe-separated) or wildcard"
+        },
+        "hooks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/hookHandler"
+          }
+        }
+      },
+      "required": ["hooks"],
+      "additionalProperties": false
+    },
+    "hookHandler": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["command", "prompt", "agent"]
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to execute (for type: command)"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt text (for type: prompt or agent)"
+        },
+        "model": {
+          "type": "string",
+          "enum": ["haiku", "sonnet", "opus"]
+        },
+        "statusMessage": {
+          "type": "string"
+        },
+        "async": {
+          "type": "boolean"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    }
+  }
+}

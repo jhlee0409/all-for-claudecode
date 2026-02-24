@@ -27,7 +27,7 @@ if command -v curl >/dev/null 2>&1; then
 elif command -v wget >/dev/null 2>&1; then
   wget -qO - "$TARBALL_URL" | tar -xzf - -C "$VENDOR_DIR"
 else
-  printf 'Error: curl or wget is required to install ShellSpec\n' >&2
+  printf '[afc] Error: curl or wget is required to install ShellSpec\n' >&2
   exit 1
 fi
 

@@ -11,55 +11,61 @@ Describe "afc-pipeline-manage.sh"
   After "cleanup"
 
   Context "start subcommand"
-    It "exits 0 and creates .afc-active with feature name"
+    It "exits 0 and creates state with feature name"
       When run script scripts/afc-pipeline-manage.sh start test-feature
       The status should eq 0
       The output should include "Pipeline started"
-      The path "$TEST_DIR/.claude/.afc-active" should be exist
-      The contents of file "$TEST_DIR/.claude/.afc-active" should include "test-feature"
+      The path "$TEST_DIR/.claude/.afc-state.json" should be exist
+      The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "test-feature"
+    End
+
+    It "strips special characters from feature name"
+      When run script scripts/afc-pipeline-manage.sh start 'feat&"fix\test'
+      The status should eq 0
+      The output should include "Pipeline started"
+      The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "featfixtest"
     End
   End
 
   Context "phase subcommand"
     setup() {
       setup_tmpdir_with_git TEST_DIR
-      echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "test-feature"
     }
 
-    It "exits 0 and updates .afc-phase"
+    It "exits 0 and updates phase in state"
       When run script scripts/afc-pipeline-manage.sh phase plan
       The status should eq 0
       The output should include "Phase: plan"
-      The contents of file "$TEST_DIR/.claude/.afc-phase" should include "plan"
+      The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "plan"
     End
   End
 
   Context "end subcommand"
     setup() {
       setup_tmpdir_with_git TEST_DIR
-      echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "test-feature" "implement"
     }
 
-    It "exits 0 and deletes pipeline flags"
+    It "exits 0 and deletes state file"
       When run script scripts/afc-pipeline-manage.sh end
       The status should eq 0
       The output should include "Pipeline ended"
-      The path "$TEST_DIR/.claude/.afc-active" should not be exist
+      The path "$TEST_DIR/.claude/.afc-state.json" should not be exist
     End
   End
 
   Context "ci-pass subcommand"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "test-feature"
     }
 
-    It "exits 0 and creates .afc-ci-passed"
+    It "exits 0 and records CI timestamp in state"
       When run script scripts/afc-pipeline-manage.sh ci-pass
       The status should eq 0
       The output should include "CI passed"
-      The path "$TEST_DIR/.claude/.afc-ci-passed" should be exist
+      The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "ciPassedAt"
     End
   End
 
@@ -67,8 +73,7 @@ Describe "afc-pipeline-manage.sh"
     Context "when pipeline is active"
       setup() {
         setup_tmpdir TEST_DIR
-        echo "status-feature" > "$TEST_DIR/.claude/.afc-active"
-        echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+        setup_state_fixture "$TEST_DIR" "status-feature" "implement"
       }
 
       It "exits 0 and outputs Active"

@@ -6,11 +6,14 @@ set -euo pipefail
 #
 # Gap fix: Enforces OMC session continuity via physical script
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ]; then
-    echo "[all-for-claudecode] session-start-context.sh exited abnormally" >&2
+    echo "[afc:session] session-start-context.sh exited abnormally" >&2
   fi
   exit "$exit_code"
 }
@@ -26,13 +29,11 @@ PROJECT_PATH=$(cd "$PROJECT_DIR" 2>/dev/null && pwd || echo "$PROJECT_DIR")
 ENCODED_PATH="${PROJECT_PATH//\//-}"
 MEMORY_DIR="$HOME/.claude/projects/$ENCODED_PATH/memory"
 CHECKPOINT="$MEMORY_DIR/checkpoint.md"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
-
 OUTPUT=""
 
 # 1. Check for active pipeline
-if [ -f "$PIPELINE_FLAG" ]; then
-  FEATURE=$(head -1 "$PIPELINE_FLAG" 2>/dev/null | tr -d '\n\r' || true)
+if afc_state_is_active; then
+  FEATURE=$(afc_state_read feature || true)
   OUTPUT="[AFC PIPELINE ACTIVE] Feature: $FEATURE"
 
   # tasks.md progress
@@ -44,9 +45,9 @@ if [ -f "$PIPELINE_FLAG" ]; then
   fi
 
   # CI pass status
-  CI_FLAG="$PROJECT_DIR/.claude/.afc-ci-passed"
-  if [ -f "$CI_FLAG" ]; then
-    OUTPUT="$OUTPUT | Last CI: PASSED ($(cat "$CI_FLAG" 2>/dev/null || true))"
+  CI_TIMESTAMP=$(afc_state_read ciPassedAt 2>/dev/null || true)
+  if [ -n "$CI_TIMESTAMP" ]; then
+    OUTPUT="$OUTPUT | Last CI: PASSED ($CI_TIMESTAMP)"
   fi
 fi
 

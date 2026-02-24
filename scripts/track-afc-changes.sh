@@ -4,10 +4,8 @@ set -euo pipefail
 # Record changed files after Edit/Write tool usage
 # Track which files have changed for the CI gate
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
-CHANGES_LOG="$PROJECT_DIR/.claude/.afc-changes.log"
-CI_FLAG="$PROJECT_DIR/.claude/.afc-ci-passed"
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -17,7 +15,7 @@ cleanup() {
 trap cleanup EXIT
 
 # If pipeline is inactive -> skip
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 
@@ -37,12 +35,11 @@ else
 fi
 
 if [ -n "$FILE_PATH" ]; then
-  # Append to change log (deduplicate)
-  printf '%s\n' "$FILE_PATH" >> "$CHANGES_LOG"
-  sort -u -o "$CHANGES_LOG" "$CHANGES_LOG"
+  # Append to change log (deduplicate handled by afc_state_append_change)
+  afc_state_append_change "$FILE_PATH"
 
   # Invalidate CI results since a file was changed
-  rm -f "$CI_FLAG"
+  afc_state_invalidate_ci
 fi
 
 exit 0

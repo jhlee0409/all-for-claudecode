@@ -5,6 +5,9 @@ set -euo pipefail
 #
 # Gap fix: Ensures resumability via /afc:resume even after session ends
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   # Extend here if temporary file cleanup is needed
@@ -12,18 +15,15 @@ cleanup() {
 }
 trap cleanup EXIT
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="${PROJECT_DIR}/.claude/.afc-active"
-
 # Consume stdin early (required -- pipe breaks if not consumed)
 INPUT=$(cat)
 
 # If pipeline is not active -> exit silently
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 
-FEATURE=$(head -1 "$PIPELINE_FLAG" | tr -d '\n\r')
+FEATURE=$(afc_state_read feature || echo '')
 
 # Parse reason: jq preferred, grep/sed fallback
 REASON=""

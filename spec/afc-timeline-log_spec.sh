@@ -36,8 +36,7 @@ Describe "afc-timeline-log.sh"
   Context "when pipeline is active"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "my-feature" "implement"
     }
 
     It "includes feature and phase in the log entry"

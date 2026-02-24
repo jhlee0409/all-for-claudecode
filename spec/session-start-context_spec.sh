@@ -22,7 +22,7 @@ Describe "session-start-context.sh"
   Context "when pipeline is active"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "context-test" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "context-test"
     }
 
     It "exits 0 and outputs AFC PIPELINE"

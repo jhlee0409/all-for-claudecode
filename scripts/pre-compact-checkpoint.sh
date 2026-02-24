@@ -5,6 +5,9 @@ set -euo pipefail
 #
 # Gap fix: Enforces OMC auto-state-save via physical script
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   # Extend here if temporary file cleanup is needed
@@ -50,10 +53,9 @@ if [ -n "$ALL_STAGED" ]; then
 fi
 
 # Check afc pipeline active status
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 PIPELINE_FEATURE=""
-if [ -f "$PIPELINE_FLAG" ]; then
-  PIPELINE_FEATURE=$(head -1 "$PIPELINE_FLAG" 2>/dev/null | tr -d '\n\r' || true)
+if afc_state_is_active; then
+  PIPELINE_FEATURE=$(afc_state_read feature || true)
 fi
 
 # Check tasks.md progress status
@@ -97,7 +99,7 @@ $MODIFIED_LIST
 $STAGED_LIST
 
 ## Pipeline Status
-- Active: $([ -f "$PIPELINE_FLAG" ] && echo "Yes ($PIPELINE_FEATURE)" || echo "No")
+- Active: $([ -n "$PIPELINE_FEATURE" ] && echo "Yes ($PIPELINE_FEATURE)" || echo "No")
 - Task progress: $TASKS_DONE/$TASKS_TOTAL
 
 ## Restore Command

@@ -22,8 +22,7 @@ Describe "afc-user-prompt-submit.sh"
   Context "when pipeline is active with implement phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "test-feature" "implement"
     }
 
     It "exits 0 and stdout contains Pipeline and Phase info"
@@ -35,10 +34,12 @@ Describe "afc-user-prompt-submit.sh"
     End
   End
 
-  Context "when pipeline is active but no phase file"
+  Context "when pipeline is active but no phase field"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
+      # State with feature only, no phase field
+      mkdir -p "$TEST_DIR/.claude"
+      printf '{"feature": "test-feature", "startedAt": %s}\n' "$(date +%s)" > "$TEST_DIR/.claude/.afc-state.json"
     }
 
     It "exits 0 and stdout contains Phase: unknown"

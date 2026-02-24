@@ -22,7 +22,7 @@ Describe "afc-bash-guard.sh"
   Context "when pipeline is active"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "feature"
     }
 
     It "denies git push --force"

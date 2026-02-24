@@ -24,7 +24,7 @@ Describe "afc-preflight-check.sh"
     setup() {
       setup_tmpdir_with_git TEST_DIR
       setup_config_fixture "$TEST_DIR"
-      echo "existing-feature" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "existing-feature"
     }
 
     It "exits 1 and reports pipeline already running"

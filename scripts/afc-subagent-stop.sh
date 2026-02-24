@@ -4,6 +4,9 @@ set -euo pipefail
 # SubagentStop Hook: Log subagent completion/failure results to pipeline log
 # Enables pipeline orchestrator to track task progress
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   :
@@ -11,7 +14,6 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 RESULTS_LOG="$PROJECT_DIR/.claude/.afc-task-results.log"
 
 # Read hook data from stdin
@@ -34,7 +36,7 @@ if [ "$STOP_HOOK_ACTIVE" = "true" ]; then
 fi
 
 # Exit silently if pipeline is inactive
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 

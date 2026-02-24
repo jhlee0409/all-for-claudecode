@@ -4,6 +4,9 @@ set -euo pipefail
 # PermissionRequest Hook: Auto-allow CI-related Bash commands during implement/review Phase
 # Only exact whitelist matches allowed; commands with chaining (&&/;/|/$()) fall through to default behavior (user confirmation)
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   :
@@ -11,22 +14,17 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
-PHASE_FLAG="$PROJECT_DIR/.claude/.afc-phase"
 
 # Read hook data from stdin
 INPUT=$(cat)
 
 # Exit silently if pipeline is inactive
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 
 # Only active during implement/review Phase
-PHASE=""
-if [ -f "$PHASE_FLAG" ]; then
-  PHASE="$(head -1 "$PHASE_FLAG" | tr -d '\n\r')"
-fi
+PHASE="$(afc_state_read phase || echo '')"
 case "${PHASE:-}" in
   implement|review) ;;
   *) exit 0 ;;

@@ -22,7 +22,7 @@ Describe "afc-subagent-stop.sh"
   Context "when stop_hook_active is true"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "feature-name"
     }
 
     It "exits 0 without creating log file"
@@ -36,7 +36,7 @@ Describe "afc-subagent-stop.sh"
   Context "when pipeline is active and stop_hook_active is false"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "feature-name"
     }
 
     It "exits 0 and creates task-results.log with agent_id and agent_type"
@@ -52,7 +52,7 @@ Describe "afc-subagent-stop.sh"
   Context "when pipeline is active and message is empty"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
+      setup_state_fixture "$TEST_DIR" "feature-name"
     }
 
     It "exits 0 and logs no message default"

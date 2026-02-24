@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Parallel Task Validator: Parse tasks.md and check for file path conflicts
 # among [P]-marked (parallel) tasks within the same phase.
+# Calls Node.js ESM version if available, falls back to bash implementation.
 #
 # Usage: afc-parallel-validate.sh <tasks_file_path>
 # Exit 0: valid (no overlaps, or no [P] tasks found)
@@ -14,7 +15,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# PROJECT_DIR kept for convention consistency with other afc scripts
 # shellcheck disable=SC2034
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
@@ -29,61 +29,48 @@ if [ ! -f "$TASKS_FILE" ]; then
   exit 1
 fi
 
-# ------------------------------------------------------------------
-# Parse phases and [P] tasks
-# Phase headers match:   ## Phase N: ...
-# Task lines match:      - [ ] T{NNN} [P] {desc} `{path}` ...
-# ------------------------------------------------------------------
+# --- Node.js fast path ---
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if command -v node >/dev/null 2>&1; then
+  node "$SCRIPT_DIR/afc-parallel-validate.mjs" "$TASKS_FILE"
+  exit $?
+fi
+
+# --- Bash fallback ---
 
 current_phase=""
 total_p_tasks=0
 conflict_found=0
 conflict_messages=""
 
-# We process line by line using a while loop.
-# Two associative arrays are used per phase to track:
-#   phase_files[file_path]="task_id" — first task that claimed the file
-#   phase_tasks[file_path]="task_id" — same map for conflict lookup
-# Because bash 3 (macOS default) lacks associative arrays we use temp files.
-
 TMPDIR_WORK="$(mktemp -d)"
 # shellcheck disable=SC2064
 trap "rm -rf '$TMPDIR_WORK'; :" EXIT
 
-# File that accumulates seen paths for the current phase:
-#   format: <file_path><TAB><task_id>
 phase_index="$TMPDIR_WORK/phase_index.tsv"
 
 flush_phase() {
-  # Reset the per-phase index for a new phase
   : > "$phase_index"
 }
 
 flush_phase
 
 while IFS= read -r line || [ -n "$line" ]; do
-  # Detect phase header: ## Phase N: ...
   if printf '%s\n' "$line" | grep -qE '^## Phase [0-9]+'; then
-    # Extract phase number
     current_phase="$(printf '%s\n' "$line" | sed 's/^## Phase \([0-9]*\).*/\1/')"
     flush_phase
     continue
   fi
 
-  # Only process [P]-marked task lines when inside a phase
   [ -z "$current_phase" ] && continue
 
-  # Match task lines containing [P] marker
   if ! printf '%s\n' "$line" | grep -qE '^\s*-\s*\[[ xX]\]\s+T[0-9]+\s+\[P\]'; then
     continue
   fi
 
-  # Extract task ID: first T{NNN} token
   task_id="$(printf '%s\n' "$line" | grep -oE 'T[0-9]+' | head -1)"
   [ -z "$task_id" ] && continue
 
-  # Extract ALL backtick-wrapped strings, then filter for file-path-like patterns
-  # (containing / or .) to exclude inline code like `true`, `exit 0`
   # shellcheck disable=SC2016
   file_paths_raw="$(printf '%s\n' "$line" | grep -oE '`[^`]+`' | sed 's/`//g' || true)"
   file_paths=""
@@ -91,7 +78,6 @@ while IFS= read -r line || [ -n "$line" ]; do
     file_paths="$(printf '%s\n' "$file_paths_raw" | grep -E '[/.]' || true)"
   fi
 
-  # Skip if no file paths found
   if [ -z "$file_paths" ]; then
     total_p_tasks=$((total_p_tasks + 1))
     continue
@@ -99,15 +85,12 @@ while IFS= read -r line || [ -n "$line" ]; do
 
   total_p_tasks=$((total_p_tasks + 1))
 
-  # Check each extracted file path for conflicts
   while IFS= read -r file_path; do
     [ -z "$file_path" ] && continue
 
-    # Look for this file_path in current phase index
     existing_task="$(grep -F "${file_path}	" "$phase_index" | cut -f2 | head -1 || true)"
 
     if [ -n "$existing_task" ]; then
-      # Conflict detected
       conflict_found=1
       msg="CONFLICT: Phase ${current_phase} — ${existing_task} and ${task_id} both target ${file_path}"
       if [ -z "$conflict_messages" ]; then
@@ -117,7 +100,6 @@ while IFS= read -r line || [ -n "$line" ]; do
 ${msg}"
       fi
     else
-      # Record this file path for the current phase
       printf '%s\t%s\n' "$file_path" "$task_id" >> "$phase_index"
     fi
   done <<EOF_PATHS
@@ -126,8 +108,6 @@ EOF_PATHS
 
 done < "$TASKS_FILE"
 
-# Count distinct phases that had [P] tasks by checking how many phase headers
-# had at least one [P] task line (reparse for count only)
 phases_with_p=0
 current_phase_count=""
 phase_had_p=0
@@ -147,14 +127,9 @@ while IFS= read -r line || [ -n "$line" ]; do
   fi
 done < "$TASKS_FILE"
 
-# Flush last phase
 if [ "$phase_had_p" -eq 1 ]; then
   phases_with_p=$((phases_with_p + 1))
 fi
-
-# ------------------------------------------------------------------
-# Output
-# ------------------------------------------------------------------
 
 if [ "$total_p_tasks" -eq 0 ]; then
   printf 'Valid: no [P] tasks found, nothing to validate\n'

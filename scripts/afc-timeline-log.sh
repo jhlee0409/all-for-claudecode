@@ -10,6 +10,9 @@ set -euo pipefail
 # message:    human-readable description
 # extra_json_fields: optional JSON object string to merge (e.g. '{"tool":"bash"}')
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   :
@@ -36,14 +39,14 @@ fi
 EVENT_TYPE=$(printf '%s' "$EVENT_TYPE" | tr -d '\n\r' | cut -c1-64)
 MESSAGE=$(printf '%s' "$MESSAGE"     | tr -d '\n\r' | cut -c1-500)
 
-# Read pipeline state (gracefully handle missing files)
+# Read pipeline state (gracefully handle missing state)
 FEATURE="none"
 PHASE="none"
-if [ -f "$FLAG_DIR/.afc-active" ]; then
-  FEATURE=$(head -1 "$FLAG_DIR/.afc-active" | tr -d '\n\r' | cut -c1-100)
-fi
-if [ -f "$FLAG_DIR/.afc-phase" ]; then
-  PHASE=$(head -1 "$FLAG_DIR/.afc-phase" | tr -d '\n\r' | cut -c1-64)
+if afc_state_is_active; then
+  FEATURE=$(afc_state_read feature || echo "none")
+  FEATURE=$(printf '%s' "$FEATURE" | cut -c1-100)
+  PHASE=$(afc_state_read phase || echo "none")
+  PHASE=$(printf '%s' "$PHASE" | cut -c1-64)
 fi
 
 # Timestamp (no jq dependency)

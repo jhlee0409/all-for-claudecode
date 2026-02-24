@@ -3,26 +3,28 @@ set -euo pipefail
 # ConfigChange Hook: Audit and block config changes while pipeline is active
 # policy_settings changes are logged only; other changes are blocked (exit 2)
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # trap: Preserve exit code on abnormal termination + stderr message
 # shellcheck disable=SC2329
 cleanup() {
   local exit_code=$?
   if [ "$exit_code" -ne 0 ] && [ "$exit_code" -ne 2 ]; then
-    echo "AFC CONFIG: Abnormal exit (exit code: $exit_code)" >&2
+    echo "[afc:config] Abnormal exit (code: $exit_code)" >&2
   fi
   exit "$exit_code"
 }
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="${PROJECT_DIR}/.claude/.afc-active"
 AUDIT_LOG="${PROJECT_DIR}/.claude/.afc-config-audit.log"
 
 # Read hook data from stdin
 INPUT=$(cat)
 
 # Exit silently if pipeline is inactive
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   exit 0
 fi
 
@@ -54,5 +56,5 @@ fi
 
 # Other changes: Write audit log + block
 printf '[%s] source=%s path=%s\n' "$TIMESTAMP" "$SOURCE" "$FILE_PATH" >> "$AUDIT_LOG"
-echo "AFC CONFIG: Config change detected while pipeline is active. source=${SOURCE} path=${FILE_PATH}" >&2
+echo "[afc:config] Config change detected while pipeline active. source=${SOURCE} path=${FILE_PATH}" >&2
 exit 2

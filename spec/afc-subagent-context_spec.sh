@@ -22,8 +22,7 @@ Describe "afc-subagent-context.sh"
   Context "when pipeline is active in implement phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "subagent-test" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "subagent-test" "implement"
     }
 
     It "exits 0 and includes Feature and Phase in output"

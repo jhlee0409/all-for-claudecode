@@ -21,8 +21,7 @@ Describe "afc-task-completed-gate.sh"
   Context "when pipeline is active in spec phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "spec" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "my-feature" "spec"
     }
 
     It "exits 0 without requiring CI"
@@ -35,8 +34,7 @@ Describe "afc-task-completed-gate.sh"
   Context "when pipeline is active in implement phase with no CI flag"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "my-feature" "implement"
     }
 
     It "exits 2 and reports CI not run"
@@ -50,9 +48,7 @@ Describe "afc-task-completed-gate.sh"
   Context "when pipeline is active in implement phase with recent CI flag"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
-      date +%s > "$TEST_DIR/.claude/.afc-ci-passed"
+      setup_state_with_ci "$TEST_DIR" "my-feature" "implement"
     }
 
     It "exits 0"
@@ -65,9 +61,7 @@ Describe "afc-task-completed-gate.sh"
   Context "when pipeline is active in review phase with stale CI timestamp"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "my-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "review" > "$TEST_DIR/.claude/.afc-phase"
-      echo "1000000000" > "$TEST_DIR/.claude/.afc-ci-passed"
+      setup_state_with_ci "$TEST_DIR" "my-feature" "review" "1000000000"
     }
 
     It "exits 2 and reports stale CI results"

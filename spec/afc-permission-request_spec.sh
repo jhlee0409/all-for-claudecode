@@ -22,8 +22,7 @@ Describe "afc-permission-request.sh"
   Context "when in implement phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "test-feature" "implement"
     }
 
     It "allows npm test"
@@ -79,8 +78,7 @@ Describe "afc-permission-request.sh"
   Context "when in spec phase"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
-      echo "spec" > "$TEST_DIR/.claude/.afc-phase"
+      setup_state_fixture "$TEST_DIR" "test-feature" "spec"
     }
 
     It "produces no output (only implement/review phases apply)"
@@ -95,8 +93,7 @@ Describe "afc-permission-request.sh"
     Context "when config has pnpm commands"
       setup() {
         setup_tmpdir TEST_DIR
-        echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
-        echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
         cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
 ## CI Commands
 
@@ -119,8 +116,7 @@ CFGEOF
     Context "when config has npm commands"
       setup() {
         setup_tmpdir TEST_DIR
-        echo "test-feature" > "$TEST_DIR/.claude/.afc-active"
-        echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
         setup_config_fixture "$TEST_DIR" "npm run lint"
       }
 

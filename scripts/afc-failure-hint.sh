@@ -2,6 +2,9 @@
 set -euo pipefail
 # PostToolUseFailure Hook: Output hints matching error patterns on tool failure
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   # Placeholder for temporary resource cleanup if needed
@@ -10,7 +13,6 @@ cleanup() {
 trap cleanup EXIT
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
 FAILURES_LOG="$PROJECT_DIR/.claude/.afc-failures.log"
 
 # Parse input from stdin
@@ -29,7 +31,7 @@ TOOL_NAME="${TOOL_NAME:-unknown}"
 ERROR="${ERROR:-}"
 
 # If pipeline is active, log failure (normalize error message to single line)
-if [ -f "$PIPELINE_FLAG" ] && [ -n "$ERROR" ]; then
+if afc_state_is_active && [ -n "$ERROR" ]; then
   ERROR_ONELINE=$(printf '%s\n' "$ERROR" | head -1 | cut -c1-200)
   printf '%s\n' "$(date +%s) $TOOL_NAME: $ERROR_ONELINE" >> "$FAILURES_LOG"
 fi
@@ -64,14 +66,14 @@ esac
 if [ -n "$HINT" ]; then
   # Generate safe JSON with jq if available, otherwise strip special chars and use printf
   if command -v jq &> /dev/null; then
-    jq -n --arg ctx "[AFC HINT] $HINT (tool: $TOOL_NAME)" \
+    jq -n --arg ctx "[afc:hint] $HINT (tool: $TOOL_NAME)" \
       '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":$ctx}}' 2>/dev/null || true
   else
     # shellcheck disable=SC1003
     SAFE_HINT=$(printf '%s' "$HINT" | tr -d '"' | tr -d '\\')
     # shellcheck disable=SC1003
     SAFE_TOOL=$(printf '%s' "$TOOL_NAME" | tr -d '"' | tr -d '\\')
-    printf '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":"[AFC HINT] %s (tool: %s)"}}\n' "$SAFE_HINT" "$SAFE_TOOL"
+    printf '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":"[afc:hint] %s (tool: %s)"}}\n' "$SAFE_HINT" "$SAFE_TOOL"
   fi
 fi
 

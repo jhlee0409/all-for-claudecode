@@ -4,6 +4,9 @@ set -euo pipefail
 # Prevents git push --force, reset --hard, checkout ., restore ., clean -f, etc.
 # Exception: reset --hard is allowed for afc/pre- tag rollback
 
+# shellcheck source=afc-state.sh
+. "$(dirname "$0")/afc-state.sh"
+
 # shellcheck disable=SC2329
 cleanup() {
   # Placeholder for temporary resource cleanup if needed
@@ -11,11 +14,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PIPELINE_FLAG="$PROJECT_DIR/.claude/.afc-active"
-
 # If pipeline is inactive -> allow
-if [ ! -f "$PIPELINE_FLAG" ]; then
+if ! afc_state_is_active; then
   printf '{"hookSpecificOutput":{"permissionDecision":"allow"}}\n'
   exit 0
 fi
@@ -74,9 +74,9 @@ esac
 
 if [ -n "$DENY_REASON" ]; then
   if [ -n "$SAFE_ALTERNATIVE" ]; then
-    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"AFC GUARD: %s. Safe alternative: %s","updatedInput":{"command":"%s"}}}\n' "$DENY_REASON" "$SAFE_ALTERNATIVE" "$SAFE_ALTERNATIVE"
+    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"[afc:guard] %s. Safe alternative: %s","updatedInput":{"command":"%s"}}}\n' "$DENY_REASON" "$SAFE_ALTERNATIVE" "$SAFE_ALTERNATIVE"
   else
-    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"AFC GUARD: %s"}}\n' "$DENY_REASON"
+    printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"[afc:guard] %s"}}\n' "$DENY_REASON"
   fi
 else
   printf '{"hookSpecificOutput":{"permissionDecision":"allow"}}\n'
