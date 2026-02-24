@@ -5,16 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-02-25
+## [Unreleased]
 
 ### Breaking Changes
-- **Rebrand**: `selfish-pipeline` → `all-for-claudecode`
-- **Pipeline restructured from 6-phase to 5-phase**: tasks phase absorbed into implement (tasks auto-generated from plan.md File Change Map)
+- **Pipeline restructured from 6-phase to 5-phase**: tasks phase absorbed into implement (auto-generated from plan.md File Change Map)
 - **State file consolidation**: 4 individual flag files (`.afc-active`, `.afc-phase`, `.afc-ci-passed`, `.afc-changes.log`) → single `.claude/.afc-state.json` with shared library (`scripts/afc-state.sh`)
 
 ### Added
 - **Cross-artifact validation**: CROSS_CONSISTENCY criterion in Plan critic (spec↔plan 5-point checklist), SPEC_ALIGNMENT criterion in Review critic (spec↔implementation verification)
-- **Specialist agent integration in Review**: afc-architect and afc-security agents invoked during Review phase for persistent-memory-aware architecture and security analysis
+- **Specialist agent integration in Review**: afc-architect and afc-security agents invoked via parallel Task() calls for persistent-memory-aware architecture and security analysis
 - **ADR recording via architect agent**: Plan phase records architecture decisions to architect agent's persistent memory for cross-session conflict detection
 - **Research persistence**: Research findings saved to `.claude/afc/memory/research/` for cross-session reuse
 - **Debug-based RCA on CI failure**: Replaces blind "retry 3 times" with `/afc:debug` logic (error trace → hypothesis → targeted fix)
@@ -30,24 +29,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Review expanded to 8 perspectives**: Added Reusability (F), Maintainability (G), Extensibility (H)
 - **Quality report JSON**: Structured pipeline metrics in `.claude/afc/memory/quality-history/`
 - **Orchestrator pre-assignment**: Swarm workers receive pre-assigned tasks (replaces self-claiming to avoid race conditions)
+- **EARS notation**: Spec phase uses Event/Action/Response/State notation for requirements
+- **Phase checkpoints**: Auto-checkpoint at each phase gate completion
+- **Research Gate**: Spec phase mandatory research before writing requirements
+- **Inline Clarification**: Spec phase auto-resolves ambiguities without separate clarify step
 
 ### Changed
 - Pipeline phases: `spec → plan → tasks → implement → review → clean` → `spec → plan → implement → review → clean`
 - Critic safety cap unified to 5 across all phases
 - Swarm mode uses orchestrator pre-assignment instead of self-claiming (avoids TaskUpdate race conditions)
 - Test suite: migrated from custom bash tests to ShellSpec 0.28.1 BDD framework (125 examples)
-- README test badge: 161 → 125 (ShellSpec migration)
+- Agent Pipeline Integration sections added to afc-architect and afc-security agent definitions
+- Phase gate protocol updated with debug-based RCA reference
+- MIGRATION.md updated for state file consolidation
 
-### Renamed (Rebrand)
+## [2.0.0] - 2026-02-24
+
+### Breaking Changes
+- **Rebrand**: `selfish-pipeline` → `all-for-claudecode`
+- All slash commands: `/selfish:*` → `/afc:*`
+- Config files: `selfish.config.*.md` → `afc.config.*.md`
+- State files: `.selfish-*` → `.afc-*`
+- CLAUDE.md markers: `SELFISH:START/END` → `AFC:START/END`
+
+### Added
+- Legacy migration support in `/afc:doctor` and `/afc:init` commands
+- Multi-ecosystem preflight check redesign
+- Quality enhancement: directory consolidation + 4 prompt improvements
+
+### Renamed
 - Package: `selfish-pipeline` → `all-for-claudecode`
 - Plugin: `selfish` → `afc`, prefix: `/selfish:*` → `/afc:*`
 - Scripts: `selfish-*.sh` → `afc-*.sh`
 - Agents: `selfish-architect` / `selfish-security` → `afc-architect` / `afc-security`
 - Config: `selfish.config.*.md` → `afc.config.*.md`
 - Git tags: `selfish/pre-*` → `afc/pre-*`
-- CLAUDE.md markers: `SELFISH:START/END` → `AFC:START/END`
 - Artifact dir: `.claude/selfish/` → `.claude/afc/`
 - GitHub: `jhlee0409/selfish-pipeline` → `jhlee0409/all-for-claudecode`
+
+### Fixed
+- Review description and migration doc accuracy
+- 5 functional bugs across 10 commands
+- Hardcoded counts removed from docs to prevent staleness
+- Doctor reads actual plugin version from package.json
+- Dynamic version in CLAUDE.md block instead of hardcoded
+- Restored hooks field in plugin.json dropped in v1.2.0
 
 ### Migration
 See [MIGRATION.md](MIGRATION.md) for step-by-step upgrade guide from v1.x.
