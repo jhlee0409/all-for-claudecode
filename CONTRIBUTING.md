@@ -11,7 +11,8 @@ hooks/      hooks.json (event → handler binding)
 agents/     2 persistent memory subagents
 docs/       shared reference documents
 templates/  5 project preset configs
-tests/      bash test suite bin/        ESM CLI installer
+spec/       ShellSpec BDD test suite
+bin/        ESM CLI installer
 .claude-plugin/  plugin.json + marketplace.json
 ```
 
@@ -19,8 +20,8 @@ tests/      bash test suite bin/        ESM CLI installer
 
 | I want to... | Primary file(s) | Also update |
 |---------------|-----------------|-------------|
-| Add a new slash command | `commands/{name}.md` | CLAUDE.md (command count), README.md (badge + table), `tests/test-hooks.sh` if hooks involved |
-| Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | CLAUDE.md (hook count), README.md (badge + table), `tests/test-hooks.sh` |
+| Add a new slash command | `commands/{name}.md` | CLAUDE.md (command count), README.md (badge + table), `spec/{name}_spec.sh` if hooks involved |
+| Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | CLAUDE.md (hook count), README.md (badge + table), `spec/{name}_spec.sh` |
 | Add a new project template | `templates/afc.config.{name}.md` | `commands/init.md` (template list) |
 | Add a new agent | `agents/{name}.md` | CLAUDE.md (agent count) |
 | Modify pipeline flow | `commands/auto.md` | Related phase commands, `docs/phase-gate-protocol.md` |
@@ -199,37 +200,53 @@ Add to `hooks/hooks.json` under the appropriate event:
 
 ### Step 5: Write tests
 
-Add to `tests/test-hooks.sh`:
+Create `spec/{name}_spec.sh` using ShellSpec BDD syntax:
 
 ```bash
-# ============================================================
-# TEST: {script-name}.sh
-# ============================================================
+#!/bin/bash
+# shellcheck shell=bash
 
-TEST_DIR=$(mktemp -d)
-mkdir -p "$TEST_DIR/.claude"
-export CLAUDE_PROJECT_DIR="$TEST_DIR"
 
-# Test 1: description
-RESULT=$(echo '{"input":"data"}' | bash "$SCRIPT_DIR/scripts/{name}.sh" 2>/dev/null)
-assert_contains "$RESULT" "expected" "Test 1: description"
+Describe "{name}.sh"
+  setup() {
+    setup_tmpdir TEST_DIR
+  }
+  cleanup() { cleanup_tmpdir "$TEST_DIR"; }
+  Before "setup"
+  After "cleanup"
 
-# Test 2: error case
-set +e
-echo '{}' | bash "$SCRIPT_DIR/scripts/{name}.sh" 2>/dev/null
-EXIT_CODE=$?
-set -e
-assert_eq "$EXIT_CODE" "0" "Test 2: description"
+  Context "when pipeline is inactive"
+    It "exits 0 with no output"
+      Data '{}'
+      When run script scripts/{name}.sh
+      The status should eq 0
+    End
+  End
 
-rm -rf "$TEST_DIR"
+  Context "when pipeline is active"
+    setup() {
+      setup_tmpdir TEST_DIR
+      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
+    }
+
+    It "exits 0 and produces expected output"
+      Data '{"key":"value"}'
+      When run script scripts/{name}.sh
+      The status should eq 0
+      The output should include "expected"
+    End
+  End
+End
 ```
 
 Key testing patterns:
-- Use `mktemp -d` for isolation (variable name `TEST_DIR`, not `TMPDIR`)
-- Set `CLAUDE_PROJECT_DIR` to `TEST_DIR`
-- Create `.claude/` subdirectory with needed flag files
-- Use `set +e` / `set -e` around scripts expected to exit non-zero
-- Clean up with `rm -rf "$TEST_DIR"`
+- `setup_tmpdir VAR_NAME` — creates isolated tmpdir, exports `CLAUDE_PROJECT_DIR` and `HOME` (named-variable pattern, NOT `VAR=$(setup_tmpdir)`)
+- `setup_tmpdir_with_git VAR_NAME` — same + bare git repo
+- `setup_config_fixture DIR [ci_cmd]` — writes minimal `afc.config.md` fixture
+- `Data '{"json":"input"}'` — pipes stdin to the script under test
+- `The path "$path" should be exist` — file/directory existence check
+- `The contents of file "$path" should include "..."` — file content check
+- ShellSpec handles non-zero exits automatically; use `The status should eq 2` for blocking hooks
 
 ---
 
@@ -443,47 +460,60 @@ cp "$SRC/CLAUDE.md" "$CACHE/CLAUDE.md"
 
 ## 8. Testing
 
+### Setup
+
+```bash
+npm run setup:test    # install ShellSpec 0.28.1 to vendor/shellspec/ (first-time only)
+```
+
 ### Running tests
 
 ```bash
-npm test              # bash tests/test-hooks.sh npm run lint          # shellcheck scripts/*.sh
+npm test              # ShellSpec BDD suite (vendor/shellspec/shellspec)
+npm run lint          # shellcheck scripts/*.sh
 npm run test:all      # lint + test combined
 ```
 
+Single spec run: `vendor/shellspec/shellspec spec/afc-bash-guard_spec.sh`
+
 ### Test structure
 
-All tests live in `tests/test-hooks.sh`. Each test suite follows:
+Tests use [ShellSpec](https://shellspec.info/) BDD framework. Each script has a corresponding spec file in `spec/`:
 
-```bash
-# ============================================================
-# TEST: {script-name}.sh
-# ============================================================
-
-TEST_DIR=$(mktemp -d)
-mkdir -p "$TEST_DIR/.claude"
-export CLAUDE_PROJECT_DIR="$TEST_DIR"
-
-# ... test cases with assert_eq / assert_contains / assert_not_contains ...
-
-rm -rf "$TEST_DIR"
+```
+spec/
+  spec_helper.sh              # shared helpers (auto-loaded via .shellspec)
+  afc-bash-guard_spec.sh      # spec for scripts/afc-bash-guard.sh
+  afc-stop-gate_spec.sh       # spec for scripts/afc-stop-gate.sh
+  ...
 ```
 
-### Assert functions
+Shared helpers in `spec/spec_helper.sh`:
+- `setup_tmpdir VAR_NAME` — creates isolated tmpdir, exports `CLAUDE_PROJECT_DIR` and `HOME`
+- `setup_tmpdir_with_git VAR_NAME` — same + initializes bare git repo
+- `setup_config_fixture DIR [ci_cmd]` — writes minimal `afc.config.md` fixture
+- `cleanup_tmpdir "$VAR"` — removes tmpdir
+
+### ShellSpec matchers reference
 
 ```bash
-assert_exit "test description" "$expected_code" "$EXIT_CODE"
-assert_stdout_contains "test description" "substring" "$RESULT"
-assert_stdout_empty "test description" "$RESULT"
-assert_file_exists "test description" "$file_path"
-assert_file_contains "test description" "$file_path" "pattern"
+The status should eq 0                    # exit code check
+The status should eq 2                    # blocking hook exit code
+The output should include "text"          # stdout contains
+The output should eq ""                   # stdout is empty
+The stderr should include "text"          # stderr contains
+The path "$path" should be exist          # file/dir exists
+The path "$path" should not be exist      # file/dir does not exist
+The contents of file "$path" should include "text"  # file content check
 ```
 
 ### Test requirements for new scripts
 
-Every new script in `scripts/` must have:
+Every new script in `scripts/` must have a corresponding `spec/{name}_spec.sh` with:
 1. At least 1 test for the happy path
 2. At least 1 test for inactive pipeline (should be a no-op or passthrough)
 3. At least 1 test for edge cases (empty stdin, missing files)
+4. Explicit expectations for all stdout/stderr output (avoids ShellSpec warnings)
 
 ---
 
@@ -539,8 +569,8 @@ This is a global open-source project. All user-facing text must be in English. C
 git diff --cached --name-only | xargs grep -l '[가-힣]' 2>/dev/null
 ```
 
-### Testing with TMPDIR
-Use `TEST_DIR` as the variable name, never `TMPDIR` (conflicts with system environment variable).
+### Testing variable names
+Use `setup_tmpdir TEST_DIR` (named-variable pattern), never `TEST_DIR=$(setup_tmpdir)` (subshell breaks `export` propagation). Never use `TMPDIR` as a variable name (conflicts with system environment variable).
 
 ### Destructive git commands during pipeline
 The `afc-bash-guard.sh` hook blocks dangerous git commands (`push --force`, `reset --hard`, `clean -f`) when the pipeline is active. Rollback commands targeting `afc/pre-*` tags are whitelisted.
@@ -555,7 +585,7 @@ The `afc-bash-guard.sh` hook blocks dangerous git commands (`push --force`, `res
 4. No Korean text in any tracked file
 5. All command frontmatter follows conventions (model, description, controls)
 6. New scripts have shellcheck passing
-7. New scripts have test coverage in test-hooks.sh
+7. New scripts have ShellSpec coverage in spec/{name}_spec.sh
 8. CLAUDE.md reflects current counts and architecture
 9. Commit and tag: `git tag v{X.Y.Z}`
 10. Push: `git push origin main --tags`
