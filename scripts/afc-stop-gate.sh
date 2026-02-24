@@ -59,7 +59,20 @@ esac
 
 # Implement/Review/Clean Phase (4-6) require CI to pass
 if [ ! -f "$CI_FLAG" ]; then
-  echo "AFC GATE: CI has not been run. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires passing the CI gate. Run your CI command and record the timestamp in .claude/.afc-ci-passed." >&2
+  # Check last_assistant_message for premature completion claims
+  LAST_MSG=""
+  if command -v jq &>/dev/null; then
+    LAST_MSG=$(printf '%s\n' "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null || true)
+  else
+    LAST_MSG=$(printf '%s\n' "$INPUT" | grep -o '"last_assistant_message"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:[[:space:]]*"//;s/"$//' 2>/dev/null || true)
+  fi
+  LAST_MSG=$(printf '%s\n' "$LAST_MSG" | head -1 | cut -c1-500)
+
+  if printf '%s\n' "$LAST_MSG" | grep -qiE '(done|complete[^s]|finished|implemented|all tasks)' 2>/dev/null; then
+    echo "AFC GATE: Response claims completion but CI has not passed. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires the CI gate." >&2
+  else
+    echo "AFC GATE: CI has not been run. Pipeline '${FEATURE:-unknown}' Phase '${CURRENT_PHASE:-unknown}' requires passing the CI gate. Run your CI command and record the timestamp in .claude/.afc-ci-passed." >&2
+  fi
   exit 2
 fi
 

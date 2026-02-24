@@ -1119,6 +1119,102 @@ else
 fi
 cleanup_tmpdir "$TEST_DIR"
 
+# ============================================================
+echo "=== afc-worktree-create.sh ==="
+# ============================================================
+
+# T016-1. Pipeline inactive → exit 0, no output
+TEST_DIR=$(setup_tmpdir)
+OUTPUT=$(echo '{"worktree_path":"/tmp/wt1"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-worktree-create.sh" 2>/dev/null); CODE=$?
+assert_exit "worktree-create: inactive → exit 0" "0" "$CODE"
+assert_stdout_empty "worktree-create: inactive → no output" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T016-2. Pipeline active → context output
+TEST_DIR=$(setup_tmpdir)
+echo "wt-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+OUTPUT=$(echo '{"worktree_path":"/tmp/wt1"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-worktree-create.sh" 2>/dev/null); CODE=$?
+assert_exit "worktree-create: active → exit 0" "0" "$CODE"
+assert_stdout_contains "worktree-create: has additionalContext" "additionalContext" "$OUTPUT"
+assert_stdout_contains "worktree-create: has feature name" "wt-feature" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T016-3. Empty stdin → exit 0
+TEST_DIR=$(setup_tmpdir)
+echo "wt-feature" > "$TEST_DIR/.claude/.afc-active"
+OUTPUT=$(echo '{}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-worktree-create.sh" 2>/dev/null); CODE=$?
+assert_exit "worktree-create: no worktree_path → exit 0" "0" "$CODE"
+assert_stdout_empty "worktree-create: no worktree_path → no output" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# ============================================================
+echo "=== afc-worktree-remove.sh ==="
+# ============================================================
+
+# T017-1. Pipeline inactive → exit 0, no archive
+TEST_DIR=$(setup_tmpdir)
+OUTPUT=$(echo '{"worktree_path":"/tmp/wt1"}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-worktree-remove.sh" 2>/dev/null); CODE=$?
+assert_exit "worktree-remove: inactive → exit 0" "0" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+# T017-2. Pipeline active + worktree results → archive to main
+TEST_DIR=$(setup_tmpdir)
+echo "rm-feature" > "$TEST_DIR/.claude/.afc-active"
+WT_DIR=$(mktemp -d)
+mkdir -p "$WT_DIR/.claude"
+echo "1234 [general-purpose] agent1: task done" > "$WT_DIR/.claude/.afc-task-results.log"
+OUTPUT=$(echo "{\"worktree_path\":\"$WT_DIR\"}" | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-worktree-remove.sh" 2>/dev/null); CODE=$?
+assert_exit "worktree-remove: active + results → exit 0" "0" "$CODE"
+assert_file_exists "worktree-remove: results archived" "$TEST_DIR/.claude/.afc-task-results.log"
+assert_file_contains "worktree-remove: results content" "$TEST_DIR/.claude/.afc-task-results.log" "task done"
+rm -rf "$WT_DIR"
+cleanup_tmpdir "$TEST_DIR"
+
+# T017-3. Pipeline active + no worktree results → exit 0, no crash
+TEST_DIR=$(setup_tmpdir)
+echo "rm-feature" > "$TEST_DIR/.claude/.afc-active"
+WT_DIR=$(mktemp -d)
+OUTPUT=$(echo "{\"worktree_path\":\"$WT_DIR\"}" | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-worktree-remove.sh" 2>/dev/null); CODE=$?
+assert_exit "worktree-remove: no results → exit 0" "0" "$CODE"
+rm -rf "$WT_DIR"
+cleanup_tmpdir "$TEST_DIR"
+
+# ============================================================
+echo "=== afc-stop-gate.sh (last_assistant_message) ==="
+# ============================================================
+
+# T018-1. Completion claim without CI → exit 2
+TEST_DIR=$(setup_tmpdir)
+echo "gate-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+set +e
+OUTPUT=$(echo '{"last_assistant_message":"All tasks are done and implemented."}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-stop-gate.sh" 2>&1); CODE=$?
+set -e
+assert_exit "stop-gate: completion claim + no CI → exit 2" "2" "$CODE"
+assert_stdout_contains "stop-gate: mentions completion claim" "claims completion" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
+# T018-2. Completion claim WITH CI → exit 0
+TEST_DIR=$(setup_tmpdir)
+echo "gate-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+date +%s > "$TEST_DIR/.claude/.afc-ci-passed"
+OUTPUT=$(echo '{"last_assistant_message":"All tasks are done and implemented."}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-stop-gate.sh" 2>/dev/null); CODE=$?
+assert_exit "stop-gate: completion claim + CI passed → exit 0" "0" "$CODE"
+cleanup_tmpdir "$TEST_DIR"
+
+# T018-3. No completion claim, no CI → generic CI message
+TEST_DIR=$(setup_tmpdir)
+echo "gate-feature" > "$TEST_DIR/.claude/.afc-active"
+echo "implement" > "$TEST_DIR/.claude/.afc-phase"
+set +e
+OUTPUT=$(echo '{"last_assistant_message":"Working on the next task."}' | CLAUDE_PROJECT_DIR="$TEST_DIR" "$SCRIPT_DIR/scripts/afc-stop-gate.sh" 2>&1); CODE=$?
+set -e
+assert_exit "stop-gate: no claim + no CI → exit 2" "2" "$CODE"
+assert_stdout_contains "stop-gate: generic CI message" "CI has not been run" "$OUTPUT"
+cleanup_tmpdir "$TEST_DIR"
+
 echo ""
 
 # ============================================================

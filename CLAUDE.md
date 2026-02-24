@@ -19,9 +19,9 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 ### Core Layers
 
 - **commands/** — 18 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `disable-model-invocation`, `context`)
-- **agents/** — 2 persistent memory subagents (afc-architect, afc-security) with `memory: project` for cross-session learning
-- **hooks/hooks.json** — Declares 15 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 2 hooks use `async: true`. Includes ConfigChange (settings audit) and TeammateIdle (Agent Teams gate)
-- **scripts/** — 20 bash scripts implementing hook logic. All follow the pattern: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
+- **agents/** — 3 subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
+- **hooks/hooks.json** — Declares 17 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 2 hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
+- **scripts/** — 22 bash scripts implementing hook logic. All follow the pattern: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
 - **templates/** — 5 project preset configs (nextjs-fsd, react-spa, express-api, monorepo, template)
 - **bin/cli.mjs** — ESM CLI entry point (install helper)

@@ -99,9 +99,10 @@ Execute each phase in order. Choose the orchestration mode based on the number o
   ```
 - Launch parallel sub-agents for unblocked [P] tasks in a **single message** (auto-parallel):
   ```
-  Task("T003: Create UserService", subagent_type: "general-purpose",
+  Task("T003: Create UserService", subagent_type: "afc-impl-worker",
+    isolation: "worktree",
     prompt: "Implement the following task:\n\n## Task\n{description}\n\n## Related Files\n{file paths}\n\n## Plan Context\n{relevant section from plan.md}\n\n## Rules\n- {config.code_style}\n- {config.architecture}\n- Follow CLAUDE.md and afc.config.md")
-  Task("T004: Create AuthService", subagent_type: "general-purpose", ...)
+  Task("T004: Create AuthService", subagent_type: "afc-impl-worker", isolation: "worktree", ...)
   ```
 - Read each agent's returned output and verify completion
 - Mark TaskUpdate(status: "completed") for each finished task
@@ -115,7 +116,8 @@ When a phase has more than 5 parallelizable tasks, use the **self-organizing swa
 2. **Set up dependency graph**: Use TaskUpdate(addBlockedBy) for every `depends:` declaration
 3. **Spawn N worker agents** (N = min(5, unblocked task count)):
    ```
-   Task("Swarm Worker 1", subagent_type: "general-purpose",
+   Task("Swarm Worker 1", subagent_type: "afc-impl-worker",
+     isolation: "worktree",
      prompt: "You are a swarm worker. Your job:
      1. Call TaskList to find available tasks (status: pending, no blockedBy, no owner)
      2. Claim one by calling TaskUpdate(taskId, status: in_progress, owner: worker-1)
@@ -187,7 +189,25 @@ After all tasks are complete:
 - **Pass**: output final report
 - **Fail**: attempt to fix errors (max 3 attempts)
 
-### 6. Final Output
+### 6. Implement Critic Loop
+
+After CI passes, run a convergence-based Critic Loop to verify design alignment before reporting completion.
+
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+
+**Critic Loop until convergence** (safety cap: 3):
+
+- **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change List. Flag any file modified that is NOT in the plan. Flag any planned file NOT modified. Provide "M of N files match" count.
+- **ARCHITECTURE**: Validate changed files against `{config.architecture}` rules (layer boundaries, naming conventions, import paths). Provide "N of M rules checked" count.
+- **CORRECTNESS**: Cross-check implemented changes against spec.md acceptance criteria (AC). Verify each AC has corresponding code. Provide "N of M AC verified" count.
+- **Adversarial 3-perspective** (mandatory each pass):
+  - Skeptic: "Which implementation assumption is most likely wrong?"
+  - Devil's Advocate: "How could this implementation be misused or fail unexpectedly?"
+  - Edge-case Hunter: "What input would cause this implementation to fail silently?"
+  - State one failure scenario per perspective. If realistic → FAIL + fix. If unrealistic → state quantitative rationale.
+- FAIL → auto-fix, re-run `{config.ci}`, and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+
+### 7. Final Output
 
 ```
 Implementation complete

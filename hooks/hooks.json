@@ -2,7 +2,7 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|compact",
+        "matcher": "startup|resume|compact|clear",
         "hooks": [
           {
             "type": "command",
@@ -203,6 +203,28 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-teammate-idle.sh\"",
             "statusMessage": "Checking teammate gate..."
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-worktree-create.sh\"",
+            "statusMessage": "Injecting pipeline context into worktree..."
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-worktree-remove.sh\"",
+            "statusMessage": "Archiving worktree results..."
           }
         ]
       }

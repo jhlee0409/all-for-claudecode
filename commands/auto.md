@@ -159,6 +159,7 @@ Execute `/afc:implement` logic inline with **dependency-aware orchestration**:
    TaskCreate({ subject: "T013: Move AudioVolumeControl", ... })
    TaskUpdate({ taskId: "T013", addBlockedBy: ["T011"] })  // if dependency exists
    → launch unblocked tasks as parallel Task() calls in a single message
+     (each with isolation: "worktree" and subagent_type: "afc-impl-worker")
    → read results → launch newly-unblocked → repeat until phase complete
    ```
 
@@ -167,9 +168,10 @@ Execute `/afc:implement` logic inline with **dependency-aware orchestration**:
    // 1. Register all phase tasks via TaskCreate
    // 2. Set up dependencies via TaskUpdate(addBlockedBy)
    // 3. Spawn N worker agents (N = min(5, unblocked count))
-   Task("Swarm Worker 1", subagent_type: "general-purpose",
+   Task("Swarm Worker 1", subagent_type: "afc-impl-worker",
+     isolation: "worktree",
      prompt: "Self-organizing worker: TaskList → claim → implement → complete → repeat until empty")
-   Task("Swarm Worker 2", ...)
+   Task("Swarm Worker 2", subagent_type: "afc-impl-worker", isolation: "worktree", ...)
    // 4. Workers self-balance — fast workers claim more tasks
    // 5. Read all worker results before proceeding to gate
    ```
@@ -179,8 +181,19 @@ Execute `/afc:implement` logic inline with **dependency-aware orchestration**:
 7. Real-time `[x]` updates in tasks.md
 8. After full completion, run `{config.ci}` final verification
    - On pass: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" ci-pass` (releases Stop Gate)
-9. **Implement retrospective**: if unexpected problems arose that weren't predicted in Plan, record in `.claude/afc/specs/{feature}/retrospective.md` (for memory update in Clean)
-10. Progress: `✓ 4/6 Implement complete ({completed}/{total} tasks, CI: ✓, Mini-Review: ✓, Checkpoint: ✓)`
+9. **Implement Critic Loop until convergence** (safety cap: 3, follow Critic Loop rules):
+   > **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+   - **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change List. Flag any file modified that is NOT in the plan. Flag any planned file NOT modified. Provide "M of N files match" count.
+   - **ARCHITECTURE**: Validate changed files against `{config.architecture}` rules (layer boundaries, naming conventions, import paths). Provide "N of M rules checked" count.
+   - **CORRECTNESS**: Cross-check implemented changes against spec.md acceptance criteria (AC). Verify each AC has corresponding code. Provide "N of M AC verified" count.
+   - **Adversarial 3-perspective** (mandatory each pass):
+     - Skeptic: "Which implementation assumption is most likely wrong?"
+     - Devil's Advocate: "How could this implementation be misused or fail unexpectedly?"
+     - Edge-case Hunter: "What input would cause this implementation to fail silently?"
+     - State one failure scenario per perspective. If realistic → FAIL + fix. If unrealistic → state quantitative rationale.
+   - FAIL → auto-fix, re-run `{config.ci}`, and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+10. **Implement retrospective**: if unexpected problems arose that weren't predicted in Plan, record in `.claude/afc/specs/{feature}/retrospective.md` (for memory update in Clean)
+11. Progress: `✓ 4/6 Implement complete ({completed}/{total} tasks, CI: ✓, Critic: converged ({N} passes, {M} fixes, {E} escalations), Checkpoint: ✓)`
 
 ### Phase 5: Review (5/6)
 
