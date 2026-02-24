@@ -108,7 +108,7 @@ Execute each phase in order. Choose the orchestration mode based on the number o
   ```
   Task("T003: Create UserService", subagent_type: "afc-impl-worker",
     isolation: "worktree",
-    prompt: "Implement the following task:\n\n## Task\n{description}\n\n## Related Files\n{file paths}\n\n## Plan Context\n{relevant section from plan.md}\n\n## Rules\n- {config.code_style}\n- {config.architecture}\n- Follow CLAUDE.md and afc.config.md")
+    prompt: "Implement the following task:\n\n## Task\n{description}\n\n## Related Files\n{file paths}\n\n## Plan Context\n{relevant section from plan.md}\n\n## Rules\n- {config.code_style}\n- {config.architecture}\n- Follow CLAUDE.md and afc.config.md\n\n## Context Budget\nReturn a summary of max 2000 characters. Include: files changed, key decisions, any issues encountered. Do not return full file contents.")
   Task("T004: Create AuthService", subagent_type: "afc-impl-worker", isolation: "worktree", ...)
   ```
 - Read each agent's returned output and verify completion
@@ -144,7 +144,10 @@ When a phase has more than 5 parallelizable tasks, use the **self-organizing swa
      ## Rules
      - {config.code_style} and {config.architecture}
      - Always read files before modifying
-     - Follow CLAUDE.md and afc.config.md")
+     - Follow CLAUDE.md and afc.config.md
+
+     ## Context Budget
+     Return a summary of max 2000 characters per task. Include: files changed, key decisions, any issues. Do not return full file contents.")
    ```
 4. **Wait for all workers to exit** — workers naturally terminate when the pool is empty
 5. **Verify**: check TaskList for any incomplete tasks → re-spawn workers if needed

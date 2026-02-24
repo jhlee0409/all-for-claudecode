@@ -73,9 +73,13 @@ Create `.claude/afc/specs/{feature-name}/spec.md`:
 **Priority rationale**: {why this order}
 **Independent testability**: {whether this story can be tested on its own}
 
-#### Acceptance Scenarios
+#### Acceptance Scenarios (GWT for user scenarios)
 - [ ] Given {precondition}, When {action}, Then {result}
 - [ ] Given {precondition}, When {action}, Then {result}
+
+#### System Requirements (EARS notation)
+- [ ] WHEN {trigger}, THE System SHALL {behavior}
+- [ ] WHILE {state}, THE System SHALL {behavior}
 
 ### US2: {story title} [P2]
 {same format}

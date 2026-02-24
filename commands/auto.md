@@ -72,6 +72,40 @@ If config file is missing:
    └─ Running fully automatically (pre-implementation gates run conditionally)
    ```
 
+### Phase 0.8: Size-Based Fast-Path Detection (conditional)
+
+**Trigger condition**: Evaluate `$ARGUMENTS` against ALL 3 criteria. Fast-path activates only when ALL are met:
+
+| Criterion | Check | Example |
+|-----------|-------|---------|
+| Trivial scope | Description explicitly mentions 1-2 specific files or a single-line fix | "fix typo in README", "update version in package.json" |
+| No script impact | Description does not reference `.sh` scripts, hooks, or pipeline logic | NOT: "fix the hook script" |
+| Low ambiguity | Clarify gate score < 2 (very clear, specific request) | "change 'foo' to 'bar' in config.md" |
+
+**If ALL 3 criteria met** (fast-path):
+1. Print: `⚡ Fast path detected — skipping spec/plan/tasks phases`
+2. Jump directly to **Fast-Path Execution** (see below)
+3. Skip Phases 0.5 through 3.7 entirely
+
+**If ANY criterion fails**: proceed to Phase 0.5 (full pipeline).
+
+**Fast-Path Execution** (implement → review → clean):
+1. Implement the change directly (no tasks.md, no plan.md)
+2. Run `{config.ci}` verification
+   - On fail: **abort fast-path**, restart with full pipeline: `⚠ Fast-path aborted — change is more complex than expected. Running full pipeline.`
+3. If change touches > 2 files OR modifies any `.sh` script: **abort fast-path**, restart with full pipeline
+4. `afc_state_checkpoint "fast-path"`
+5. Run `/afc:review` logic inline (mini-review only — single Critic pass)
+6. Run Phase 6 Clean logic (artifact cleanup, CI gate, pipeline flag release)
+7. Final output:
+   ```
+   Fast path complete: {feature}
+   ├─ Mode: ⚡ Fast path (spec/plan/tasks skipped)
+   ├─ Changed files: {N}
+   ├─ CI: ✓
+   └─ Review: mini-review passed
+   ```
+
 ### Phase 0.5: Auto-Clarify Gate (conditional)
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clarify`
@@ -91,7 +125,8 @@ If config file is missing:
 2. Present via AskUserQuestion with multiple-choice options
 3. Apply answers to refine `$ARGUMENTS` before proceeding to Spec
 4. If in full-auto mode and user prefers no interruption: auto-resolve with best-guess, tag with `[AUTO-RESOLVED: clarify]`, emit warning
-5. Progress: `✓ Clarify gate triggered ({N} questions, {M} auto-resolved)`
+5. **Checkpoint**: `afc_state_checkpoint "clarify"`
+6. Progress: `✓ Clarify gate triggered ({N} questions, {M} auto-resolved)`
 
 **If score < 3** (clear): skip silently, proceed to Phase 1.
 
@@ -114,7 +149,8 @@ Execute `/afc:spec` logic inline:
    - INDEPENDENCE: are implementation details (code, library names) absent from the spec?
    - EDGE_CASES: are at least 2 identified? Any missing boundary conditions?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-6. Progress: `✓ Spec complete (US: {N}, FR: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
+6. **Checkpoint**: `afc_state_checkpoint "spec"`
+7. Progress: `✓ Spec complete (US: {N}, FR: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
 ### Phase 2: Plan
 
@@ -139,7 +175,8 @@ Execute `/afc:plan` logic inline:
    - **ARCHITECTURE criterion**: explicitly describe import paths for moved/created files and pre-validate against `{config.architecture}` rules
    - Each pass must **explicitly explore what was missed in the previous pass** ("Pass 2: {X} was missed in pass 1. Further review: ...")
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-6. Progress: `✓ Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N})`
+6. **Checkpoint**: `afc_state_checkpoint "plan"`
+7. Progress: `✓ Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N})`
 
 ### Phase 3: Tasks
 
@@ -163,7 +200,8 @@ Execute `/afc:tasks` logic inline:
    - DEPENDENCIES: is the dependency graph a valid DAG? Do [P] tasks have no file overlaps?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 7. Create `.claude/afc/specs/{feature}/tasks.md`
-8. Progress: `✓ Tasks complete (tasks: {N}, parallel: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
+8. **Checkpoint**: `afc_state_checkpoint "tasks"`
+9. Progress: `✓ Tasks complete (tasks: {N}, parallel: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
 ### Phase 3.5: TDD Pre-Generation (conditional)
 
@@ -181,7 +219,8 @@ Execute `/afc:tasks` logic inline:
    {config.test}  # should show Pending examples, not errors
    ```
 3. Create `.claude/afc/specs/{feature}/tests-pre.md` listing generated test expectations per task
-4. Progress: `✓ TDD pre-gen ({N} skeletons generated, {M} skipped)`
+4. **Checkpoint**: `afc_state_checkpoint "test-pre-gen"`
+5. Progress: `✓ TDD pre-gen ({N} skeletons generated, {M} skipped)`
 
 **If not triggered** (no `.sh` tasks): skip silently.
 
@@ -203,7 +242,8 @@ Execute `/afc:tasks` logic inline:
    - Option 2: Acknowledge the cycle and proceed (mark as [DEFERRED])
 3. If high fan-out files are detected (>5 dependents): emit warning in pipeline output, add as RISK note in plan.md
 4. Save output to `.claude/afc/specs/{feature}/impact.md`
-5. Progress: `✓ Blast radius ({N} planned, {M} dependents, high fan-out: {list})`
+5. **Checkpoint**: `afc_state_checkpoint "blast-radius"`
+6. Progress: `✓ Blast radius ({N} planned, {M} dependents, high fan-out: {list})`
 
 **If not triggered** (< 3 files): skip silently (small changes have bounded blast radius).
 
@@ -234,7 +274,8 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
      - State one failure scenario per perspective. If realistic → FAIL + fix. If unrealistic → state quantitative rationale.
    - FAIL → auto-fix, re-run `{config.ci}`, and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 5. **Implement retrospective**: if unexpected problems arose that weren't predicted in Plan, record in `.claude/afc/specs/{feature}/retrospective.md` (for memory update in Clean)
-6. Progress: `✓ Implement complete ({completed}/{total} tasks, CI: ✓, Critic: converged ({N} passes, {M} fixes, {E} escalations), Checkpoint: ✓)`
+6. **Checkpoint**: `afc_state_checkpoint "implement"`
+7. Progress: `✓ Implement complete ({completed}/{total} tasks, CI: ✓, Critic: converged ({N} passes, {M} fixes, {E} escalations), Checkpoint: ✓)`
 
 ### Phase 5: Review
 
@@ -255,7 +296,8 @@ Execute `/afc:review` logic inline:
 6. **Handling SC shortfalls**:
    - Fixable → attempt auto-fix → re-run `{config.ci}` verification
    - Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
-7. Progress: `✓ Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
+7. **Checkpoint**: `afc_state_checkpoint "review"`
+8. Progress: `✓ Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
 
 ### Phase 6: Clean
 
@@ -313,7 +355,8 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - Change tracking log deleted
    - Safety tag removed (successful completion)
    - Phase rollback tags removed (handled automatically by pipeline end)
-9. Progress: `✓ Clean complete (deleted: {N}, dead code: {N}, CI: ✓)`
+9. **Checkpoint**: `afc_state_checkpoint "clean"`
+10. Progress: `✓ Clean complete (deleted: {N}, dead code: {N}, CI: ✓)`
 
 ### Final Output
 
