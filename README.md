@@ -6,91 +6,53 @@
 [![npm downloads](https://img.shields.io/npm/dm/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
 [![license](https://img.shields.io/github/license/jhlee0409/all-for-claudecode)](./LICENSE)
 [![test](https://img.shields.io/badge/tests-125%20passed-brightgreen)](#how-it-works)
-[![hooks](https://img.shields.io/badge/hooks-17%20events-blue)](#17-hook-events)
-[![commands](https://img.shields.io/badge/commands-18-orange)](#18-slash-commands)
-[![zero dependencies](https://img.shields.io/badge/dependencies-0-success)](#)
 
-> Zero-dependency automation pipeline for Claude Code. One command (`/afc:auto`) runs the entire cycle: write specs, design plans, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
-
-## What is all-for-claudecode?
-
-all-for-claudecode is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
-
-- **18 slash commands** for every phase of development
-- **17 hook events** with 3 handler types (shell scripts, LLM prompts, subagents)
-- **5 project presets** for popular stacks (Next.js, React SPA, Express API, Monorepo)
-- **Persistent memory agents** that learn across sessions
-- **Built-in CI gates** that physically prevent skipping quality checks
+> One command (`/afc:auto`) runs the entire cycle. Zero runtime dependencies — pure markdown commands + bash hook scripts.
 
 ## Quick Start
 
-### Option A: Inside Claude Code (`/plugin`)
-
-```
+```bash
+# Option A: Inside Claude Code
 /plugin marketplace add jhlee0409/all-for-claudecode
 /plugin install afc@all-for-claudecode
-```
 
-Or use the interactive UI: type `/plugin` → Manage → Add marketplace → `jhlee0409/all-for-claudecode` → Discover → install **afc**.
-
-### Option B: One-line install (via npx)
-
-```bash
+# Option B: npx
 npx all-for-claudecode
 ```
 
-Interactive installer — choose scope (user / project / local) and done.
-
-### Option C: Claude Code CLI
-
-```bash
-claude plugin marketplace add jhlee0409/all-for-claudecode
-claude plugin install afc@all-for-claudecode --scope user
-```
-
-### Then, inside Claude Code:
+Then:
 
 ```
 /afc:init                              # Detect your stack, generate config
 /afc:auto "Add user authentication"    # Run the full pipeline
 ```
 
-That's it. The pipeline will:
+The pipeline will:
 1. Write a feature spec with acceptance criteria
-2. Design an implementation plan with file change map and dependency graph
-3. Implement each task with CI verification (tasks auto-generated from plan)
-4. Run a code review with security scan
+2. Design an implementation plan with file change map
+3. Implement tasks with CI gates (auto task decomposition + parallel execution)
+4. Run code review with architecture/security agent analysis
 5. Clean up artifacts and prepare for commit
 
-## When to Use all-for-claudecode
-
-| Scenario | Without afc | With `/afc:auto` |
-|----------|-------------|-------------------|
-| Add a new feature | 5+ manual prompts, no quality checks | One command, full pipeline with CI gates |
-| Implement across 10+ files | Track changes manually, easy to miss files | Auto task decomposition + parallel execution |
-| Ensure code quality | Remember to run linter, hope for the best | CI gates physically block if checks fail |
-| Resume after session timeout | Re-explain everything from scratch | `/afc:resume` restores full context |
-| Security review | Manual or skip entirely | Persistent memory agent flags known patterns |
-
-**Use all-for-claudecode when you want consistent, repeatable development phases with quality enforcement. Use manual workflow for quick one-off tasks.**
-
-## Features
-
-### Full Auto Pipeline
+## How It Works
 
 ```
-/afc:auto "feature description"
-```
+/afc:auto "Add feature X"
 
-Runs all 5 phases automatically with **Critic Loop** quality checks at each gate:
-
-```
 Spec (1/5) → Plan (2/5) → Implement (3/5) → Review (4/5) → Clean (5/5)
+  │              │              │                │              │
+  │              │              │                │              └─ Artifact cleanup
+  │              │              │                └─ 8 perspectives + agent review
+  │              │              └─ Auto task decomposition, parallel execution, CI gates
+  │              └─ File change map, ADR recording, research persistence
+  └─ Acceptance criteria, pre-implementation gates
+
+17 hooks run automatically at each step.
+CI failure → debug-based RCA (not blind retry).
+Critic Loops verify quality at each gate until convergence.
 ```
 
-### 18 Slash Commands
-
-**User and model (unrestricted):**
+## 18 Slash Commands
 
 | Command | Description |
 |---|---|
@@ -99,14 +61,9 @@ Spec (1/5) → Plan (2/5) → Implement (3/5) → Review (4/5) → Clean (5/5)
 | `/afc:plan` | Design implementation plan with file change map |
 | `/afc:implement` | Execute code implementation with CI gates |
 | `/afc:test` | Test strategy planning and test writing |
-| `/afc:review` | Code review with security scanning |
+| `/afc:review` | Code review with architecture/security scanning |
 | `/afc:research` | Technical research with persistent storage |
 | `/afc:debug` | Bug diagnosis and fix |
-
-**User-only** (`disable-model-invocation: true`):
-
-| Command | Description |
-|---|---|
 | `/afc:init` | Project setup — detects stack and generates config |
 | `/afc:doctor` | Diagnose project health and plugin setup |
 | `/afc:architect` | Architecture analysis (persistent memory) |
@@ -114,16 +71,11 @@ Spec (1/5) → Plan (2/5) → Implement (3/5) → Review (4/5) → Clean (5/5)
 | `/afc:principles` | Project principles management |
 | `/afc:checkpoint` | Save session state |
 | `/afc:resume` | Restore session state |
-
-**Model-only** (`user-invocable: false`):
-
-| Command | Description |
-|---|---|
 | `/afc:tasks` | Task decomposition (auto-generated by implement) |
 | `/afc:analyze` | Verify artifact consistency |
 | `/afc:clarify` | Resolve spec ambiguities |
 
-### 17 Hook Events
+## 17 Hook Events
 
 Every hook fires automatically — no configuration needed after install.
 
@@ -134,7 +86,7 @@ Every hook fires automatically — no configuration needed after install.
 | `PreToolUse` | Blocks dangerous commands (`push --force`, `reset --hard`) |
 | `PostToolUse` | Tracks file changes + auto-formats code |
 | `SubagentStart` | Injects pipeline context into subagents |
-| `Stop` | CI gate (shell) + code completeness check (AI agent) |
+| `Stop` | CI gate (shell) + code completeness check (agent) |
 | `SessionEnd` | Warns about unfinished pipeline |
 | `PostToolUseFailure` | Diagnostic hints for known error patterns |
 | `Notification` | Desktop alerts (macOS/Linux) |
@@ -144,25 +96,32 @@ Every hook fires automatically — no configuration needed after install.
 | `PermissionRequest` | Auto-allows CI commands during implement/review |
 | `ConfigChange` | Audits/blocks settings changes during active pipeline |
 | `TeammateIdle` | Prevents Agent Teams idle during implement/review |
+| `WorktreeCreate` | Sets up worktree isolation for parallel workers |
+| `WorktreeRemove` | Cleans up worktree after worker completion |
 
-### 3 Hook Handler Types
+3 handler types: `command` (shell scripts, all 17 events), `prompt` (LLM single-turn, TaskCompleted), `agent` (subagent with tools, Stop).
 
-| Type | Description | Use Case |
-|---|---|---|
-| `command` | Shell script execution (deterministic) | All 15 events |
-| `prompt` | LLM single-turn evaluation (haiku) | TaskCompleted |
-| `agent` | Subagent with file access tools | Stop |
+## Persistent Memory Agents
 
-### Persistent Memory Agents
+| Agent | Role |
+|---|---|
+| `afc-architect` | Remembers ADR decisions and architecture patterns across sessions. Auto-invoked during Plan (ADR recording) and Review (architecture compliance). |
+| `afc-security` | Remembers vulnerability patterns and false positives across sessions. Auto-invoked during Review (security scanning). Runs in isolated worktree. |
+| `afc-impl-worker` | Parallel implementation worker. Receives pre-assigned tasks from orchestrator. Ephemeral (no memory). |
 
-Two custom agents that **learn across sessions**:
+## Task Orchestration
 
-| Agent | Role | Memory |
-|---|---|---|
-| `afc-architect` | Architecture analysis — remembers ADR decisions and patterns | `.claude/agent-memory/afc-architect/` |
-| `afc-security` | Security scan — remembers vulnerability patterns and false positives | `.claude/agent-memory/afc-security/` |
+The implement phase automatically selects execution strategy:
 
-### Project Presets
+| Parallel tasks in phase | Mode |
+|---|---|
+| 0 | Sequential — one task at a time |
+| 1–5 | Parallel Batch — concurrent Task() calls |
+| 6+ | Swarm — orchestrator pre-assigns tasks to worker agents (max 5) |
+
+Dependencies are tracked via DAG. CI gate + Mini-Review + Auto-Checkpoint run at each phase boundary.
+
+## Project Presets
 
 | Preset | Stack |
 |---|---|
@@ -172,68 +131,30 @@ Two custom agents that **learn across sessions**:
 | `express-api` | Express + TypeScript + Prisma + Jest |
 | `monorepo` | Turborepo + pnpm workspace |
 
-## How It Works
-
-```
-┌─────────────────────────────────────────────┐
-│  /afc:auto "Add feature X"              │
-├─────────────────────────────────────────────┤
-│  Phase 1: Spec      → Critic Loop → Gate ✓   │
-│  Phase 2: Plan      → Critic Loop → Gate ✓   │
-│  Phase 3: Implement → Tasks auto-gen → CI ✓  │
-│  Phase 4: Review    → 8 perspectives → Gate ✓│
-│  Phase 5: Clean     → Artifacts removed      │
-├─────────────────────────────────────────────┤
-│  15 hooks run automatically at each step    │
-│  Stop/TaskCompleted gates block if CI fails │
-└─────────────────────────────────────────────┘
-```
-
 ## Configuration
 
-Initialize your project:
-
-```bash
+```
 /afc:init
 ```
 
-This detects your tech stack and generates `.claude/afc.config.md` with:
-- CI/lint/test commands
-- Architecture style and layers
-- Framework-specific settings
-- Code style conventions
+Detects your tech stack and generates `.claude/afc.config.md` with CI/lint/test commands, architecture rules, framework settings, and code style conventions.
 
 ## FAQ
 
-### What is all-for-claudecode?
-A Claude Code plugin that automates the entire development cycle (spec → plan → implement → review → clean) through 18 slash commands and 17 hook events. It turns a feature description into working, reviewed code with one command.
-
-### How does it compare to manual Claude Code workflows?
-Instead of manually prompting each step, all-for-claudecode orchestrates the full cycle with built-in quality gates that physically prevent skipping CI or security checks. You describe the feature once, and the pipeline handles spec writing, implementation planning, code generation, and review automatically.
-
 ### Does it work with any project?
-Yes. Run `/afc:init` to auto-detect your stack, or use one of the 5 presets (Next.js, React SPA, Express API, Monorepo, or generic template). The plugin works with any language or framework that Claude Code supports.
+Yes. Run `/afc:init` to auto-detect your stack, or pick a preset.
 
 ### Does it require any dependencies?
-No. Zero runtime dependencies — pure markdown commands + bash hook scripts. Nothing to install beyond the plugin itself.
-
-### How do I install it?
-Inside Claude Code, run `/plugin marketplace add jhlee0409/all-for-claudecode` then `/plugin install afc@all-for-claudecode`. Alternatively, run `npx all-for-claudecode` from your terminal for a guided install.
-
-### What Claude Code version is required?
-Claude Code with plugin support (2025+). The plugin uses standard hooks, commands, and agents APIs.
-
-### How does task orchestration work?
-The plugin automatically selects the best execution strategy based on task count: sequential for simple tasks, parallel batch for 2-5 independent tasks, or swarm mode with multiple workers for 6+ tasks. Dependencies are tracked via a DAG (directed acyclic graph) so tasks execute in the correct order.
+No. Pure markdown commands + bash hook scripts.
 
 ### What happens if CI fails during the pipeline?
-The pipeline runs debug-based root cause analysis (not blind retry). It traces the error, forms a hypothesis, applies a targeted fix, and re-runs the check. After 3 failed attempts, it halts and reports the diagnosis to you.
+Debug-based RCA: traces the error, forms a hypothesis, applies a targeted fix. Halts after 3 failed attempts with full diagnosis.
 
-### Can I run individual phases instead of the full pipeline?
-Yes. Each phase has its own command (`/afc:spec`, `/afc:plan`, `/afc:implement`, `/afc:review`). Use `/afc:auto` for the full pipeline or run phases individually for more control.
+### Can I run individual phases?
+Yes. Each phase has its own command (`/afc:spec`, `/afc:plan`, `/afc:implement`, `/afc:review`). `/afc:auto` runs them all.
 
 ### What are Critic Loops?
-Critic Loops are convergence-based quality checks that run after each phase. They evaluate the output against specific criteria (completeness, feasibility, architecture compliance, etc.) and auto-fix issues until no more problems are found. This replaces fixed-pass reviews with intelligent, adaptive verification.
+Convergence-based quality checks after each phase. They evaluate output against criteria (completeness, feasibility, architecture compliance) and auto-fix issues until stable. 4 verdicts: PASS, FAIL, ESCALATE (asks user), DEFER.
 
 ## License
 
