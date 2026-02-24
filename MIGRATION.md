@@ -13,7 +13,7 @@
 | Command prefix | `/selfish:spec` | `/afc:spec` |
 | Script prefix | `selfish-*.sh` | `afc-*.sh` |
 | Agent names | `selfish-architect`, `selfish-security` | `afc-architect`, `afc-security` |
-| State files | `.selfish-active`, `.selfish-phase`, etc. | `.afc-active`, `.afc-phase`, etc. |
+| State files | `.selfish-active`, `.selfish-phase`, etc. | `.claude/.afc-state.json` (single consolidated file) |
 | Config file | `selfish.config.md` | `afc.config.md` |
 | Git tags | `selfish/pre-auto` | `afc/pre-auto` |
 | CLAUDE.md block | `SELFISH:START` / `SELFISH:END` | `AFC:START` / `AFC:END` |
@@ -55,15 +55,18 @@ Replace the `SELFISH:START` / `SELFISH:END` block in your project's CLAUDE.md:
 
 Or simply run `/afc:init` to regenerate the block.
 
-#### 4. Rename state files (if pipeline was active)
+#### 4. Migrate state files (if pipeline was active)
+
+v2.0 consolidated multiple state flag files (`.selfish-active`, `.selfish-phase`, `.selfish-ci-passed`, `.selfish-changes.log`) into a single JSON file (`.claude/.afc-state.json`). If you had an active pipeline:
 
 ```bash
 cd .claude
-for f in .selfish-*; do
-  [ -f "$f" ] && mv "$f" "${f/.selfish-/.afc-}"
-done
+# Remove old individual flag files
+rm -f .selfish-active .selfish-phase .selfish-ci-passed .selfish-changes.log
+# Rename directories
 [ -d selfish ] && mv selfish afc
 [ -f selfish.config.md ] && mv selfish.config.md afc.config.md
+# Note: .afc-state.json is created automatically on next pipeline start
 ```
 
 #### 5. Update git tags
@@ -159,9 +162,9 @@ For new projects, you can auto-generate it with `/afc:init`.
 ## What Stays the Same
 
 - `.claude/afc.config.md` file format and path
-- `.afc-*` state file paths
 - `git tag afc/pre-*` safety tags
 - Internal logic of hook scripts
+- Pipeline state concept (now consolidated in `.claude/.afc-state.json`)
 
 ## What Changed (v1.2.2+)
 

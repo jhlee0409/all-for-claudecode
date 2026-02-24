@@ -9,11 +9,11 @@ After each Phase completes, perform **3-step verification** sequentially:
 ```
 
 - **Pass**: proceed to Step 2
-- **Fail**:
-  1. Analyze error messages
-  2. Fix relevant task files
-  3. Re-verify
-  4. After 3 failures → report to user and **halt**
+- **Fail** — use debug-based RCA (not blind retry):
+  1. Execute `/afc:debug` logic with the CI error output as input
+  2. Debug performs RCA: error trace → data flow → hypothesis → targeted fix
+  3. Re-run `{config.gate}` after fix
+  4. After 3 debug-fix cycles → report to user with diagnosis details and **halt**
 
 ## Step 2. Mini-Review
 

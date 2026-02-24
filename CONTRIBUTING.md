@@ -407,7 +407,7 @@ The implement phase uses 3-tier orchestration:
 |------|---------|----------------|
 | Sequential | 0 [P] tasks | Direct execution |
 | Parallel Batch | 1–5 [P] tasks | TaskCreate + addBlockedBy + parallel Task() calls |
-| Swarm | 6+ [P] tasks | Task pool + self-organizing worker agents |
+| Swarm | 6+ [P] tasks | Orchestrator pre-assigns tasks to worker agents (no self-claiming) |
 
 To modify:
 - Batch/swarm thresholds: edit `commands/implement.md` Mode Selection table

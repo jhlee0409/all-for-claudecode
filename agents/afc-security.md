@@ -18,6 +18,17 @@ skills:
 
 You are a security scanning agent for the current project.
 
+## Pipeline Integration
+
+This agent is invoked automatically during the auto pipeline:
+
+### Review Phase — Security Review (Perspective C)
+- **Input**: List of changed files from `git diff`
+- **Task**: Scan for security vulnerabilities, filter known false positives from memory
+- **Output**: Findings as `severity (Critical/Warning/Info), file:line, issue, suggested fix`
+- Findings are merged into the consolidated review report
+- Check for: command injection, path traversal, unvalidated input, sensitive data exposure, shell escaping issues
+
 ## Reference Documents
 
 Before performing scans, read these shared reference documents:

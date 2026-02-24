@@ -5,21 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-02-24
+## [2.0.0] - 2026-02-25
 
 ### Breaking Changes
 - **Rebrand**: `selfish-pipeline` → `all-for-claudecode`
-- Package name: `selfish-pipeline` → `all-for-claudecode`
-- Plugin name: `selfish` → `afc`
-- Command prefix: `/selfish:*` → `/afc:*`
-- Script prefix: `selfish-*.sh` → `afc-*.sh`
-- Agent names: `selfish-architect` / `selfish-security` → `afc-architect` / `afc-security`
-- State files: `.selfish-*` → `.afc-*`
-- Config template: `selfish.config.*.md` → `afc.config.*.md`
+- **Pipeline restructured from 6-phase to 5-phase**: tasks phase absorbed into implement (tasks auto-generated from plan.md File Change Map)
+- **State file consolidation**: 4 individual flag files (`.afc-active`, `.afc-phase`, `.afc-ci-passed`, `.afc-changes.log`) → single `.claude/.afc-state.json` with shared library (`scripts/afc-state.sh`)
+
+### Added
+- **Cross-artifact validation**: CROSS_CONSISTENCY criterion in Plan critic (spec↔plan 5-point checklist), SPEC_ALIGNMENT criterion in Review critic (spec↔implementation verification)
+- **Specialist agent integration in Review**: afc-architect and afc-security agents invoked during Review phase for persistent-memory-aware architecture and security analysis
+- **ADR recording via architect agent**: Plan phase records architecture decisions to architect agent's persistent memory for cross-session conflict detection
+- **Research persistence**: Research findings saved to `.claude/afc/memory/research/` for cross-session reuse
+- **Debug-based RCA on CI failure**: Replaces blind "retry 3 times" with `/afc:debug` logic (error trace → hypothesis → targeted fix)
+- **Acceptance test generation**: Post-implementation auto-generation of test cases from spec GWT (Given/When/Then) acceptance scenarios
+- **Implementation Context**: <500 word section in plan.md injected into every sub-agent prompt during implement
+- **Session context preservation**: `save_session_context` at Plan, `load_session_context` at Implement for compaction resilience
+- **Pre-implementation gates**: Auto-Clarify (Phase 0.5), TDD pre-gen (Step 3.2), Blast Radius analysis (Step 3.3)
+- **Request Triage (Phase 0.3)**: Necessity, scope, and proportionality checks before pipeline investment
+- **Fast-path detection (Phase 0.8)**: Trivial changes skip spec/plan phases
+- **JSON Schema validation**: `schemas/` directory with hooks.schema.json, plugin.schema.json, marketplace.schema.json
+- **Error message standardization**: All stderr uses `[afc:{context}]` prefix
+- **Node.js validators**: `afc-dag-validate.mjs`, `afc-parallel-validate.mjs` (bash fallback retained)
+- **Review expanded to 8 perspectives**: Added Reusability (F), Maintainability (G), Extensibility (H)
+- **Quality report JSON**: Structured pipeline metrics in `.claude/afc/memory/quality-history/`
+- **Orchestrator pre-assignment**: Swarm workers receive pre-assigned tasks (replaces self-claiming to avoid race conditions)
+
+### Changed
+- Pipeline phases: `spec → plan → tasks → implement → review → clean` → `spec → plan → implement → review → clean`
+- Critic safety cap unified to 5 across all phases
+- Swarm mode uses orchestrator pre-assignment instead of self-claiming (avoids TaskUpdate race conditions)
+- Test suite: migrated from custom bash tests to ShellSpec 0.28.1 BDD framework (125 examples)
+- README test badge: 161 → 125 (ShellSpec migration)
+
+### Renamed (Rebrand)
+- Package: `selfish-pipeline` → `all-for-claudecode`
+- Plugin: `selfish` → `afc`, prefix: `/selfish:*` → `/afc:*`
+- Scripts: `selfish-*.sh` → `afc-*.sh`
+- Agents: `selfish-architect` / `selfish-security` → `afc-architect` / `afc-security`
+- Config: `selfish.config.*.md` → `afc.config.*.md`
 - Git tags: `selfish/pre-*` → `afc/pre-*`
-- CLAUDE.md block markers: `SELFISH:START/END` → `AFC:START/END`
-- Artifact directory: `.claude/selfish/` → `.claude/afc/`
-- GitHub repository: `jhlee0409/selfish-pipeline` → `jhlee0409/all-for-claudecode`
+- CLAUDE.md markers: `SELFISH:START/END` → `AFC:START/END`
+- Artifact dir: `.claude/selfish/` → `.claude/afc/`
+- GitHub: `jhlee0409/selfish-pipeline` → `jhlee0409/all-for-claudecode`
 
 ### Migration
 See [MIGRATION.md](MIGRATION.md) for step-by-step upgrade guide from v1.x.

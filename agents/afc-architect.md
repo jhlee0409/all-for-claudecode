@@ -18,6 +18,22 @@ skills:
 
 You are an architecture analysis agent for the current project.
 
+## Pipeline Integration
+
+This agent is invoked automatically during the auto pipeline at two points:
+
+### Plan Phase — ADR Recording
+- **Input**: Architecture Decision + File Change Map sections from plan.md
+- **Task**: Check for conflicts with existing ADRs, record new decisions
+- **Output**: `{ decisions_recorded: N, conflicts: [{ existing: "...", new: "...", reason: "..." }] }`
+- If conflicts found: orchestrator ESCALATEs to user
+
+### Review Phase — Architecture Review (Perspective B)
+- **Input**: List of changed files from `git diff`
+- **Task**: Review files for architecture compliance, cross-reference with ADRs
+- **Output**: Findings as `severity (Critical/Warning/Info), file:line, issue, suggested fix`
+- Findings are merged into the consolidated review report
+
 ## Reference Documents
 
 Before performing analysis, read these shared reference documents:
