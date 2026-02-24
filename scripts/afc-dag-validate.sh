@@ -77,8 +77,7 @@ fi
 # ------------------------------------------------------------------
 
 COLOR_DIR="$TMPDIR_WORK/colors"
-PARENT_DIR="$TMPDIR_WORK/parents"
-mkdir -p "$COLOR_DIR" "$PARENT_DIR"
+mkdir -p "$COLOR_DIR"
 
 # Initialize all nodes as WHITE (0)
 while IFS= read -r node; do
@@ -119,15 +118,7 @@ dfs_check() {
           if [ "$nb_color" = "1" ]; then
             # GRAY neighbor = cycle found
             CYCLE_FOUND=1
-            # Build cycle path
-            CYCLE_PATH="$neighbor → $current"
-            # Trace back through stack
-            while IFS= read -r stack_node; do
-              if [ "$stack_node" = "$neighbor" ]; then
-                break
-              fi
-            done < "$stack_file"
-            CYCLE_PATH="CYCLE: $CYCLE_PATH → $neighbor"
+            CYCLE_PATH="CYCLE: $neighbor → $current → $neighbor"
             return
           elif [ "$nb_color" = "0" ]; then
             printf '%s\n' "$neighbor" >> "$stack_file"
