@@ -1,4 +1,4 @@
-# Contributing to All-for-ClaudeCode
+# Contributing to all-for-claudecode
 
 Development guidelines for adding features, modifying behavior, upgrading, and maintaining the all-for-claudecode project.
 
@@ -106,7 +106,7 @@ Follow this structure:
 
 - **CLAUDE.md**: Update command count (the `N markdown files` figure in Architecture section)
 - **commands/auto.md**: If the new command is a pipeline phase, add it to the auto pipeline
-- **Global CLAUDE.md AFC block** (in `commands/init.md` template): Add to skill routing table if user-invocable
+- **Global CLAUDE.md all-for-claudecode block** (in `commands/init.md` template): Add to skill routing table if user-invocable
 - **Tests**: Add test cases if the command involves hooks or scripts
 
 ### Naming conventions
@@ -240,7 +240,7 @@ Key testing patterns:
 Create `templates/afc.config.{name}.md` following the structure:
 
 ```markdown
-# AFC Configuration
+# all-for-claudecode Configuration
 
 > This file defines project-specific settings for the afc command system.
 
@@ -380,7 +380,7 @@ The pipeline is `spec → plan → tasks → implement → review → clean`.
    - Add `afc-pipeline-manage.sh phase {name}` call
 3. Update `scripts/afc-pipeline-manage.sh` to handle the new phase name
 4. Update `CLAUDE.md` pipeline description
-5. Update the AFC block template in `commands/init.md`
+5. Update the all-for-claudecode block template in `commands/init.md`
 
 ### Modifying orchestration (implement phase)
 

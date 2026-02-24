@@ -40,7 +40,7 @@ function run(cmd) {
 
 async function main() {
   console.log();
-  console.log("  All-for-ClaudeCode — Claude Code Plugin Installer");
+  console.log("  all-for-claudecode — Claude Code Plugin Installer");
   console.log("  ===================================================");
   console.log();
 

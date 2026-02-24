@@ -26,7 +26,12 @@ model: haiku
 
 ## Config Load
 
-**Must** read `.claude/afc.config.md` first. Stop if the config file is not present.
+**Always** read `.claude/afc.config.md` first.
+
+If config file is missing:
+1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
+2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
+3. If user declines → **abort**
 
 ## Execution Steps
 

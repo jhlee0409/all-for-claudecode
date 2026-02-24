@@ -76,7 +76,7 @@ See [MIGRATION.md](MIGRATION.md) for step-by-step upgrade guide from v1.x.
 - CONTRIBUTING.md updated: hook protocol table, script template, quick reference
 - README.md: test badge anchor fix, badge count update
 - `.claude/rules/commands.md`: model assignment lists updated (doctor, test added)
-- Version sync now includes `commands/init.md` AFC block (4-file sync)
+- Version sync now includes `commands/init.md` all-for-claudecode block (4-file sync)
 
 ## [1.1.0] - 2026-02-20
 

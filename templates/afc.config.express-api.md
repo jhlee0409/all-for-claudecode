@@ -1,4 +1,4 @@
-# AFC Configuration
+# all-for-claudecode Configuration
 
 > This file defines project-specific settings for the afc command system.
 > All afc commands reference this file to determine project-specific behavior.

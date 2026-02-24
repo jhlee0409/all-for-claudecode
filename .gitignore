@@ -3,10 +3,10 @@
 node_modules/
 *.tgz
 
-# AFC pipeline state files (runtime artifacts)
+# All-for-ClaudeCode pipeline state files (runtime artifacts)
 .claude/.afc-*
 
-# AFC pipeline artifacts (specs, memory, config)
+# All-for-ClaudeCode pipeline artifacts (specs, memory, config)
 .claude/afc/
 .claude/afc.config.md
 .claude/agent-memory/

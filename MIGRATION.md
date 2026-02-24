@@ -2,7 +2,7 @@
 
 ## v2.0 — Rebrand: selfish-pipeline → all-for-claudecode
 
-> All-for-ClaudeCode v2.0 renames the package, plugin prefix, scripts, agents, and state files from `selfish` to `afc`.
+> all-for-claudecode v2.0 renames the package, plugin prefix, scripts, agents, and state files from `selfish` to `afc`.
 
 ### What Changed
 

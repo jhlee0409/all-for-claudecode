@@ -16,7 +16,7 @@ model: sonnet
 
 ## Config Load
 
-**Must** read `.claude/afc.config.md` first. Stop if the config file is not present.
+**Must** read `.claude/afc.config.md` first. If the config file is not present, print "`.claude/afc.config.md` not found. Run `/afc:init` first." then **abort**.
 
 ## Execution Steps
 

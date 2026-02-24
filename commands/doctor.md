@@ -58,10 +58,10 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| Global CLAUDE.md exists | Read `~/.claude/CLAUDE.md` | File exists | ⚠ Warning: no global CLAUDE.md. All-for-ClaudeCode skills won't auto-trigger from intent. Fix: run `/afc:init` |
-| AFC block present | Grep for `<!-- AFC:START -->` and `<!-- AFC:END -->` in `~/.claude/CLAUDE.md` | Both markers found | Fix: run `/afc:init` to inject AFC block |
-| AFC block version | Extract version from `<!-- AFC:VERSION:X.Y.Z -->` in CLAUDE.md. Then read `${CLAUDE_PLUGIN_ROOT}/package.json` to get the actual plugin version. Compare the two. | Block version ≥ plugin version | ⚠ Warning: AFC block is outdated (found {block_version}, current {plugin_version}). Fix: run `/afc:init` to update |
-| No conflicting routing | Grep for conflicting agent patterns (`executor`, `deep-executor`, `debugger`, `code-reviewer`) outside AFC block that could intercept afc intents | No conflicts or conflicts are inside other tool blocks | ⚠ Warning: found agent routing that may conflict with afc skills. Review `~/.claude/CLAUDE.md` |
+| Global CLAUDE.md exists | Read `~/.claude/CLAUDE.md` | File exists | ⚠ Warning: no global CLAUDE.md. all-for-claudecode skills won't auto-trigger from intent. Fix: run `/afc:init` |
+| all-for-claudecode block present | Grep for `<!-- AFC:START -->` and `<!-- AFC:END -->` in `~/.claude/CLAUDE.md` | Both markers found | Fix: run `/afc:init` to inject all-for-claudecode block |
+| all-for-claudecode block version | Extract version from `<!-- AFC:VERSION:X.Y.Z -->` in CLAUDE.md. Then read `${CLAUDE_PLUGIN_ROOT}/package.json` to get the actual plugin version. Compare the two. | Block version ≥ plugin version | ⚠ Warning: all-for-claudecode block is outdated (found {block_version}, current {plugin_version}). Fix: run `/afc:init` to update |
+| No conflicting routing | Grep for conflicting agent patterns (`executor`, `deep-executor`, `debugger`, `code-reviewer`) outside all-for-claudecode block that could intercept afc intents | No conflicts or conflicts are inside other tool blocks | ⚠ Warning: found agent routing that may conflict with afc skills. Review `~/.claude/CLAUDE.md` |
 
 ### Category 4: Legacy Migration (v1.x → v2.0)
 
@@ -69,7 +69,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| No legacy CLAUDE.md block | Grep `~/.claude/CLAUDE.md` for `<!-- SELFISH:START -->` | Marker not found | ⚠ Warning: legacy `SELFISH:START` block found in `~/.claude/CLAUDE.md`. Fix: run `/afc:init` (will replace with AFC block) |
+| No legacy CLAUDE.md block | Grep `~/.claude/CLAUDE.md` for `<!-- SELFISH:START -->` | Marker not found | ⚠ Warning: legacy `SELFISH:START` block found in `~/.claude/CLAUDE.md`. Fix: run `/afc:init` (will replace with all-for-claudecode block) |
 | No legacy config file | Check `.claude/selfish.config.md` | File does not exist | ⚠ Warning: legacy config `.claude/selfish.config.md` found. Fix: `mv .claude/selfish.config.md .claude/afc.config.md` |
 | No legacy state files | Glob `.claude/.selfish-*` | No files found | ⚠ Warning: legacy state files `.claude/.selfish-*` found. Fix: `cd .claude && for f in .selfish-*; do mv "$f" "${f/.selfish-/.afc-}"; done` |
 | No legacy artifact dir | Check `.claude/selfish/` directory | Directory does not exist | ⚠ Warning: legacy artifact directory `.claude/selfish/` found. Fix: `mv .claude/selfish .claude/afc` |
@@ -108,7 +108,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 1. Print header:
    ```
-   All-for-ClaudeCode Doctor
+   all-for-claudecode Doctor
    =======================
    ```
 
@@ -133,7 +133,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 ## Example Output
 
 ```
-All-for-ClaudeCode Doctor
+all-for-claudecode Doctor
 =======================
 
 Environment
@@ -149,8 +149,8 @@ Project Config
 
 CLAUDE.md Integration
   ✓ Global ~/.claude/CLAUDE.md exists
-  ✓ AFC block present
-  ⚠ AFC block version outdated (1.0.0 → 1.1.0)
+  ✓ all-for-claudecode block present
+  ⚠ all-for-claudecode block version outdated (1.0.0 → 1.1.0)
     Fix: /afc:init
   ✓ No conflicting routing
 

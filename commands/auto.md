@@ -28,7 +28,10 @@ argument-hint: "[feature description in natural language]"
 - `{config.risks}` — project-specific risk patterns
 - `{config.mini_review}` — Mini-Review checklist items
 
-If config file is missing: print "`.claude/afc.config.md` not found. Create project config with `/afc:init`." then **abort**.
+If config file is missing:
+1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
+2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
+3. If user declines → **abort**
 
 ---
 

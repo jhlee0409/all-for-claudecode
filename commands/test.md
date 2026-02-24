@@ -19,7 +19,13 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/afc.config.md` first. Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first.
+
+If config file is missing:
+1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
+2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
+3. If user declines → **abort**
+
 Values used from config:
 - `{config.testing}` — test framework (jest, vitest, playwright, etc.)
 - `{config.architecture}` — architecture pattern

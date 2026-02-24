@@ -113,11 +113,11 @@ Analyze project structure and auto-infer configuration:
 
 Read `~/.claude/CLAUDE.md` and analyze in the following order.
 
-#### Step 1. Check for Existing AFC or Legacy SELFISH Block
+#### Step 1. Check for Existing all-for-claudecode or Legacy SELFISH Block
 
 Check for presence of `<!-- AFC:START -->` or `<!-- SELFISH:START -->` marker.
 - If `<!-- AFC:START -->` found: replace with latest version (proceed to Step 3)
-- If `<!-- SELFISH:START -->` found (legacy v1.x): remove the entire `SELFISH:START` ~ `SELFISH:END` block, then proceed to inject new AFC block at Step 4. Print: `Migrated: SELFISH block → AFC block in ~/.claude/CLAUDE.md`
+- If `<!-- SELFISH:START -->` found (legacy v1.x): remove the entire `SELFISH:START` ~ `SELFISH:END` block, then proceed to inject new all-for-claudecode block at Step 4. Print: `Migrated: SELFISH block → all-for-claudecode block in ~/.claude/CLAUDE.md`
 - If neither found: proceed to Step 2
 
 #### Step 2. Conflict Pattern Scan
@@ -145,8 +145,8 @@ Find these patterns:
 
 **D. Legacy Block Detection**
 Previous versions without markers or with old branding:
-- `## All-for-ClaudeCode Auto-Trigger Rules`
-- `## All-for-ClaudeCode Integration`
+- `## all-for-claudecode Auto-Trigger Rules`
+- `## all-for-claudecode Integration`
 - `<!-- SELFISH:START -->` ~ `<!-- SELFISH:END -->` (v1.x block — should have been caught in Step 1, but double-check here)
 - `<selfish-pipeline>` / `</selfish-pipeline>` XML tags
 
@@ -170,25 +170,25 @@ Ask user:
 > "Directives overlapping with afc were found. How would you like to proceed?"
 >
 > 1. **afc-exclusive mode** — Adds afc override comments to conflicting agent routing directives.
->    Does not modify other tools' marker block contents; covers them with override rules in the AFC block.
+>    Does not modify other tools' marker block contents; covers them with override rules in the all-for-claudecode block.
 > 2. **coexistence mode** — Ignores conflicts and adds only the afc block.
 >    Since it's at the end of the file, afc directives will likely take priority, but may be non-deterministic on conflict.
 > 3. **manual cleanup** — Shows only the current conflict list and stops.
 >    User manually cleans up CLAUDE.md then runs init again.
 
 Based on choice:
-- **Option 1**: AFC block includes explicit override rules (activates `<conflict-overrides>` section from base template)
-- **Option 2**: AFC block added without overrides (base template as-is)
+- **Option 1**: all-for-claudecode block includes explicit override rules (activates `<conflict-overrides>` section from base template)
+- **Option 2**: all-for-claudecode block added without overrides (base template as-is)
 - **Option 3**: Print conflict list only and abort without modifying CLAUDE.md
 
-#### Step 4. Inject AFC Block
+#### Step 4. Inject all-for-claudecode Block
 
 **Version resolution**: Read `${CLAUDE_PLUGIN_ROOT}/package.json` and extract the `"version"` field. Use this value as `{PLUGIN_VERSION}` in the template below.
 
 Add the following block at the **very end** of the file (later-positioned directives have higher priority).
 
-Replace existing AFC block if present, otherwise append.
-If legacy block (`## All-for-ClaudeCode Auto-Trigger Rules` etc.) exists, remove it then append.
+Replace existing all-for-claudecode block if present, otherwise append.
+If legacy block (`## all-for-claudecode Auto-Trigger Rules` etc.) exists, remove it then append.
 
 ```markdown
 <!-- AFC:START -->
@@ -226,7 +226,7 @@ spec → plan → tasks → implement → review → clean
 
 ## Override Rules
 
-NEVER use executor, deep-executor, debugger, planner, analyst, verifier, test-engineer, code-reviewer, quality-reviewer, style-reviewer, api-reviewer, security-reviewer, performance-reviewer for tasks that a afc skill covers above. ALWAYS invoke the afc skill instead.
+NEVER use executor, deep-executor, debugger, planner, analyst, verifier, test-engineer, code-reviewer, quality-reviewer, style-reviewer, api-reviewer, security-reviewer, performance-reviewer for tasks that an afc skill covers above. ALWAYS invoke the afc skill instead.
 </afc-pipeline>
 <!-- AFC:END -->
 ```
@@ -247,7 +247,7 @@ The following rules were auto-generated to resolve conflicts:
 ### 6. Final Output
 
 ```
-All-for-ClaudeCode initialization complete
+all-for-claudecode initialization complete
 ├─ Config: .claude/afc.config.md
 ├─ Framework: {detected framework}
 ├─ Architecture: {detected style}
@@ -266,7 +266,7 @@ All-for-ClaudeCode initialization complete
 - **Preset path**: Presets are loaded from the `templates/` directory inside the plugin.
 - **`.claude/` directory**: Created automatically if it does not exist.
 - **Global CLAUDE.md principles**:
-  - Never modify content outside the `<!-- AFC:START/END -->` markers
+  - Never modify content outside the `<!-- AFC:START/END -->` markers (the `AFC` prefix in markers is a compact technical identifier)
   - Never modify content inside other tools' marker blocks (`<!-- *:START/END -->`)
-  - Always place the AFC block at the very end of the file (ensures priority)
+  - Always place the all-for-claudecode block at the very end of the file (ensures priority)
   - Conflict resolution is handled only via override rules (do not delete or modify other blocks)

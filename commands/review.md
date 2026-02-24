@@ -28,7 +28,12 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above). Abort if config file is missing.
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above).
+
+If config file is missing:
+1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
+2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
+3. If user declines → **abort**
 
 ## Execution Steps
 

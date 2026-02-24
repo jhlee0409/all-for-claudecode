@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "Claude Code plugin that automates the full dev cycle — spec, plan, tasks, implement, review, clean. 18 commands, 15 hooks, 5 presets.",
   "bin": {
-    "all-for-claudecode": "./bin/cli.mjs"
+    "all-for-claudecode": "bin/cli.mjs"
   },
   "type": "module",
   "files": [
@@ -26,7 +26,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jhlee0409/all-for-claudecode"
+    "url": "git+https://github.com/jhlee0409/all-for-claudecode.git"
   },
   "homepage": "https://github.com/jhlee0409/all-for-claudecode#readme",
   "bugs": {

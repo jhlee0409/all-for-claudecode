@@ -1,4 +1,4 @@
-# All-for-ClaudeCode
+# all-for-claudecode
 
 **Claude Code plugin that automates the full development cycle — spec → plan → tasks → implement → review → clean.**
 
@@ -10,9 +10,9 @@
 
 > Zero-dependency automation pipeline for Claude Code. One command (`/afc:auto`) runs the entire cycle: write specs, design plans, break into tasks, implement code, review quality, and clean up — all with built-in CI gates and critic loops.
 
-## What is All-for-ClaudeCode?
+## What is all-for-claudecode?
 
-All-for-ClaudeCode is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
+all-for-claudecode is a **Claude Code plugin** that transforms your development workflow into a fully automated pipeline. Instead of manually prompting Claude through each development phase, you run a single command and the pipeline handles everything — from writing feature specifications to final code review.
 
 - **18 slash commands** for every phase of development
 - **15 hook events** with 3 handler types (shell scripts, LLM prompts, subagents)
