@@ -39,6 +39,32 @@ Describe "afc-pipeline-manage.sh"
       The output should include "Phase: plan"
       The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "plan"
     End
+
+    Context "new phase names"
+      It "accepts clarify phase"
+        When run script scripts/afc-pipeline-manage.sh phase clarify
+        The status should eq 0
+        The output should include "Phase: clarify"
+      End
+
+      It "accepts test-pre-gen phase"
+        When run script scripts/afc-pipeline-manage.sh phase test-pre-gen
+        The status should eq 0
+        The output should include "Phase: test-pre-gen"
+      End
+
+      It "accepts blast-radius phase"
+        When run script scripts/afc-pipeline-manage.sh phase blast-radius
+        The status should eq 0
+        The output should include "Phase: blast-radius"
+      End
+
+      It "rejects invalid phase name"
+        When run script scripts/afc-pipeline-manage.sh phase invalid-name
+        The status should eq 1
+        The stderr should include "Invalid phase"
+      End
+    End
   End
 
   Context "end subcommand"

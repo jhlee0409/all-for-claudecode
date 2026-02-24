@@ -24,7 +24,7 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 - **agents/** — 3 subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
 - **hooks/hooks.json** — Declares 17 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 4 hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
-- **scripts/** — 23 bash scripts + 2 Node.js ESM validators (.mjs) + 1 shared state library (afc-state.sh). Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
+- **scripts/** — 25 bash scripts + 2 Node.js ESM validators (.mjs) + 1 shared state library (afc-state.sh). Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
 - **templates/** — 5 project preset configs (nextjs-fsd, react-spa, express-api, monorepo, template)
 - **bin/cli.mjs** — ESM CLI entry point (install helper)

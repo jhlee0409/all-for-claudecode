@@ -189,6 +189,33 @@ afc_state_ci_pass() {
   afc_state_write "ciPassedAt" "$now"
 }
 
+# Record a phase checkpoint with git SHA
+# Usage: afc_state_checkpoint <phase>
+afc_state_checkpoint() {
+  local phase="$1"
+  if [ ! -f "$_AFC_STATE_FILE" ]; then
+    return 1
+  fi
+  local git_sha=""
+  if cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null; then
+    git_sha=$(git rev-parse --short HEAD 2>/dev/null || echo "")
+  fi
+  local now
+  now=$(date +%s)
+  if command -v jq >/dev/null 2>&1; then
+    local tmp
+    tmp=$(mktemp)
+    if jq --arg p "$phase" --arg s "$git_sha" --argjson t "$now" \
+      '.phaseCheckpoints = ((.phaseCheckpoints // []) + [{"phase": $p, "gitSha": $s, "timestamp": $t}])' \
+      "$_AFC_STATE_FILE" > "$tmp" 2>/dev/null; then
+      mv "$tmp" "$_AFC_STATE_FILE"
+    else
+      rm -f "$tmp"
+    fi
+  fi
+  # No sed fallback — phaseCheckpoints is array-typed, too complex for sed
+}
+
 # Legacy fallback: check if old flag files exist
 # Returns: 0 if legacy state found, 1 if not
 # Side effect: sets FEATURE and PHASE variables

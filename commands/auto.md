@@ -6,8 +6,9 @@ argument-hint: "[feature description in natural language]"
 
 # /afc:auto — Full Auto Pipeline
 
-> Runs spec → plan → tasks → implement → review → clean fully automatically from a single feature description.
-> No intermediate confirmation. clarify/analyze are skipped. Critic Loop is performed automatically at each phase.
+> Runs clarify? → spec → plan → tasks → test-pre-gen? → blast-radius? → implement → review → clean fully automatically from a single feature description.
+> No intermediate confirmation. Critic Loop is performed automatically at each phase.
+> Pre-implementation gates (clarify, test-pre-gen, blast-radius) run conditionally based on input ambiguity and task composition.
 
 ## Arguments
 
@@ -67,11 +68,34 @@ If config file is missing:
 6. Start notification:
    ```
    Auto pipeline started: {feature}
-   ├─ 1/6 Spec → 2/6 Plan → 3/6 Tasks → 4/6 Implement → 5/6 Review → 6/6 Clean
-   └─ Running fully automatically (no intermediate confirmation)
+   ├─ Clarify? → Spec → Plan → Tasks → Test-Pre-Gen? → Blast-Radius? → Implement → Review → Clean
+   └─ Running fully automatically (pre-implementation gates run conditionally)
    ```
 
-### Phase 1: Spec (1/6)
+### Phase 0.5: Auto-Clarify Gate (conditional)
+
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clarify`
+
+**Trigger condition**: Score `$ARGUMENTS` on 5 ambiguity signals. If score >= 3, trigger clarification.
+
+| Signal | Detection | Example |
+|--------|-----------|---------|
+| Vague scope | No specific file, component, or module mentioned | "add caching" |
+| Missing quantifiers | No numbers, sizes, limits, or thresholds | "improve performance" |
+| Undefined entities | References to concepts not in the codebase | "integrate the new service" |
+| Unclear boundaries | No start/end conditions or scope limits | "refactor the system" |
+| Multiple interpretations | Ambiguous verbs or overloaded terms | "fix the pipeline" (which one?) |
+
+**If score >= 3** (ambiguous):
+1. Generate at most 3 clarification questions targeting the highest-signal areas
+2. Present via AskUserQuestion with multiple-choice options
+3. Apply answers to refine `$ARGUMENTS` before proceeding to Spec
+4. If in full-auto mode and user prefers no interruption: auto-resolve with best-guess, tag with `[AUTO-RESOLVED: clarify]`, emit warning
+5. Progress: `✓ Clarify gate triggered ({N} questions, {M} auto-resolved)`
+
+**If score < 3** (clear): skip silently, proceed to Phase 1.
+
+### Phase 1: Spec
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase spec`
 
@@ -79,7 +103,7 @@ Execute `/afc:spec` logic inline:
 
 1. Explore codebase for related code (Glob, Grep) — explore by `{config.architecture}` layer
 2. Create `.claude/afc/specs/{feature}/spec.md`
-3. `[NEEDS CLARIFICATION]` items are **auto-resolved with best-guess** (clarify skipped)
+3. `[NEEDS CLARIFICATION]` items are **auto-resolved with best-guess** (clarify skipped if Phase 0.5 already ran)
    - Tag auto-resolved items with `[AUTO-RESOLVED]`
 4. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
@@ -90,9 +114,9 @@ Execute `/afc:spec` logic inline:
    - INDEPENDENCE: are implementation details (code, library names) absent from the spec?
    - EDGE_CASES: are at least 2 identified? Any missing boundary conditions?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-6. Progress: `✓ 1/6 Spec complete (US: {N}, FR: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
+6. Progress: `✓ Spec complete (US: {N}, FR: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
-### Phase 2: Plan (2/6)
+### Phase 2: Plan
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase plan`
 
@@ -115,9 +139,9 @@ Execute `/afc:plan` logic inline:
    - **ARCHITECTURE criterion**: explicitly describe import paths for moved/created files and pre-validate against `{config.architecture}` rules
    - Each pass must **explicitly explore what was missed in the previous pass** ("Pass 2: {X} was missed in pass 1. Further review: ...")
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-6. Progress: `✓ 2/6 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N})`
+6. Progress: `✓ Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N})`
 
-### Phase 3: Tasks (3/6)
+### Phase 3: Tasks
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase tasks`
 
@@ -139,13 +163,57 @@ Execute `/afc:tasks` logic inline:
    - DEPENDENCIES: is the dependency graph a valid DAG? Do [P] tasks have no file overlaps?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 7. Create `.claude/afc/specs/{feature}/tasks.md`
-8. Progress: `✓ 3/6 Tasks complete (tasks: {N}, parallel: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
+8. Progress: `✓ Tasks complete (tasks: {N}, parallel: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
-### Phase 4: Implement (4/6)
+### Phase 3.5: TDD Pre-Generation (conditional)
+
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase test-pre-gen`
+
+**Trigger condition**: tasks.md contains at least 1 task targeting a `.sh` file in `scripts/`.
+
+**If triggered**:
+1. Run the test pre-generation script:
+   ```bash
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-test-pre-gen.sh" ".claude/afc/specs/{feature}/tasks.md" "spec/"
+   ```
+2. Review generated skeleton files — verify they are parseable:
+   ```bash
+   {config.test}  # should show Pending examples, not errors
+   ```
+3. Create `.claude/afc/specs/{feature}/tests-pre.md` listing generated test expectations per task
+4. Progress: `✓ TDD pre-gen ({N} skeletons generated, {M} skipped)`
+
+**If not triggered** (no `.sh` tasks): skip silently.
+
+**Note**: Generated tests contain `Pending` examples — implementation agents should replace these with real assertions as they implement each task. The `Pending` tests serve as acceptance criteria anchors.
+
+### Phase 3.7: Blast Radius Analysis (conditional)
+
+`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase blast-radius`
+
+**Trigger condition**: plan.md File Change Map lists >= 3 files to change.
+
+**If triggered**:
+1. Run the blast radius analysis:
+   ```bash
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-blast-radius.sh" ".claude/afc/specs/{feature}/plan.md" "${CLAUDE_PROJECT_DIR}"
+   ```
+2. If exit 1 (cycle detected): **ESCALATE** — present the cycle to user with options:
+   - Option 1: Refactor plan to break the cycle
+   - Option 2: Acknowledge the cycle and proceed (mark as [DEFERRED])
+3. If high fan-out files are detected (>5 dependents): emit warning in pipeline output, add as RISK note in plan.md
+4. Save output to `.claude/afc/specs/{feature}/impact.md`
+5. Progress: `✓ Blast radius ({N} planned, {M} dependents, high fan-out: {list})`
+
+**If not triggered** (< 3 files): skip silently (small changes have bounded blast radius).
+
+### Phase 4: Implement
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement`
 
 Execute `/afc:implement` logic inline — **follow all orchestration rules defined in `commands/implement.md`** (mode selection, batch/swarm execution, failure recovery, task execution pattern). The implement command is the single source of truth for orchestration details.
+
+**TDD integration** (if Phase 3.5 ran): When implementing tasks that have pre-generated test skeletons, replace `Pending` examples with real assertions as part of implementation. After each task, verify the corresponding test passes.
 
 **Auto-specific additions** (beyond implement.md):
 
@@ -166,9 +234,9 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
      - State one failure scenario per perspective. If realistic → FAIL + fix. If unrealistic → state quantitative rationale.
    - FAIL → auto-fix, re-run `{config.ci}`, and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 5. **Implement retrospective**: if unexpected problems arose that weren't predicted in Plan, record in `.claude/afc/specs/{feature}/retrospective.md` (for memory update in Clean)
-6. Progress: `✓ 4/6 Implement complete ({completed}/{total} tasks, CI: ✓, Critic: converged ({N} passes, {M} fixes, {E} escalations), Checkpoint: ✓)`
+6. Progress: `✓ Implement complete ({completed}/{total} tasks, CI: ✓, Critic: converged ({N} passes, {M} fixes, {E} escalations), Checkpoint: ✓)`
 
-### Phase 5: Review (5/6)
+### Phase 5: Review
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase review`
 
@@ -187,9 +255,9 @@ Execute `/afc:review` logic inline:
 6. **Handling SC shortfalls**:
    - Fixable → attempt auto-fix → re-run `{config.ci}` verification
    - Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
-7. Progress: `✓ 5/6 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
+7. Progress: `✓ Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
 
-### Phase 6: Clean (6/6)
+### Phase 6: Clean
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clean`
 
@@ -218,9 +286,12 @@ Artifact cleanup and codebase hygiene check after implementation and review:
        "feature": "{feature}",
        "date": "{YYYY-MM-DD}",
        "phases": {
+         "clarify": { "triggered": true/false, "questions": N, "auto_resolved": N },
          "spec": { "user_stories": N, "requirements": { "FR": N, "NFR": N }, "auto_resolved": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
          "plan": { "files_planned": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
          "tasks": { "total": N, "parallel": N, "phases": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
+         "test_pre_gen": { "triggered": true/false, "skeletons": N, "skipped": N },
+         "blast_radius": { "triggered": true/false, "planned_files": N, "dependents": N, "high_fan_out": N, "cycles": N },
          "implement": { "completed": N, "total": N, "ci_passes": N, "ci_failures": N },
          "review": { "critical": N, "warning": N, "info": N, "sc_shortfalls": N, "critic_passes": N, "critic_fixes": N, "escalations": N }
        },
@@ -242,15 +313,18 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - Change tracking log deleted
    - Safety tag removed (successful completion)
    - Phase rollback tags removed (handled automatically by pipeline end)
-9. Progress: `✓ 6/6 Clean complete (deleted: {N}, dead code: {N}, CI: ✓)`
+9. Progress: `✓ Clean complete (deleted: {N}, dead code: {N}, CI: ✓)`
 
 ### Final Output
 
 ```
 Auto pipeline complete: {feature}
+├─ Clarify: {triggered/skipped} ({N} questions, {M} auto-resolved)
 ├─ Spec: US {N}, FR {N}
 ├─ Plan: Critic converged ({N} passes, {M} fixes, {E} escalations), research {present/absent}
 ├─ Tasks: {total} (parallel {N})
+├─ TDD Pre-Gen: {triggered/skipped} ({N} skeletons)
+├─ Blast Radius: {triggered/skipped} ({N} planned, {M} dependents)
 ├─ Implement: {completed}/{total} tasks, CI ✓, Checkpoint ✓
 ├─ Review: Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N}
 ├─ Clean: {N} artifacts deleted, {N} dead code removed

@@ -31,6 +31,45 @@ Describe "afc-stop-gate.sh"
     End
   End
 
+  Context "when pipeline is active in clarify phase"
+    setup() {
+      setup_tmpdir TEST_DIR
+      setup_state_fixture "$TEST_DIR" "test-feature" "clarify"
+    }
+
+    It "exits 0 for clarify phase (no CI required)"
+      Data '{}'
+      When run script scripts/afc-stop-gate.sh
+      The status should eq 0
+    End
+  End
+
+  Context "when pipeline is active in test-pre-gen phase"
+    setup() {
+      setup_tmpdir TEST_DIR
+      setup_state_fixture "$TEST_DIR" "test-feature" "test-pre-gen"
+    }
+
+    It "exits 0 for test-pre-gen phase (no CI required)"
+      Data '{}'
+      When run script scripts/afc-stop-gate.sh
+      The status should eq 0
+    End
+  End
+
+  Context "when pipeline is active in blast-radius phase"
+    setup() {
+      setup_tmpdir TEST_DIR
+      setup_state_fixture "$TEST_DIR" "test-feature" "blast-radius"
+    }
+
+    It "exits 0 for blast-radius phase (no CI required)"
+      Data '{}'
+      When run script scripts/afc-stop-gate.sh
+      The status should eq 0
+    End
+  End
+
   Context "when pipeline is active in implement phase with no CI passed"
     setup() {
       setup_tmpdir TEST_DIR

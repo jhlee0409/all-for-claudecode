@@ -74,13 +74,13 @@ case "$COMMAND" in
   phase)
     PHASE="${2:?Phase name required}"
     case "$PHASE" in
-      spec|plan|tasks|implement|review|clean)
+      spec|plan|tasks|implement|review|clean|clarify|test-pre-gen|blast-radius)
         afc_state_write "phase" "$PHASE"
         afc_state_invalidate_ci
         echo "Phase: $PHASE"
         ;;
       *)
-        printf "[afc:pipeline] Invalid phase: %s\n  → Valid phases: spec|plan|tasks|implement|review|clean\n" "$PHASE" >&2
+        printf "[afc:pipeline] Invalid phase: %s\n  → Valid phases: spec|plan|tasks|implement|review|clean|clarify|test-pre-gen|blast-radius\n" "$PHASE" >&2
         exit 1
         ;;
     esac

@@ -47,7 +47,7 @@ CURRENT_PHASE="$(afc_state_read phase || echo '')"
 
 # Spec/Plan/Tasks Phase (1-3) do not require CI -> pass through
 case "${CURRENT_PHASE:-}" in
-  spec|plan|tasks)
+  spec|plan|tasks|clarify|test-pre-gen|blast-radius)
     exit 0
     ;;
 esac
