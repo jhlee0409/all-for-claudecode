@@ -40,6 +40,14 @@ git tag -f afc/pre-implement
 - Tag is automatically overwritten on the next `/afc:implement` run
 - Skip if running inside `/afc:auto` pipeline (the `afc/pre-auto` tag already exists)
 
+**Standalone safety activation** (skip if inside `/afc:auto`):
+If no active pipeline state exists, activate it for the duration of this command:
+```bash
+"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" start {feature-name-from-tasks.md}
+"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement
+```
+This enables Stop Gate and CI Gate hooks during standalone implementation. Release on completion (Step 7) or failure rollback.
+
 ### 1. Load Context
 
 1. **Current branch** → `BRANCH_NAME`
@@ -255,6 +263,11 @@ After CI passes, run a convergence-based Critic Loop to verify design alignment 
 - FAIL → auto-fix, re-run `{config.ci}`, and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 
 ### 7. Final Output
+
+**Standalone cleanup** (if pipeline was activated in Step 0):
+```bash
+"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" end
+```
 
 ```
 Implementation complete

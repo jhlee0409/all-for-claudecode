@@ -44,6 +44,10 @@ If config file is missing:
 3. Read full **spec.md**
 4. Read **.claude/afc/memory/principles.md** (if present)
 5. Read **CLAUDE.md** project context
+6. **Memory loading** (skip gracefully if directories are empty or absent):
+   - **Quality history**: if `.claude/afc/memory/quality-history/*.json` exists, load recent entries and display trend: "Last {N} pipelines: avg critic_fixes {X}, avg ci_failures {Y}". Use trends to inform risk assessment.
+   - **Decisions**: if `.claude/afc/memory/decisions/` exists, load ADR entries and check for conflicts with the current feature's design direction.
+   - **Reviews**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns (same file/category appearing in 2+ reviews). Flag as known risk areas.
 
 ### 2. Clarification Check
 
@@ -195,6 +199,12 @@ Run the critic loop until convergence. Safety cap: 7 passes.
 **On DEFER**: record reason, mark criterion clean, continue.
 **On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
 **On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
+
+### 5.5. Auto-Checkpoint (standalone only)
+
+When not running inside `/afc:auto`, save progress for `/afc:resume`:
+- Write/update `.claude/afc/memory/checkpoint.md` with: branch, last commit, feature name, current phase (plan complete), next step (`/afc:tasks`)
+- Skip if running inside auto pipeline (auto manages its own checkpoints via phase transitions)
 
 ### 6. Final Output
 

@@ -119,6 +119,12 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 
 Every FR-*/NFR-* must be mapped to at least one task.
 
+### 5.5. Auto-Checkpoint (standalone only)
+
+When not running inside `/afc:auto`, save progress for `/afc:resume`:
+- Write/update `.claude/afc/memory/checkpoint.md` with: branch, last commit, feature name, current phase (tasks complete), task count ({total} tasks, {parallel} parallel), next step (`/afc:implement`)
+- Skip if running inside auto pipeline (auto manages its own checkpoints via phase transitions)
+
 ### 6. Final Output
 
 Save to `.claude/afc/specs/{feature}/tasks.md`, then:
