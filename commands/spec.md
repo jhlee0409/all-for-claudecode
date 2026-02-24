@@ -194,7 +194,7 @@ Spec generated
 ├─ Research: {N} external references researched / skipped (all internal)
 ├─ Clarified: {N} items resolved inline / {M} deferred
 ├─ Unresolved: {[NEEDS CLARIFICATION] count}
-└─ Next step: /afc:clarify (if unresolved) or /afc:plan → /afc:implement
+└─ Next step: /afc:plan (unresolved items will be flagged at plan start)
 ```
 
 ## Notes

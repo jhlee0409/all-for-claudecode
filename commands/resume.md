@@ -60,7 +60,7 @@ Compare the checkpoint state against the current environment:
 ### Recommended Next Steps
 {recommended commands based on state}
 - Tasks in progress → resume `/afc:implement`
-- Plan complete → `/afc:tasks`
+- Plan complete → `/afc:implement` (tasks generated automatically at start)
 - Spec only → `/afc:plan`
 ```
 

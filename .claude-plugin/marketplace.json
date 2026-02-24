@@ -5,14 +5,14 @@
     "email": "relee6203@gmail.com"
   },
   "metadata": {
-    "description": "Automated pipeline for Claude Code — spec → plan → tasks → implement → review → clean",
+    "description": "Automated pipeline for Claude Code — spec → plan → implement → review → clean",
     "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "afc",
       "source": "./",
-      "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec → plan → tasks → implement → review → clean.",
+      "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec → plan → implement → review → clean.",
       "version": "2.0.0",
       "category": "automation",
       "tags": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"]

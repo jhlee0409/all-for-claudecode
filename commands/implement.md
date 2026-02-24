@@ -43,7 +43,7 @@ git tag -f afc/pre-implement
 **Standalone safety activation** (skip if inside `/afc:auto`):
 If no active pipeline state exists, activate it for the duration of this command:
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" start {feature-name-from-tasks.md}
+"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" start {feature-name-from-plan.md}
 "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement
 ```
 This enables Stop Gate and CI Gate hooks during standalone implementation. Release on completion (Step 7) or failure rollback.

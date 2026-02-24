@@ -32,7 +32,7 @@ Collect automatically:
    - List of changed files (`git status --short`)
 2. **Active Features**:
    - Check subdirectories under `.claude/afc/specs/`
-   - Progress state of each feature (spec only? through plan? through tasks? implementing?)
+   - Progress state of each feature (spec only? through plan? implementing?)
 3. **Tasks Progress**:
    - If tasks.md exists, count `[x]`/`[ ]` items
 4. **Current Work Context**:
@@ -56,7 +56,7 @@ Collect automatically:
 ## Active Features
 | Feature | Status | Progress |
 |---------|--------|----------|
-| {name} | {spec/plan/tasks/implementing/done} | {N/M tasks} |
+| {name} | {spec/plan/implementing/done} | {N/M tasks} |
 
 ## Incomplete Work
 {concrete next steps}

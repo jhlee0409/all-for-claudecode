@@ -378,7 +378,7 @@ agent: afc-{name}
 
 ## 5. Modifying Pipeline Flow
 
-The pipeline is `spec → plan → tasks → implement → review → clean`.
+The pipeline is `spec → plan → implement → review → clean` (tasks are auto-generated at implement start).
 
 ### Modifying a phase
 
@@ -412,7 +412,7 @@ The implement phase uses 3-tier orchestration:
 To modify:
 - Batch/swarm thresholds: edit `commands/implement.md` Mode Selection table
 - Worker behavior: edit the swarm worker prompt in `commands/implement.md`
-- Auto pipeline integration: mirror changes in `commands/auto.md` Phase 4
+- Auto pipeline integration: mirror changes in `commands/auto.md` Phase 3 (Implement)
 
 ---
 

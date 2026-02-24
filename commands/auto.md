@@ -104,9 +104,9 @@ If all checks pass, proceed to Phase 0.8.
 | Low ambiguity | Clarify gate score < 2 (very clear, specific request) | "change 'foo' to 'bar' in config.md" |
 
 **If ALL 3 criteria met** (fast-path):
-1. Print: `⚡ Fast path detected — skipping spec/plan/tasks phases`
+1. Print: `⚡ Fast path detected — skipping spec/plan phases`
 2. Jump directly to **Fast-Path Execution** (see below)
-3. Skip Phases 0.5 through 3.7 entirely
+3. Skip Phases 0.5 through 3.3 entirely
 
 **If ANY criterion fails**: proceed to Phase 0.5 (full pipeline).
 
@@ -117,11 +117,11 @@ If all checks pass, proceed to Phase 0.8.
 3. If change touches > 2 files OR modifies any `.sh` script: **abort fast-path**, restart with full pipeline
 4. **Checkpoint**: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase fast-path`
 5. Run `/afc:review` logic inline (mini-review only — single Critic pass)
-6. Run Phase 6 Clean logic (artifact cleanup, CI gate, pipeline flag release)
+6. Run Phase 5 Clean logic (artifact cleanup, CI gate, pipeline flag release)
 7. Final output:
    ```
    Fast path complete: {feature}
-   ├─ Mode: ⚡ Fast path (spec/plan/tasks skipped)
+   ├─ Mode: ⚡ Fast path (spec/plan skipped)
    ├─ Changed files: {N}
    ├─ CI: ✓
    └─ Review: mini-review passed

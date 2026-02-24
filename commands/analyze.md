@@ -123,4 +123,4 @@ Analysis complete
 
 - **Read-only**: Do not modify any files. Report only.
 - **Avoid false positives**: Do not over-flag ambiguity. Consider context.
-- **Optional**: Not required in the pipeline. Can proceed plan → tasks → implement directly.
+- **Optional**: Not required in the pipeline. Can proceed plan → implement directly.
