@@ -137,20 +137,28 @@ If config file is missing:
 Execute `/afc:spec` logic inline:
 
 1. Explore codebase for related code (Glob, Grep) — explore by `{config.architecture}` layer
-2. Create `.claude/afc/specs/{feature}/spec.md`
-3. `[NEEDS CLARIFICATION]` items are **auto-resolved with best-guess** (clarify skipped if Phase 0.5 already ran)
-   - Tag auto-resolved items with `[AUTO-RESOLVED]`
-4. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
+2. **Research Gate** (conditional):
+   - Scan `$ARGUMENTS` for external library/API/technology references not present in the codebase
+   - If external references found: run focused WebSearch for each (latest stable version, key constraints, compatibility)
+   - Optionally use Context7 for library-specific documentation
+   - Use research findings to inform spec writing (accurate requirements instead of guesses)
+   - Tag researched items with `[RESEARCHED]` in spec
+   - If no external references: skip (all internal → no research needed)
+3. Create `.claude/afc/specs/{feature}/spec.md`
+4. `[NEEDS CLARIFICATION]` items: **research first, then auto-resolve remaining** (clarify skipped if Phase 0.5 already ran)
+   - Items answerable via research → resolve with researched facts, tag `[RESEARCHED]`
+   - Items requiring user judgment → auto-resolve with best-guess, tag `[AUTO-RESOLVED]`
+5. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
    - Were there scope-related issues in past specs? Warn about similar ambiguities.
-5. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
+6. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
    - COMPLETENESS: does every User Story have acceptance scenarios? Any missing requirements?
    - MEASURABILITY: are success criteria measurable, not subjective? **Is quantitative evidence provided for numerical targets?**
    - INDEPENDENCE: are implementation details (code, library names) absent from the spec?
    - EDGE_CASES: are at least 2 identified? Any missing boundary conditions?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-6. **Checkpoint**: `afc_state_checkpoint "spec"`
-7. Progress: `✓ Spec complete (US: {N}, FR: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
+7. **Checkpoint**: `afc_state_checkpoint "spec"`
+8. Progress: `✓ Spec complete (US: {N}, FR: {N}, researched: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
 ### Phase 2: Plan
 
@@ -329,7 +337,7 @@ Artifact cleanup and codebase hygiene check after implementation and review:
        "date": "{YYYY-MM-DD}",
        "phases": {
          "clarify": { "triggered": true/false, "questions": N, "auto_resolved": N },
-         "spec": { "user_stories": N, "requirements": { "FR": N, "NFR": N }, "auto_resolved": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
+         "spec": { "user_stories": N, "requirements": { "FR": N, "NFR": N }, "researched": N, "auto_resolved": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
          "plan": { "files_planned": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
          "tasks": { "total": N, "parallel": N, "phases": N, "critic_passes": N, "critic_fixes": N, "escalations": N },
          "test_pre_gen": { "triggered": true/false, "skeletons": N, "skipped": N },
@@ -363,7 +371,7 @@ Artifact cleanup and codebase hygiene check after implementation and review:
 ```
 Auto pipeline complete: {feature}
 ├─ Clarify: {triggered/skipped} ({N} questions, {M} auto-resolved)
-├─ Spec: US {N}, FR {N}
+├─ Spec: US {N}, FR {N}, researched {N}
 ├─ Plan: Critic converged ({N} passes, {M} fixes, {E} escalations), research {present/absent}
 ├─ Tasks: {total} (parallel {N})
 ├─ TDD Pre-Gen: {triggered/skipped} ({N} skeletons)

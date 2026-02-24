@@ -52,6 +52,21 @@ Before writing the spec, understand the current project structure:
 2. Explore existing code related to the feature description (Grep/Glob)
 3. Identify related type definitions, APIs, and components
 
+### 2.5. Research Gate (conditional)
+
+Detect whether `$ARGUMENTS` references external libraries, APIs, or technologies not already present in the codebase:
+
+1. **Scan for external references**: extract library names, API names, protocol names, and framework references from `$ARGUMENTS`
+2. **Check codebase presence**: Grep/Glob for each reference in the project
+3. **If all references are internal** (found in codebase): skip research, proceed to Step 3
+4. **If external references detected**:
+   - For each unknown reference, run a focused WebSearch query: `"{library/API name} latest stable version usage guide {current year}"`
+   - Optionally use Context7 (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) for library-specific documentation
+   - Record findings inline as context for spec writing (not persisted — research.md is Plan phase responsibility)
+   - Tag each researched item in spec with `[RESEARCHED]` for traceability
+
+> Research here is **lightweight and spec-scoped** — just enough to write accurate requirements. Deep technical research (alternatives comparison, migration paths) belongs in `/afc:plan` Phase 0.
+
 ### 3. Write Spec
 
 Create `.claude/afc/specs/{feature-name}/spec.md`:
@@ -120,6 +135,19 @@ Create `.claude/afc/specs/{feature-name}/spec.md`:
 - {uncertain items — record if any, remove section if none}
 ```
 
+### 3.5. Inline Clarification (standalone mode only)
+
+After writing the spec, check for `[NEEDS CLARIFICATION]` items:
+
+1. **If no `[NEEDS CLARIFICATION]` items exist**: skip, proceed to Step 4
+2. **If items exist and running standalone** (`/afc:spec` directly):
+   - Present each ambiguity to the user via AskUserQuestion (max 3 questions per batch)
+   - Apply answers directly into spec.md (replace `[NEEDS CLARIFICATION]` with resolved text)
+   - If user chooses to defer: leave items as `[NEEDS CLARIFICATION]` and note in final output
+3. **If running inside `/afc:auto`**: skip this step entirely (auto.md handles auto-resolution in Phase 1)
+
+> This replaces the previous pattern of always deferring to `/afc:clarify`. Standalone spec now resolves ambiguities immediately when the user is present. `/afc:clarify` remains available for revisiting specs later.
+
 ### 4. Retrospective Check
 
 If `.claude/afc/memory/retrospectives/` directory exists, load retrospective files and check:
@@ -152,6 +180,8 @@ Spec generated
 ├─ .claude/afc/specs/{feature-name}/spec.md
 ├─ User Stories: {count}
 ├─ Requirements: FR {count}, NFR {count}
+├─ Research: {N} external references researched / skipped (all internal)
+├─ Clarified: {N} items resolved inline / {M} deferred
 ├─ Unresolved: {[NEEDS CLARIFICATION] count}
 └─ Next step: /afc:clarify (if unresolved) or /afc:plan
 ```
