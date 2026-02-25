@@ -9,7 +9,7 @@
 [![npm version](https://img.shields.io/npm/v/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
 [![npm downloads](https://img.shields.io/npm/dm/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
 [![license](https://img.shields.io/github/license/jhlee0409/all-for-claudecode)](./LICENSE)
-[![test](https://img.shields.io/badge/tests-125%20passed-brightgreen)](#how-it-works)
+[![test](https://img.shields.io/badge/tests-passing-brightgreen)](#how-it-works)
 
 > One command (`/afc:auto`) runs the entire cycle. Zero runtime dependencies — pure markdown commands + bash hook scripts.
 
@@ -51,12 +51,12 @@ Spec (1/5) → Plan (2/5) → Implement (3/5) → Review (4/5) → Clean (5/5)
   │              └─ File change map, ADR recording, research persistence
   └─ Acceptance criteria, pre-implementation gates
 
-17 hooks run automatically at each step.
+Hooks run automatically at each step.
 CI failure → debug-based RCA (not blind retry).
 Critic Loops verify quality at each gate until convergence.
 ```
 
-## 18 Slash Commands
+## Slash Commands
 
 | Command | Description |
 |---|---|
@@ -79,7 +79,7 @@ Critic Loops verify quality at each gate until convergence.
 | `/afc:analyze` | Verify artifact consistency |
 | `/afc:clarify` | Resolve spec ambiguities |
 
-## 17 Hook Events
+## Hook Events
 
 Every hook fires automatically — no configuration needed after install.
 
@@ -103,7 +103,7 @@ Every hook fires automatically — no configuration needed after install.
 | `WorktreeCreate` | Sets up worktree isolation for parallel workers |
 | `WorktreeRemove` | Cleans up worktree after worker completion |
 
-3 handler types: `command` (shell scripts, all 17 events), `prompt` (LLM single-turn, TaskCompleted), `agent` (subagent with tools, Stop).
+Handler types: `command` (shell scripts, all events), `prompt` (LLM single-turn, TaskCompleted), `agent` (subagent with tools, Stop).
 
 ## Persistent Memory Agents
 

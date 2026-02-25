@@ -5,12 +5,12 @@ Development guidelines for adding features, modifying behavior, upgrading, and m
 ## Project Map
 
 ```
-commands/   18 markdown slash commands (the product surface)
+commands/   markdown slash commands (the product surface)
 scripts/    bash hook handlers (enforcement layer)
 hooks/      hooks.json (event → handler binding)
-agents/     2 persistent memory subagents
+agents/     subagent definitions (persistent memory + ephemeral workers)
 docs/       shared reference documents
-templates/  5 project preset configs
+templates/  project preset configs
 spec/       ShellSpec BDD test suite
 bin/        ESM CLI installer
 .claude-plugin/  plugin.json + marketplace.json
@@ -20,10 +20,10 @@ bin/        ESM CLI installer
 
 | I want to... | Primary file(s) | Also update |
 |---------------|-----------------|-------------|
-| Add a new slash command | `commands/{name}.md` | CLAUDE.md (command count), README.md (badge + table), `spec/{name}_spec.sh` if hooks involved |
-| Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | CLAUDE.md (hook count), README.md (badge + table), `spec/{name}_spec.sh` |
+| Add a new slash command | `commands/{name}.md` | README.md (table), `spec/{name}_spec.sh` if hooks involved |
+| Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | README.md (table), `spec/{name}_spec.sh` |
 | Add a new project template | `templates/afc.config.{name}.md` | `commands/init.md` (template list) |
-| Add a new agent | `agents/{name}.md` | CLAUDE.md (agent count) |
+| Add a new agent | `agents/{name}.md` | |
 | Modify pipeline flow | `commands/auto.md` | Related phase commands, `docs/phase-gate-protocol.md` |
 | Change critic loop behavior | `docs/critic-loop-rules.md` | All commands that reference it |
 | Update version | `package.json` + `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` |
@@ -104,7 +104,6 @@ Follow this structure:
 
 ### Step 6: Update references
 
-- **CLAUDE.md**: Update command count (the `N markdown files` figure in Architecture section)
 - **commands/auto.md**: If the new command is a pipeline phase, add it to the auto pipeline
 - **Global CLAUDE.md all-for-claudecode block** (in `commands/init.md` template): Add to skill routing table if user-invocable
 - **Tests**: Add test cases if the command involves hooks or scripts
@@ -531,7 +530,7 @@ Every new script in `scripts/` must have a corresponding `spec/{name}_spec.sh` w
 ### CLAUDE.md
 
 - Describes project architecture for Claude Code sessions working on this repo
-- Update whenever: command count changes, hook count changes, new architectural pattern is introduced
+- Update whenever: new architectural pattern is introduced or layer structure changes
 - Keep factual and concise — this is a reference, not a tutorial
 
 ### .claude/rules/
@@ -585,6 +584,6 @@ The `afc-bash-guard.sh` hook blocks dangerous git commands (`push --force`, `res
 5. All command frontmatter follows conventions (model, description, controls)
 6. New scripts have shellcheck passing
 7. New scripts have ShellSpec coverage in spec/{name}_spec.sh
-8. CLAUDE.md reflects current counts and architecture
+8. CLAUDE.md reflects current architecture
 9. Commit and tag: `git tag v{X.Y.Z}`
 10. Push: `git push origin main --tags`

@@ -20,11 +20,11 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 
 ### Core Layers
 
-- **commands/** — 20 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`). Includes 2 standalone utilities (ideate, launch) outside the main pipeline.
-- **agents/** — 3 subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
-- **hooks/hooks.json** — Declares 17 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 4 hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
+- **commands/** — Markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`). Includes standalone utilities (ideate, launch) outside the main pipeline.
+- **agents/** — Subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
+- **hooks/hooks.json** — Hook event declarations with handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). Some hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
-- **scripts/** — 29 bash scripts (25 afc-*.sh hook/utility scripts + 4 non-afc utility scripts) + 2 Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
+- **scripts/** — Bash hook/utility scripts (afc-*.sh + non-afc utilities) + Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
 - **templates/** — config template (`afc.config.template.md`) defining free-form markdown structure with fixed CI Commands YAML section
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
@@ -49,8 +49,8 @@ Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claud
 
 ### Command Frontmatter Controls
 
-- `user-invocable: false` — hidden from `/` menu, only model-callable (3 commands: analyze, clarify, tasks)
-- `context: fork` — runs in isolated subagent, result returned to main context (3 commands: analyze, architect, security). architect and security use custom agents with `memory: project` for persistent learning
+- `user-invocable: false` — hidden from `/` menu, only model-callable (analyze, clarify, tasks)
+- `context: fork` — runs in isolated subagent, result returned to main context (analyze, architect, security). architect and security use custom agents with `memory: project` for persistent learning
 - `model: haiku|sonnet` — model routing per command complexity (haiku for mechanical tasks, sonnet for design/analysis, omit for orchestrator inheritance)
 
 ## Shell Script Conventions

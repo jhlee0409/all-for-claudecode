@@ -1,7 +1,7 @@
 {
   "name": "all-for-claudecode",
   "version": "2.1.0",
-  "description": "Claude Code plugin that automates the full dev cycle — spec, plan, tasks, implement, review, clean. 18 commands, 17 hooks, 5 presets.",
+  "description": "Claude Code plugin that automates the full dev cycle — spec, plan, implement, review, clean.",
   "bin": {
     "all-for-claudecode": "bin/cli.mjs"
   },
