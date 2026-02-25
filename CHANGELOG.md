@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-02-26
+
+### Changed
+- **Phase checkpoints**: Auto-checkpoint recorded at each phase gate with timestamp in state JSON
+- **SSOT validation**: `afc-consistency-check.sh` now validates phase constants, command-to-phase mapping, and subagent prefix conventions
+- **Dead code removal**: Removed unused helper functions and redundant flag file references
+- **README**: Added walkthrough, usage examples, and expanded FAQ
+
+### Fixed
+- **afc-stop-todo-check**: Handle absolute paths from Claude's `tool_input` (was silently skipping files)
+- **afc-pipeline-manage**: `phase` and `ci-pass` commands now fail fast when no pipeline is active (was corrupting state)
+- **afc-state**: `afc_state_remove` now has sed fallback for jq-less environments (was silently no-op)
+- **afc-notify**: Eliminated AppleScript injection via positional `argv` pattern (was using string interpolation)
+- **afc-dag-validate / afc-parallel-validate**: Replaced string-based trap with function-based trap (prevented code injection via temp path)
+- **afc-permission-request**: Added symlink resolution for `chmod +x`, path traversal block for `PLUGIN_ROOT`, single-quoted and unquoted YAML config parsing
+- **afc-consistency-check**: Context-aware awk extraction for `marketplace.json` version fields (was position-dependent)
+- **Documentation**: Fixed handler type descriptions, step numbering in auto.md and implement.md, documented critic safety cap rationale
+- **Test coverage**: Added 27 tests for `afc-state.sh` public API (171 total, 0 failures)
+
 ## [2.2.0] - 2026-02-25
 
 ### Added
