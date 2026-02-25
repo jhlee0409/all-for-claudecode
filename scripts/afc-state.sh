@@ -8,6 +8,26 @@
 _AFC_STATE_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude"
 _AFC_STATE_FILE="${_AFC_STATE_DIR}/.afc-state.json"
 
+# --- Phase Constants (SSOT) ---
+# All valid pipeline phases. Update HERE when adding a new phase.
+AFC_VALID_PHASES="spec|plan|tasks|implement|review|clean|clarify|test-pre-gen|blast-radius|fast-path"
+# Phases that do NOT require CI gate to pass (preparatory phases)
+AFC_CI_EXEMPT_PHASES="spec|plan|tasks|clarify|test-pre-gen|blast-radius"
+
+# Check if a phase name is valid
+# Usage: afc_is_valid_phase <phase>
+# Returns: 0 if valid, 1 if not
+afc_is_valid_phase() {
+  printf '%s\n' "$AFC_VALID_PHASES" | tr '|' '\n' | grep -qxF "$1"
+}
+
+# Check if a phase is exempt from CI gate
+# Usage: afc_is_ci_exempt <phase>
+# Returns: 0 if exempt, 1 if CI required
+afc_is_ci_exempt() {
+  printf '%s\n' "$AFC_CI_EXEMPT_PHASES" | tr '|' '\n' | grep -qxF "$1"
+}
+
 # --- Public API ---
 
 # Check if pipeline is active (state file exists and has feature)

@@ -97,6 +97,16 @@ if [ "$ALLOWED" = "false" ]; then
   esac
 fi
 
+# Plugin's own scripts (auto-allow during pipeline execution)
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
+if [ "$ALLOWED" = "false" ] && [ -n "$PLUGIN_ROOT" ]; then
+  case "$COMMAND" in
+    "\"${PLUGIN_ROOT}/scripts/"*|"${PLUGIN_ROOT}/scripts/"*)
+      ALLOWED=true
+      ;;
+  esac
+fi
+
 # Prefix matching (allow paths after shellcheck, prettier, chmod +x)
 if [ "$ALLOWED" = "false" ]; then
   case "$COMMAND" in

@@ -141,7 +141,7 @@ TaskUpdate({ taskId: "T004", addBlockedBy: ["T002"] })  // if T004 depends on T0
 
 **Step 2 — Launch unblocked [P] tasks in a single message** (Claude Code executes multiple Task() calls in a single message concurrently, up to ~10):
 ```
-Task("T003: Create UserService", subagent_type: "afc-impl-worker",
+Task("T003: Create UserService", subagent_type: "afc:afc-impl-worker",
   isolation: "worktree",
   prompt: "Implement the following task:
 
@@ -164,7 +164,7 @@ Task("T003: Create UserService", subagent_type: "afc-impl-worker",
   - Key decisions: {any design choices made}
   - Issues: {blockers or concerns, if any}
   - Verification: {config.gate} result")
-Task("T004: Create AuthService", subagent_type: "afc-impl-worker", isolation: "worktree", ...)
+Task("T004: Create AuthService", subagent_type: "afc:afc-impl-worker", isolation: "worktree", ...)
 ```
 
 **Step 3 — Collect results and advance**: After all parallel agents return:
@@ -201,7 +201,7 @@ TaskUpdate({ taskId: "T008", addBlockedBy: ["T006"] })  // if dependency exists
 Instead of workers self-claiming (race-prone), the **orchestrator pre-assigns** tasks:
 ```
 // Orchestrator assigns: each worker gets a unique, non-overlapping task set
-Task("Worker 1: T007, T009, T011", subagent_type: "afc-impl-worker",
+Task("Worker 1: T007, T009, T011", subagent_type: "afc:afc-impl-worker",
   isolation: "worktree",
   prompt: "Implement these tasks in order:
   1. T007: {description} — `{file path}`
@@ -224,7 +224,7 @@ Task("Worker 1: T007, T009, T011", subagent_type: "afc-impl-worker",
   Return a structured summary per task (max 2000 chars total):
   - Files changed, key decisions, issues encountered per task.")
 
-Task("Worker 2: T008, T010, T012", subagent_type: "afc-impl-worker", isolation: "worktree", ...)
+Task("Worker 2: T008, T010, T012", subagent_type: "afc:afc-impl-worker", isolation: "worktree", ...)
 ```
 
 **Step 3 — Collect and reconcile**:

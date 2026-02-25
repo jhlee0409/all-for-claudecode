@@ -34,7 +34,7 @@
     "url": "https://github.com/jhlee0409/all-for-claudecode/issues"
   },
   "scripts": {
-    "lint": "shellcheck -x --source-path=scripts scripts/*.sh && bash scripts/afc-schema-validate.sh --all",
+    "lint": "shellcheck -x --source-path=scripts scripts/*.sh && bash scripts/afc-schema-validate.sh --all && bash scripts/afc-consistency-check.sh",
     "test": "vendor/shellspec/shellspec",
     "test:all": "npm run lint && npm run test",
     "setup:test": "bash scripts/install-shellspec.sh"

@@ -113,7 +113,11 @@ If all checks pass, proceed to Phase 0.8.
 2. Run `{config.ci}` verification
    - On fail: **abort fast-path**, restart with full pipeline: `⚠ Fast-path aborted — change is more complex than expected. Running full pipeline.`
 3. If change touches > 2 files OR modifies any `.sh` script: **abort fast-path**, restart with full pipeline
-4. **Checkpoint**: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase fast-path`
+4. **Checkpoint**:
+   ```bash
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase fast-path
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" ci-pass
+   ```
 5. Run `/afc:review` logic inline (mini-review only — single Critic pass)
 6. Run Phase 5 Clean logic (artifact cleanup, CI gate, pipeline flag release)
 7. Final output:

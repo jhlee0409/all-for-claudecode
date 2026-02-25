@@ -32,12 +32,10 @@ FEATURE="$(afc_state_read feature || echo '')"
 # Check current Phase
 CURRENT_PHASE="$(afc_state_read phase || echo '')"
 
-# Spec/Plan/Tasks Phase (1-3) do not require CI -> pass through
-case "${CURRENT_PHASE:-}" in
-  spec|plan|tasks)
-    exit 0
-    ;;
-esac
+# Preparatory phases do not require CI -> pass through
+if afc_is_ci_exempt "${CURRENT_PHASE:-}"; then
+  exit 0
+fi
 
 # Implement/Review/Clean Phase (4-6) require CI to pass
 CI_TIME="$(afc_state_read ciPassedAt 2>/dev/null || echo '')"

@@ -17,7 +17,7 @@ After each Phase completes, perform **3-step verification** sequentially:
 
 ## Step 2. Mini-Review
 
-Quantitatively inspect `{config.mini_review}` items for files changed within the Phase:
+Quantitatively inspect changed files within the Phase against `{config.code_style}` and `{config.architecture}` rules:
 - List changed files and perform the inspection **for each file**
 - Output format:
   ```

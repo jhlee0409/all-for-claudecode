@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build / Lint / Test
 
 ```bash
-npm run lint          # shellcheck scripts/*.sh
+npm run lint          # shellcheck + schema validation + consistency check
 npm test              # ShellSpec BDD suite (vendor/shellspec/shellspec)
 npm run test:all      # lint + test combined
 npm run setup:test    # install ShellSpec to vendor/shellspec/ (first-time setup)
@@ -24,7 +24,7 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 - **agents/** — 3 subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
 - **hooks/hooks.json** — Declares 17 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 4 hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
-- **scripts/** — 25 bash scripts + 2 Node.js ESM validators (.mjs) + 1 shared state library (afc-state.sh). Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
+- **scripts/** — 29 bash scripts (25 afc-*.sh hook/utility scripts + 4 non-afc utility scripts) + 2 Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
 - **templates/** — config template (`afc.config.template.md`) defining free-form markdown structure with fixed CI Commands YAML section
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
