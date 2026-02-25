@@ -213,10 +213,12 @@ IMPORTANT: For requests matching the afc skill routing table below, always invok
 | Spec | `afc:spec` | spec, specification |
 | Tasks | `afc:tasks` | break down tasks, decompose |
 | Research | `afc:research` | research, investigate |
+| Ideate | `afc:ideate` | idea, brainstorm, what to build, product brief |
 | Ambiguous | `afc:clarify` | auto-triggered when requirements are unclear |
 | Full auto | `afc:auto` | do it automatically, auto-run |
 
 User-only (not auto-triggered — inform user on request):
+- `afc:launch` — inform user when release artifact generation is requested
 - `afc:doctor` — inform user when health check is requested
 - `afc:architect` — inform user when architecture review is requested
 - `afc:security` — inform user when security scan is requested

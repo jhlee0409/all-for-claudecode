@@ -20,7 +20,7 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 
 ### Core Layers
 
-- **commands/** — 18 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`)
+- **commands/** — 20 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`). Includes 2 standalone utilities (ideate, launch) outside the main pipeline.
 - **agents/** — 3 subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
 - **hooks/hooks.json** — Declares 17 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 4 hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
