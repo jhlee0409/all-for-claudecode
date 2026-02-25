@@ -51,9 +51,17 @@ if afc_state_is_active; then
   fi
 fi
 
-# 2. Check if checkpoint exists
-if [ -f "$CHECKPOINT" ]; then
-  RAW_LINE=$(grep 'Auto-generated:' "$CHECKPOINT" 2>/dev/null || echo "")
+# 2. Check if checkpoint exists (project-local first, fallback to auto-memory)
+LOCAL_CHECKPOINT="$PROJECT_DIR/.claude/afc/memory/checkpoint.md"
+CHECKPOINT_FILE=""
+if [ -f "$LOCAL_CHECKPOINT" ]; then
+  CHECKPOINT_FILE="$LOCAL_CHECKPOINT"
+elif [ -f "$CHECKPOINT" ]; then
+  CHECKPOINT_FILE="$CHECKPOINT"
+fi
+
+if [ -n "$CHECKPOINT_FILE" ]; then
+  RAW_LINE=$(grep 'Auto-generated:' "$CHECKPOINT_FILE" 2>/dev/null || echo "")
   FIRST_LINE=$(echo "$RAW_LINE" | head -1)
   CHECKPOINT_DATE="${FIRST_LINE##*Auto-generated: }"
   if [ -n "$CHECKPOINT_DATE" ]; then

@@ -33,12 +33,24 @@ Quantitatively inspect changed files within the Phase against `{config.code_styl
 
 After passing the Phase gate, automatically save session state:
 
+1. Create `.claude/afc/memory/` directory if it does not exist
+2. Write/update `.claude/afc/memory/checkpoint.md`:
+
 ```markdown
-# .claude/afc/memory/checkpoint.md auto-update
-Current Phase: {N}/{total}
-Completed tasks: {list of completed IDs}
-Changed files: {file list}
-Last CI: ✓
+# Phase Gate Checkpoint
+> Auto-generated: {YYYY-MM-DD HH:mm:ss}
+> Trigger: phase gate
+
+## Git Status
+- Branch: {current branch}
+- Commit: {short hash} — {commit message}
+
+## Pipeline Status
+- Active: Yes ({feature name})
+- Current Phase: {N}/{total}
+- Completed tasks: {list of completed IDs}
+- Changed files: {file list}
+- Last CI: ✓
 ```
 
 - Even if the session is interrupted, resume from this point with `/afc:resume`

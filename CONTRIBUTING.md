@@ -22,7 +22,7 @@ bin/        ESM CLI installer
 |---------------|-----------------|-------------|
 | Add a new slash command | `commands/{name}.md` | README.md (table), `spec/{name}_spec.sh` if hooks involved |
 | Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | README.md (table), `spec/{name}_spec.sh` |
-| Add a new project template | `templates/afc.config.{name}.md` | `commands/init.md` (template list) |
+| Modify config template | `templates/afc.config.template.md` | |
 | Add a new agent | `agents/{name}.md` | |
 | Modify pipeline flow | `commands/auto.md` | Related phase commands, `docs/phase-gate-protocol.md` |
 | Change critic loop behavior | `docs/critic-loop-rules.md` | All commands that reference it |
@@ -194,7 +194,7 @@ Add to `hooks/hooks.json` under the appropriate event:
 
 - `matcher` is optional. Omit for universal hooks. Use regex for tool-specific hooks.
 - `async: true` + `timeout: N` for non-blocking hooks (auto-format, notifications).
-- Three handler types: `command` (shell), `prompt` (LLM single-turn), `agent` (subagent with tools).
+- Two handler types: `command` (shell), `prompt` (LLM single-turn).
 
 ### Step 5: Write tests
 
@@ -248,84 +248,37 @@ Key testing patterns:
 
 ---
 
-## 3. Adding a New Project Template
+## 3. Config Template
 
-### Step 1: Create the template
+The config template at `templates/afc.config.template.md` uses free-form markdown with only CI Commands in fixed YAML format. The `/afc:init` command auto-analyzes the project structure and fills in sections dynamically — there is no preset/template selection system.
 
-Create `templates/afc.config.{name}.md` following the structure:
+### Template structure
 
 ```markdown
-# all-for-claudecode Configuration
-
-> This file defines project-specific settings for the afc command system.
+# Project Configuration
 
 ## CI Commands
 
 \`\`\`yaml
 ci: "npm run ci"
-typecheck: "npm run typecheck"
-lint: "npm run lint"
-lint_fix: "npm run lint:fix"
 gate: "npm run typecheck && npm run lint"
 test: "npm test"
 \`\`\`
 
 ## Architecture
 
-\`\`\`yaml
-style: "Layered"
-layers: []
-import_rule: ""
-segments: []
-path_alias: ""
-\`\`\`
-
-## Framework
-
-\`\`\`yaml
-name: ""
-runtime: ""
-server_client_boundary: false
-\`\`\`
+(init analyzes your project and writes this section in free-form)
 
 ## Code Style
 
-\`\`\`yaml
-language: "TypeScript"
-strict_mode: true
-\`\`\`
+(init analyzes your project and writes this section in free-form)
 
-## State Management
+## Project Context
 
-\`\`\`yaml
-global_state: ""
-server_state: ""
-\`\`\`
-
-## Styling
-
-\`\`\`yaml
-framework: ""
-\`\`\`
-
-## Testing
-
-\`\`\`yaml
-framework: ""
-\`\`\`
-
-## Project-Specific Risks
-
-1. (risk pattern)
-
-## Mini-Review Checklist
-
-1. (checklist item)
+(init analyzes your project and writes this section in free-form)
 ```
 
-### Step 2: Register in init.md
-
-Update `commands/init.md` to include the new template in the selection list.
+To modify the template, edit `templates/afc.config.template.md` directly. CI Commands keys (`ci`, `gate`, `test`) are parsed by scripts — keep their YAML format intact. All other sections are free-form markdown.
 
 ---
 

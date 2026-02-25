@@ -136,14 +136,15 @@ Check for presence of `<!-- AFC:START -->` or `<!-- SELFISH:START -->` marker.
 
 #### Step 2. Conflict Pattern Scan
 
-Search the entire CLAUDE.md for the patterns below. **Include content inside marker blocks (`<!-- *:START -->` ~ `<!-- *:END -->`) in the scan.**
+Search CLAUDE.md for the patterns below. **IMPORTANT: EXCLUDE content inside any marker blocks (`<!-- *:START -->` ~ `<!-- *:END -->`). Only scan unguarded content outside marker blocks.** Other tools (OMC, etc.) manage their own blocks — their internal agent names are not conflicts.
 
 **A. Marker Block Detection**
 - Regex: `<!-- ([A-Z0-9_-]+):START -->` ~ `<!-- \1:END -->`
 - Record all found block names and line ranges
+- **Strip these ranges from the scan target** — only scan lines NOT inside any marker block
 
 **B. Agent Routing Conflict Detection**
-Find directives containing these keywords:
+In the **unguarded** (non-marker-block) content only, find directives containing these keywords:
 - `executor`, `deep-executor` — conflicts with afc:implement
 - `code-reviewer`, `quality-reviewer`, `style-reviewer`, `api-reviewer`, `security-reviewer`, `performance-reviewer` — conflicts with afc:review
 - `debugger` (in agent routing context) — conflicts with afc:debug
@@ -152,7 +153,7 @@ Find directives containing these keywords:
 - `test-engineer` — conflicts with afc:test
 
 **C. Skill Routing Conflict Detection**
-Find these patterns:
+In the **unguarded** content only, find these patterns:
 - Another tool's skill trigger table (e.g., tables like `| situation | skill |`)
 - `delegate to`, `route to`, `always use` + agent name combinations
 - Directives related to `auto-trigger`, `intent detection`, `intent-based routing`

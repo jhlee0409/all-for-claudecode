@@ -181,7 +181,8 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 ### 5.5. Auto-Checkpoint (standalone only)
 
 When not running inside `/afc:auto`, save progress for `/afc:resume`:
-- Write/update `.claude/afc/memory/checkpoint.md` with: branch, last commit, feature name, current phase (spec complete), next step (`/afc:plan`)
+- Create `.claude/afc/memory/` directory if it does not exist (`mkdir -p .claude/afc/memory/`)
+- Write/update `.claude/afc/memory/checkpoint.md` with: branch, last commit (or "none" if empty repo), feature name, current phase (spec complete), next step (`/afc:plan`)
 - Skip if running inside auto pipeline (auto manages its own checkpoints via phase transitions)
 
 ### 6. Final Output

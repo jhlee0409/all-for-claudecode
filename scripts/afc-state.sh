@@ -30,10 +30,16 @@ afc_is_ci_exempt() {
 
 # --- Public API ---
 
-# Check if pipeline is active (state file exists and has feature)
+# Check if pipeline is active (state file exists, non-empty, and valid JSON with feature)
 # Returns: 0 if active, 1 if not
 afc_state_is_active() {
-  [ -f "$_AFC_STATE_FILE" ] && [ -s "$_AFC_STATE_FILE" ]
+  [ -f "$_AFC_STATE_FILE" ] && [ -s "$_AFC_STATE_FILE" ] || return 1
+  # Validate JSON structure — reject corrupt/truncated files
+  if command -v jq >/dev/null 2>&1; then
+    jq -e '.feature // empty' "$_AFC_STATE_FILE" >/dev/null 2>&1 || return 1
+  else
+    grep -q '"feature"' "$_AFC_STATE_FILE" 2>/dev/null || return 1
+  fi
 }
 
 # Read a field from state file
@@ -89,10 +95,11 @@ afc_state_write() {
     fi
   else
     # sed fallback: replace or append field
-    # Escape sed-special chars in value: \ first, then &
+    # Escape sed-special chars in value: \ first, then & and /
     local safe_val="$value"
     safe_val="${safe_val//\\/\\\\}"
     safe_val="${safe_val//&/\\&}"
+    safe_val="${safe_val//\//\\/}"
     if grep -q "\"${field}\"" "$_AFC_STATE_FILE" 2>/dev/null; then
       local tmp
       tmp=$(mktemp)

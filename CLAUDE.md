@@ -22,7 +22,7 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 
 - **commands/** — Markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`). Includes standalone utilities (ideate, launch) outside the main pipeline.
 - **agents/** — Subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
-- **hooks/hooks.json** — Hook event declarations with handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). Some hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
+- **hooks/hooks.json** — Hook event declarations with handler types: `command` (shell scripts), `prompt` (LLM single-turn). Some hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
 - **scripts/** — Bash hook/utility scripts (afc-*.sh + non-afc utilities) + Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
@@ -39,7 +39,7 @@ Scripts receive stdin JSON from Claude Code and respond via stdout JSON or stder
 - **UserPromptSubmit**: stdout `{"hookSpecificOutput":{"additionalContext":"..."}}` injects context per prompt
 - **PermissionRequest**: stdout `{"hookSpecificOutput":{"decision":{"behavior":"allow"}}}` auto-allows whitelisted Bash commands
 - **TaskCompleted (prompt)**: `type: "prompt"` with haiku — LLM verifies acceptance criteria (supplements command CI gate)
-- **Stop (agent)**: `type: "agent"` with haiku — subagent checks TODO/FIXME in changed files (supplements command CI gate)
+- **Stop (command)**: two `type: "command"` handlers — CI gate verification (`afc-stop-gate.sh`) and TODO/FIXME check in changed files (`afc-stop-todo-check.sh`)
 
 Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claude/.afc-state.json`:
 - All scripts source `scripts/afc-state.sh` for state access (afc_state_is_active, afc_state_read, afc_state_write)

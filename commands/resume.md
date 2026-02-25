@@ -22,8 +22,8 @@ allowed-tools:
 ### 1. Load Checkpoint
 
 Read `.claude/afc/memory/checkpoint.md`:
-- If not found: output "No saved checkpoint found." then **stop**
-- If found: parse the full contents
+- If not found: output "No saved checkpoint found. Use `/afc:checkpoint` to create one, or checkpoints are created automatically on context compaction." then **stop**
+- If found: parse the full contents (extract branch, commit hash, pipeline feature, task progress, modified files)
 
 ### 2. Validate Environment
 
@@ -32,7 +32,10 @@ Compare the checkpoint state against the current environment:
 1. **Branch check**: Does the checkpoint branch match the current branch?
    - If different: warn + suggest switching
 2. **File state**: Have any files changed since the checkpoint?
-   - Check for new commits with `git log {checkpoint hash}..HEAD --oneline`
+   - First verify HEAD exists: `git rev-parse --verify HEAD 2>/dev/null`
+     - If HEAD does not exist (empty repo / no commits): report "No commits yet — cannot check changes since checkpoint." and skip this check
+   - If checkpoint hash is present and non-empty: `git log {checkpoint hash}..HEAD --oneline`
+   - If checkpoint hash is empty or missing: report "Checkpoint has no git reference — cannot diff." and skip this check
 3. **Feature directory**: Does .claude/afc/specs/{feature}/ still exist?
 
 ### 3. Report State

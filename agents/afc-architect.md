@@ -11,6 +11,8 @@ tools:
   - WebSearch
 model: sonnet
 memory: project
+# Note: no `isolation: worktree` — architect writes ADR files to project memory
+# which must persist in the main worktree (unlike afc-security which is read-only)
 skills:
   - docs/critic-loop-rules.md
   - docs/phase-gate-protocol.md

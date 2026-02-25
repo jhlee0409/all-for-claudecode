@@ -27,11 +27,18 @@ ENCODED_PATH="${PROJECT_PATH//\//-}"
 MEMORY_DIR="$HOME/.claude/projects/$ENCODED_PATH/memory"
 CHECKPOINT="$MEMORY_DIR/checkpoint.md"
 
-# Create memory directory if it doesn't exist
+# Project-local checkpoint path (used by /afc:resume)
+LOCAL_MEMORY_DIR="$PROJECT_DIR/.claude/afc/memory"
+LOCAL_CHECKPOINT="$LOCAL_MEMORY_DIR/checkpoint.md"
+
+# Create both memory directories
 mkdir -p "$MEMORY_DIR"
+mkdir -p "$LOCAL_MEMORY_DIR"
 
 # Collect current git status
 BRANCH=$(cd "$PROJECT_DIR" 2>/dev/null && git branch --show-current 2>/dev/null || echo "unknown")
+COMMIT_HASH=$(cd "$PROJECT_DIR" 2>/dev/null && git rev-parse --short HEAD 2>/dev/null || echo "none")
+COMMIT_MSG=$(cd "$PROJECT_DIR" 2>/dev/null && git log -1 --format='%s' 2>/dev/null || echo "no commits")
 
 ALL_MODIFIED=$(cd "$PROJECT_DIR" 2>/dev/null && git diff --name-only 2>/dev/null || true)
 MODIFIED=$(printf '%s\n' "$ALL_MODIFIED" | head -10)
@@ -84,14 +91,15 @@ else
   STAGED_LIST="  (none)"
 fi
 
-# Write checkpoint.md
-cat > "$CHECKPOINT" << EOF
+# Build checkpoint content (shared between both locations)
+CHECKPOINT_CONTENT="$(cat << EOF
 # Auto Checkpoint (Pre-Compact)
 > Auto-generated: $(date '+%Y-%m-%d %H:%M:%S')
 > Trigger: context compaction
 
 ## Git Status
 - Branch: $BRANCH
+- Commit: $COMMIT_HASH — $COMMIT_MSG
 - Modified files: ${MODIFIED_COUNT}
 $MODIFIED_LIST
 
@@ -107,8 +115,15 @@ $STAGED_LIST
 /afc:resume
 \`\`\`
 EOF
+)"
+
+# Write to auto-memory (Claude context recovery after compaction)
+printf '%s\n' "$CHECKPOINT_CONTENT" > "$CHECKPOINT"
+
+# Write to project-local path (used by /afc:resume command)
+printf '%s\n' "$CHECKPOINT_CONTENT" > "$LOCAL_CHECKPOINT"
 
 # Inject context via stdout (Claude can see this info after compaction)
-echo "Auto-checkpoint saved to .claude/afc/memory/checkpoint.md (branch: $BRANCH, pipeline: ${PIPELINE_FEATURE:-inactive})"
+echo "Auto-checkpoint saved (branch: $BRANCH, commit: $COMMIT_HASH, pipeline: ${PIPELINE_FEATURE:-inactive})"
 
 exit 0

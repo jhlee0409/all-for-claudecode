@@ -92,7 +92,7 @@ Structure analysis results and **print to console**:
 
 > **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
-Run the critic loop until convergence. Safety cap: 7 passes.
+Run the critic loop until convergence. Safety cap: 7 passes (higher than the standard 5 because architecture analysis involves broader exploration across modules and layers).
 
 | Criterion | Validation |
 |-----------|------------|

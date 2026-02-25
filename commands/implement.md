@@ -94,7 +94,7 @@ If tasks.md already exists (e.g., from standalone `/afc:tasks` run): use as-is, 
    - Identify already-completed `[x]` tasks
 2. Load **Implementation Context** section from plan.md (used in sub-agent prompts)
 
-### 1.5. Retrospective Check
+### 1.7. Retrospective Check
 
 If `.claude/afc/memory/retrospectives/` exists, load and check:
 - Were there implementation issues in past pipelines (e.g., file conflicts, unexpected dependencies, CI failures after parallel execution)?

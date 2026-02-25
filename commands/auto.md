@@ -231,14 +231,18 @@ Execute `/afc:plan` logic inline:
    ```
    - If architect returns conflicts → **ESCALATE** to user with conflict details
    - If no conflicts → proceed (ADR recorded for future reference)
-8. **Session context preservation**: Save key decisions and constraints for context compaction resilience:
+8. **Session context preservation**: Write key decisions to `.claude/afc/specs/{feature}/context.md` for compaction resilience:
+   ```markdown
+   # Session Context: {feature}
+   ## Goal
+   - Original request: $ARGUMENTS
+   - Current objective: Implement {feature}
+   ## Key Decisions
+   - {what}: {rationale}
+   ## Discoveries
+   - {file path}: {finding}
    ```
-   save_session_context({
-     goal: { original_request: "$ARGUMENTS", current_objective: "Implement {feature}" },
-     decisions: [{ what: "{key design decision}", why: "{rationale}" }],
-     discoveries: [{ file: "{path}", insight: "{finding}" }]
-   })
-   ```
+   This file is read at Implement start to restore context after compaction.
 9. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase plan` at phase start
 10. Progress: `✓ 2/5 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N}, ADR: {N} recorded, Implementation Context: {W} words)`
 
@@ -246,7 +250,7 @@ Execute `/afc:plan` logic inline:
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement`
 
-**Session context reload**: At implement start, call `load_session_context()` to restore key decisions and constraints from Plan phase (resilient to context compaction).
+**Session context reload**: At implement start, read `.claude/afc/specs/{feature}/context.md` if it exists. This restores key decisions and constraints from Plan phase (resilient to context compaction).
 
 Execute `/afc:implement` logic inline — **follow all orchestration rules defined in `commands/implement.md`** (task generation, mode selection, batch/swarm execution, failure recovery, task execution pattern). The implement command is the single source of truth for orchestration details.
 
@@ -414,16 +418,16 @@ Execute `/afc:review` logic inline — **follow all review perspectives defined 
 6. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
-6. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
+7. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
    - COMPLETENESS: were all changed files reviewed across all 8 perspectives (A-H)?
    - SPEC_ALIGNMENT: cross-check implementation against spec.md — (1) every SC verified with `{M}/{N}` count, (2) every acceptance scenario (GWT) has corresponding code path, (3) no spec constraint is violated
    - PRECISION: are there unnecessary changes? Are there out-of-scope modifications?
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-7. **Handling SC shortfalls**:
+8. **Handling SC shortfalls**:
    - Fixable → attempt auto-fix → re-run `{config.ci}` verification
    - Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
-8. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase review` at phase start
-9. Progress: `✓ 4/5 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
+9. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase review` at phase start
+10. Progress: `✓ 4/5 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
 
 ### Phase 5: Clean (5/5)
 
@@ -548,7 +552,7 @@ Pipeline aborted (Phase {N}/5)
 - **[P] parallel is mandatory**: if a [P] marker is assigned in tasks.md, it must be executed in parallel. Orchestration mode (batch vs swarm) is selected automatically based on task count. Sequential substitution is prohibited.
 - **Swarm mode is automatic**: when a phase has 6+ [P] tasks, the orchestrator pre-assigns tasks to swarm workers. Do not manually batch.
 - **Implementation Context travels with workers**: every sub-agent prompt includes the Implementation Context section from plan.md, ensuring spec intent propagates to parallel workers.
-- **Session context resilience**: key decisions are saved via `save_session_context` at Plan completion and restored at Implement start, surviving context compaction.
+- **Session context resilience**: key decisions are written to `.claude/afc/specs/{feature}/context.md` at Plan completion and read at Implement start, surviving context compaction.
 - **Specialist agents enhance review**: afc-architect and afc-security agents are invoked during Review to provide persistent-memory-aware analysis. Their findings are merged into the consolidated review. Agent memory updates happen automatically during the agent call.
 - **Debug-based RCA replaces blind retry**: CI failures trigger `/afc:debug` logic (hypothesis → targeted fix) instead of generic "retry 3 times". This produces better fixes and records patterns via retrospective.
 - **Acceptance tests close the spec-to-code gap**: When spec contains GWT scenarios and a test framework is configured, acceptance tests are auto-generated after implementation, verifying spec intent is met.
