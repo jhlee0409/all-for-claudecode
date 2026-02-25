@@ -1,6 +1,6 @@
 {
   "name": "afc",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec → plan → implement → review → clean.",
   "author": { "name": "jhlee0409", "email": "relee6203@gmail.com" },
   "homepage": "https://github.com/jhlee0409/all-for-claudecode",

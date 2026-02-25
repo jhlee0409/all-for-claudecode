@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-25
+
+### Added
+- **Standalone commands**: `/afc:ideate` (divergent idea generation) and `/afc:launch` (deployment readiness check) — independent of the main pipeline
+- **SSOT phase constants**: Centralized phase list in `afc-state.sh`; scripts use helpers instead of hardcoded phase lists
+- **Cross-reference consistency check**: `afc-consistency-check.sh` validates config placeholders, agent names, hook scripts, test coverage, version sync, and phase SSOT — runs as part of `npm run lint`
+
+### Changed
+- **Config format**: `afc.config.md` converted to free-form markdown with only CI Commands in fixed YAML format; init auto-analyzes the project structure instead of selecting presets
+- **Presets removed**: `react-spa`, `express-api`, `monorepo`, `nextjs-fsd` preset templates deleted — replaced by auto-detection in `/afc:init`
+- **Config template**: `afc.config.template.md` simplified to match free-form structure
+- **Fork commands** (analyze, architect, security): Now read `afc.config.md` directly instead of relying on injected config
+- **Model invocation**: `disable-model-invocation` removed from 7 commands for flexibility
+- **Docs**: Hardcoded counts removed from CLAUDE.md, README.md, CONTRIBUTING.md, package.json to prevent staleness
+- **README**: Rewritten for clarity, SEO/AEO optimization, added project image
+- **Plugin description**: Added to plugin.json for marketplace display
+
+### Fixed
+- Fork commands failed when config was not pre-injected into context
+
 ## [2.1.0] - 2026-02-25
 
 ### Breaking Changes
