@@ -22,13 +22,12 @@ model: haiku
 
 ## Config Load
 
-Read the following settings from `CLAUDE.md` or `.claude/CLAUDE.md` at the project root and assign to the `config` variable:
+**Always** read `.claude/afc.config.md` first. This file contains free-form markdown sections:
+- `## Architecture` — architecture pattern, layers, import rules (primary reference for this command)
+- `## Code Style` — language, naming conventions, lint rules
+- `## Project Context` — framework, state management, testing, etc.
 
-```
-config.architecture = the architecture pattern used in the project
-                      (e.g., "FSD", "Clean Architecture", "Layered", "Modular Monolith")
-                      → Architecture standard specified in CLAUDE.md. Assume "Layered Architecture" if not present.
-```
+If config file is missing: read `CLAUDE.md` for architecture info. Assume "Layered Architecture" if neither source has it.
 
 ## Execution Steps
 

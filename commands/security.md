@@ -26,16 +26,14 @@ model: sonnet
 
 ## Config Load
 
-Read the following settings from `CLAUDE.md` or `.claude/CLAUDE.md` at the project root and assign to the `config` variable:
+**Always** read `.claude/afc.config.md` first. This file contains free-form markdown sections:
+- `## Project Context` — framework, state management, testing, etc. (primary source for framework info)
+- `## Architecture` — architecture pattern, layers, import rules
+- `## Code Style` — language, naming conventions, lint rules
 
-```
-config.framework  = the framework used in the project
-                    (e.g., "Next.js", "Nuxt", "SvelteKit", "Express", "NestJS")
-                    → Framework specified in CLAUDE.md. Assume "unknown" if not present.
-config.auditCmd   = dependency audit command
-                    (e.g., "yarn audit", "npm audit", "pnpm audit")
-                    → Infer from the packageManager field in package.json or the lockfile.
-```
+If config file is missing: read `CLAUDE.md` for framework info. Assume "unknown" if neither source has it.
+
+For dependency audit command: infer from `packageManager` field in `package.json` or the lockfile (e.g., `npm audit`, `yarn audit`, `pnpm audit`).
 
 ## Execution Steps
 
