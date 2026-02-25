@@ -34,9 +34,9 @@ If config file is missing:
 3. If user declines → **abort**
 
 Values used from config:
-- `{config.testing}` — test framework (jest, vitest, playwright, etc.)
-- `{config.architecture}` — architecture pattern
-- `{config.gate}` — CI validation command
+- `{config.gate}` — CI validation command (from `## CI Commands` YAML)
+- `{config.architecture}` — architecture pattern (from `## Architecture` section)
+- Test framework info — from `## Project Context` section
 
 ## Execution Steps
 
@@ -63,7 +63,7 @@ Values used from config:
 ```markdown
 ### Test Strategy
 - Target: {file/feature}
-- Framework: {config.testing}
+- Framework: {test framework from Project Context}
 - Test types:
   - [ ] Unit tests: {list of target functions/methods}
   - [ ] Integration tests: {component interactions}

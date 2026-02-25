@@ -33,4 +33,41 @@ Describe "afc-subagent-context.sh"
       The output should include "Phase: implement"
     End
   End
+
+  Context "when config has Project Context section"
+    setup() {
+      setup_tmpdir TEST_DIR
+      setup_state_fixture "$TEST_DIR" "ctx-test" "implement"
+      mkdir -p "$TEST_DIR/.claude"
+      cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## CI Commands
+
+```yaml
+ci: "npm test"
+gate: "npm test"
+test: "npm test"
+```
+
+## Architecture
+
+FSD architecture with strict layer rules.
+
+## Code Style
+
+TypeScript strict mode.
+
+## Project Context
+
+Next.js 14 App Router. Zustand for state. Tailwind CSS.
+CFGEOF
+    }
+
+    It "includes Project Context in output"
+      Data '{}'
+      When run script scripts/afc-subagent-context.sh
+      The status should eq 0
+      The output should include "Project Context:"
+      The output should include "Next.js"
+    End
+  End
 End

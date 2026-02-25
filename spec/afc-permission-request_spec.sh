@@ -127,5 +127,29 @@ CFGEOF
         The output should include '"behavior":"allow"'
       End
     End
+
+    Context "when config has leading whitespace in YAML keys"
+      setup() {
+        setup_tmpdir TEST_DIR
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+        mkdir -p "$TEST_DIR/.claude"
+        cat > "$TEST_DIR/.claude/afc.config.md" << 'CFGEOF'
+## CI Commands
+
+```yaml
+  ci: "npm run ci"
+  gate: "npm run typecheck"
+  test: "npm test"
+```
+CFGEOF
+      }
+
+      It "allows commands with leading whitespace in config"
+        Data '{"tool_input":{"command":"npm run ci"}}'
+        When run script scripts/afc-permission-request.sh
+        The status should eq 0
+        The output should include '"behavior":"allow"'
+      End
+    End
   End
 End

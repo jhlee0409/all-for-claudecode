@@ -109,13 +109,7 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 {summary of core requirements from spec + technical approach, 3-5 sentences}
 
 ## Technical Context
-{summary of project settings loaded from afc.config.md}
-- **Language**: {config.code_style.language}
-- **Framework**: {config.framework.name}
-- **State**: {config.state_management summary}
-- **Architecture**: {config.architecture.style}
-- **Styling**: {config.styling.framework}
-- **Testing**: {config.testing.framework}
+{Summarize key project settings from afc.config.md — Architecture, Code Style, and Project Context sections}
 - **Constraints**: {constraints extracted from spec}
 
 ## Principles Check

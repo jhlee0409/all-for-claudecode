@@ -59,7 +59,7 @@ if [ -f "$CONFIG_FILE" ]; then
   # Extract ci, gate, test values from YAML code block
   # Handles both quoted and unquoted: ci: "npm run lint" or ci: npm run lint
   for key in ci gate test; do
-    val=$(grep -E "^${key}:" "$CONFIG_FILE" 2>/dev/null | head -1 | sed 's/^[^:]*:[[:space:]]*//;s/^"//;s/"[[:space:]]*$//' || true)
+    val=$(grep -E "^\s*${key}:\s*\"[^\"]*\"" "$CONFIG_FILE" 2>/dev/null | head -1 | sed 's/.*'"${key}"': *"\([^"]*\)".*/\1/' || true)
     if [ -n "$val" ] && [ "$val" != '""' ]; then
       DYNAMIC_WHITELIST="${DYNAMIC_WHITELIST:+${DYNAMIC_WHITELIST}|}${val}"
       # Generate PM-agnostic variants (npm → pnpm, yarn, bun)

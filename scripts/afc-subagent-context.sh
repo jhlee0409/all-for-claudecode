@@ -51,6 +51,13 @@ if [ -f "$CONFIG_FILE" ]; then
   if [ -n "$STYLE" ]; then
     CONTEXT="$CONTEXT | Code Style: $STYLE"
   fi
+
+  # Extract Project Context section (## Project Context to next ## or EOF)
+  # shellcheck disable=SC2001
+  PROJ_CTX=$(sed -n '/^## Project Context/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -15 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
+  if [ -n "$PROJ_CTX" ]; then
+    CONTEXT="$CONTEXT | Project Context: $PROJ_CTX"
+  fi
 fi
 
 # 5. Output as hookSpecificOutput JSON (required for SubagentStart context injection)

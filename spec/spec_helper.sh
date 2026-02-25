@@ -44,6 +44,8 @@ setup_config_fixture() {
   local ci_cmd="${2:-npm run lint}"
   mkdir -p "$dir/.claude"
   cat > "$dir/.claude/afc.config.md" << EOF
+# Project Configuration
+
 ## CI Commands
 
 \`\`\`yaml
@@ -51,6 +53,14 @@ ci: "$ci_cmd"
 gate: "$ci_cmd"
 test: "npm test"
 \`\`\`
+
+## Architecture
+
+Layered architecture with src/ root.
+
+## Code Style
+
+TypeScript strict mode. PascalCase components.
 EOF
 }
 

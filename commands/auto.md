@@ -22,13 +22,11 @@ argument-hint: "[feature description in natural language]"
 ## Config Load
 
 **Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above). Values defined in this file are referenced below as `{config.*}`:
-- `{config.ci}` — full CI command
-- `{config.gate}` — phase gate command
-- `{config.architecture}` — architecture style and rules
-- `{config.framework}` — framework characteristics (server/client boundary etc.)
-- `{config.code_style}` — code style rules
-- `{config.risks}` — project-specific risk patterns
-- `{config.mini_review}` — Mini-Review checklist items
+- `{config.ci}` — full CI command (from `## CI Commands` YAML)
+- `{config.gate}` — phase gate command (from `## CI Commands` YAML)
+- `{config.test}` — test command (from `## CI Commands` YAML)
+- `{config.architecture}` — architecture style and rules (from `## Architecture` section)
+- `{config.code_style}` — code style rules (from `## Code Style` section)
 
 If config file is missing:
 1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
@@ -204,8 +202,8 @@ Execute `/afc:plan` logic inline:
      5. Acceptance anchor alignment: Implementation Context Acceptance Anchors faithfully reflect spec acceptance scenarios
    - **RISK criterion mandatory checks**:
      - Enumerate **at least 3** `{config.ci}` failure scenarios and describe mitigation
-     - Check each pattern in `{config.risks}` one by one
-     - Consider `{config.framework}` characteristics (server/client boundary etc.)
+     - Check each risk pattern described in config's Project Context section one by one
+     - Consider framework characteristics from config's Project Context (server/client boundary etc.)
    - **ARCHITECTURE criterion**: explicitly describe import paths for moved/created files and pre-validate against `{config.architecture}` rules
    - Each pass must **explicitly explore what was missed in the previous pass** ("Pass 2: {X} was missed in pass 1. Further review: ...")
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
@@ -328,7 +326,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
    For each acceptance scenario in spec.md:
    - Map GWT to a test case: Given → Arrange, When → Act, Then → Assert
    - Target file: determined by the component/module referenced in the scenario
-   - Test file location: follows project convention ({config.testing} framework patterns)
+   - Test file location: follows project convention (test framework from Project Context)
    ```
 3. Run `{config.test}` to verify tests pass against the implementation
    - If tests fail → this reveals a gap between spec and implementation:
@@ -402,7 +400,7 @@ Execute `/afc:review` logic inline — **follow all review perspectives defined 
    - A. Code Quality — `{config.code_style}` compliance (direct review)
    - B. Architecture — **delegated to afc-architect agent** (persistent memory, ADR-aware)
    - C. Security — **delegated to afc-security agent** (persistent memory, false-positive-aware)
-   - D. Performance — `{config.framework}`-specific patterns (direct review)
+   - D. Performance — framework-specific patterns from Project Context (direct review)
    - E. Project Pattern Compliance — conventions and idioms (direct review)
    - **F. Reusability** — DRY, shared utilities, abstraction level (direct review)
    - **G. Maintainability** — AI/human comprehension, naming clarity, self-contained files (direct review)

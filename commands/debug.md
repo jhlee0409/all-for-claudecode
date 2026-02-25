@@ -48,7 +48,7 @@ Proceed in order:
 
 1. **Error trace**: extract file:line from error message/stack trace → read that code
 2. **Data flow**: trace backwards from the problem point (where did the bad data come in?)
-3. **State analysis**: check relevant {config.state_management} cache state
+3. **State analysis**: check relevant state management cache state (from Project Context)
 4. **Recent changes**: check recent changes with `git log --oneline -10 -- {related files}`
 5. **Race conditions**: check for timing issues between async operations
 

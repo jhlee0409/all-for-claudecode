@@ -127,12 +127,12 @@ For each changed file, examine from the following perspectives:
 - Startup/response latency concerns
 - Unnecessary computation or redundant operations
 - Resource management (memory, file handles, connections, subprocesses)
-- {config.framework}-specific performance patterns
+- Framework-specific performance patterns (from Project Context)
 
 #### E. Project Pattern Compliance
 - {config.code_style} naming and structure conventions
 - {config.architecture} layer rules and boundaries
-- {config.framework}-specific idioms and best practices
+- Framework-specific idioms and best practices (from Project Context)
 
 #### F. Reusability
 - Duplicate or near-duplicate logic across files

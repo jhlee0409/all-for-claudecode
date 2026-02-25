@@ -1,7 +1,7 @@
 ---
 name: afc:init
 description: "Project initial setup"
-argument-hint: "[preset: nextjs-fsd | react-spa | express-api | monorepo]"
+argument-hint: "[additional context]"
 allowed-tools:
   - Read
   - Write
@@ -17,9 +17,7 @@ model: haiku
 
 ## Arguments
 
-- `$ARGUMENTS` — (optional) Template preset name (e.g., `nextjs-fsd`)
-  - If not specified: analyzes project structure and auto-infers
-  - If preset specified: uses `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.{preset}.md`
+- `$ARGUMENTS` — (optional) Additional context or hints for project analysis
 
 ## Execution Steps
 
@@ -54,64 +52,76 @@ If `.claude/afc.config.md` already exists:
 - Ask user: "Config file already exists. Do you want to overwrite it?"
 - If declined: **abort**
 
-### 3. Preset Branch
+### 3. Analyze Project Structure
 
-#### A. Preset Specified (`$ARGUMENTS` provided)
-
-1. Verify `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.{$ARGUMENTS}.md` exists
-2. If found: copy that file to `.claude/afc.config.md`
-3. If not found: print "Preset `{$ARGUMENTS}` not found. Available: {list}" then **abort**
-
-#### B. Auto-Infer (`$ARGUMENTS` not provided)
-
-Analyze project structure and auto-infer configuration:
+Analyze the project and auto-infer configuration. Use `$ARGUMENTS` as additional context if provided.
 
 **Step 1. Package Manager / Script Detection**
 - Read `package.json` → extract CI-related commands from `scripts` field
-- Determine package manager from lockfile (yarn.lock / pnpm-lock.yaml / package-lock.json)
-- Reflect detected scripts in `CI Commands` section
+- Determine package manager from lockfile:
+
+| Lockfile | Package Manager |
+|----------|----------------|
+| `pnpm-lock.yaml` | pnpm |
+| `yarn.lock` | yarn |
+| `bun.lockb` or `bun.lock` | bun |
+| `package-lock.json` | npm |
+
+- If no lockfile: check `packageManager` field in `package.json`
+- Non-JS projects: check `pyproject.toml` (Python), `Cargo.toml` (Rust), `go.mod` (Go)
 
 **Step 2. Framework Detection**
 - Determine from `package.json` dependencies/devDependencies:
-  - `next` → Next.js (App Router/Pages Router determined by presence of `app/` directory)
-  - `nuxt` → Nuxt
-  - `@sveltejs/kit` → SvelteKit
-  - `vite` → Vite
-  - etc.
+
+| Dependency | Framework |
+|-----------|-----------|
+| `next` | Next.js (App Router if `app/` dir exists, else Pages Router) |
+| `nuxt` | Nuxt |
+| `@sveltejs/kit` | SvelteKit |
+| `@remix-run/react` | Remix |
+| `astro` | Astro |
+| `@angular/core` | Angular |
+| `vite` (alone) | Vite SPA |
+| `hono` | Hono |
+| `fastify` | Fastify |
+| `express` | Express |
+
+- Non-JS: `pyproject.toml` → Django/FastAPI/Flask, `Cargo.toml` → Rust project, `go.mod` → Go project
 - Presence of `tsconfig.json` → TypeScript indicator
 
 **Step 3. Architecture Detection**
 - Analyze directory structure:
-  - `src/app/`, `src/features/`, `src/entities/`, `src/shared/` → FSD
+  - FSD: requires **at least 3** of `features/`, `entities/`, `shared/`, `widgets/`, `pages/` under `src/`
   - `src/domain/`, `src/application/`, `src/infrastructure/` → Clean Architecture
   - `src/modules/` → Modular
   - Other → Layered
-- `paths` in `tsconfig.json` → extract path_alias
+- `paths` in `tsconfig.json` → extract path alias
 
-**Step 4. State Management Detection**
-- From dependencies:
-  - `zustand` → Zustand
-  - `@reduxjs/toolkit` → Redux Toolkit
-  - `@tanstack/react-query` → React Query
-  - `swr` → SWR
-  - `pinia` → Pinia
+**Step 4. State / Styling / Testing / DB Detection**
+- State management: `zustand`, `@reduxjs/toolkit`, `@tanstack/react-query`, `swr`, `pinia`, `jotai`, `recoil`
+- Styling: `tailwindcss`, `styled-components`, `@emotion/react`, `sass`, CSS Modules (check for `*.module.css`)
+- Testing: `jest`, `vitest`, `playwright`, `@testing-library/*`, `cypress`
+- Linter: `.eslintrc*` / `eslint.config.*` / `biome.json` / `biome.jsonc`
+- DB/ORM: `prisma` (check `prisma/schema.prisma`), `drizzle-orm`, `typeorm`, `@prisma/client`
 
-**Step 5. Styling / Testing Detection**
-- `tailwindcss` → Tailwind CSS
-- `styled-components` → styled-components
-- `jest` / `vitest` / `playwright` → mapped respectively
-
-**Step 6. Code Style Detection**
-- Check `.eslintrc*` / `eslint.config.*` → identify lint rules
-- `strict` in `tsconfig.json` → strict_mode
+**Step 5. Code Style Detection**
+- Check linter config → identify key rules
+- `strict` in `tsconfig.json` → strict mode
 - Read 2-3 existing code samples to verify naming patterns
 
 ### 4. Generate Config File
 
-1. Generate config based on `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.template.md`
-2. Fill in blanks with auto-inferred values
-3. For items that cannot be inferred: keep template defaults + mark with `# TODO: Adjust for your project`
-4. Save to `.claude/afc.config.md`
+Generate `.claude/afc.config.md` in **free-form markdown** format:
+
+1. **CI Commands** section: YAML code block with `ci`, `gate`, `test` keys (fixed format, scripts parse these)
+2. **Architecture** section: describe detected architecture style, layers, import rules, path aliases in free-form prose/lists
+3. **Code Style** section: describe detected language, strictness, naming conventions, lint rules in free-form prose/lists
+4. **Project Context** section: describe framework, state management, styling, testing, DB/ORM, risks, and any other relevant project characteristics in free-form prose/lists
+
+Reference `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.template.md` for the section structure.
+Write sections as natural descriptions — **no YAML code blocks** except for CI Commands.
+For items that cannot be inferred: note `TODO: Adjust for your project` inline.
+Save to `.claude/afc.config.md`.
 
 ### 5. Scan Global CLAUDE.md and Detect Conflicts
 
@@ -269,7 +279,6 @@ all-for-claudecode initialization complete
 
 - **Overwrite caution**: If config file already exists, always confirm with user.
 - **Inference limits**: Auto-inference is best-effort. User may need to review and adjust.
-- **Preset path**: Presets are loaded from the `templates/` directory inside the plugin.
 - **`.claude/` directory**: Created automatically if it does not exist.
 - **Global CLAUDE.md principles**:
   - Never modify content outside the `<!-- AFC:START/END -->` markers (the `AFC` prefix in markers is a compact technical identifier)

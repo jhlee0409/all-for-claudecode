@@ -66,7 +66,7 @@ Task("Security scan: src/shared/api/", subagent_type: general-purpose)
 - Session management vulnerabilities
 
 #### C. Sensitive Data Exposure (A02:2021)
-- `.env` values exposed to the client (check framework-specific public env variables for {config.framework})
+- `.env` values exposed to the client (check framework-specific public env variables from Project Context)
 - Sensitive information printed via console.log
 - Internal details exposed in error messages
 
@@ -107,7 +107,7 @@ Task("Security scan: src/shared/api/", subagent_type: general-purpose)
 - **Mitigation**: {how to fix}
 
 ### Dependency Audit
-{config.auditCmd} result summary — if executable
+{dependency audit command result summary — if executable}
 
 ### Recommended Actions
 {prioritized fix suggestions}
@@ -127,4 +127,4 @@ Security scan complete
 - **Read-only**: Does not modify code. Reports security issues only.
 - **Minimize false positives**: Account for React's default XSS defenses. Report only genuinely dangerous patterns.
 - **Handle sensitive data carefully**: Do not include actual token or password values in scan results.
-- **Consider context**: Reflect security specifics for the {config.framework} environment.
+- **Consider context**: Reflect security specifics for the project's framework environment (from Project Context).

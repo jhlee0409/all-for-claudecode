@@ -16,7 +16,7 @@ Single spec run: `vendor/shellspec/shellspec spec/afc-bash-guard_spec.sh`
 
 ## Architecture
 
-all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → implement → review → clean) through markdown command prompts, bash hook scripts, and project preset templates. Tasks are generated automatically at implement start from plan.md's File Change Map (no separate tasks phase). Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or orchestrator-managed swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
+all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → implement → review → clean) through markdown command prompts and bash hook scripts. Project config (`afc.config.md`) uses free-form markdown with only CI Commands in fixed YAML format; init auto-analyzes the project structure instead of using presets. Tasks are generated automatically at implement start from plan.md's File Change Map (no separate tasks phase). Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or orchestrator-managed swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
 
 ### Core Layers
 
@@ -26,7 +26,7 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
 - **scripts/** — 25 bash scripts + 2 Node.js ESM validators (.mjs) + 1 shared state library (afc-state.sh). Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
-- **templates/** — 5 project preset configs (nextjs-fsd, react-spa, express-api, monorepo, template)
+- **templates/** — config template (`afc.config.template.md`) defining free-form markdown structure with fixed CI Commands YAML section
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
 - **.claude-plugin/** — Plugin manifest (`plugin.json`) and marketplace registration (`marketplace.json`)
 
