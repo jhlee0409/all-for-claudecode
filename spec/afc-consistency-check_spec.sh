@@ -29,10 +29,10 @@ name: afc-test-agent
 Test agent
 AGENT
 
-    # Command referencing config and agent
-    cat > "$dir/commands/test-cmd.md" << 'CMD'
+    # Command referencing config and agent (name matches valid phase 'spec')
+    cat > "$dir/commands/spec.md" << 'CMD'
 ---
-name: afc:test-cmd
+name: afc:spec
 description: "Test command"
 ---
 Use {config.ci} and {config.architecture}
@@ -93,7 +93,7 @@ SCRIPT
     AfterAll "cleanup_tmpdir $DIR2"
 
     It "fails on undefined {config.nonexistent}"
-      printf '{config.nonexistent}\n' >> "$DIR2/commands/test-cmd.md"
+      printf '{config.nonexistent}\n' >> "$DIR2/commands/spec.md"
       When run bash "$SCRIPT" "$DIR2"
       The status should eq 1
       The output should include "Done"
@@ -107,7 +107,7 @@ SCRIPT
     AfterAll "cleanup_tmpdir $DIR3"
 
     It "fails on missing agent definition"
-      printf 'subagent_type: "afc:afc-missing-agent"\n' >> "$DIR3/commands/test-cmd.md"
+      printf 'subagent_type: "afc:afc-missing-agent"\n' >> "$DIR3/commands/spec.md"
       When run bash "$SCRIPT" "$DIR3"
       The status should eq 1
       The output should include "Done"
@@ -194,6 +194,27 @@ SCRIPT
       The status should eq 1
       The output should include "Done"
       The stderr should include "hardcoded phase list"
+    End
+  End
+
+  Describe "when command name is not a valid phase and not in non-phase list"
+    setup_tmpdir DIR9
+    BeforeAll "setup_project_fixture $DIR9"
+    AfterAll "cleanup_tmpdir $DIR9"
+
+    It "warns on unrecognized command name"
+      cat > "$DIR9/commands/unknown-phase.md" << 'CMD'
+---
+name: afc:unknown-phase
+description: "Unknown"
+---
+Unknown phase command
+CMD
+      When run bash "$SCRIPT" "$DIR9"
+      The status should eq 0
+      The output should include "Done"
+      The stderr should include "unknown-phase"
+      The stderr should include "not a recognized phase"
     End
   End
 

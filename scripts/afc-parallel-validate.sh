@@ -15,9 +15,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# shellcheck disable=SC2034
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-
 TASKS_FILE="${1:-}"
 if [ -z "$TASKS_FILE" ]; then
   printf 'Usage: %s <tasks_file_path>\n' "$0" >&2

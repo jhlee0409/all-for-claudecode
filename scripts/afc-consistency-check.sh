@@ -221,8 +221,9 @@ check_phase_ssot() {
   # shellcheck source=afc-state.sh
   . "$SCRIPT_DIR/afc-state.sh"
 
-  local dupes=0
-  # Look for hardcoded phase lists (pipe-separated patterns with 3+ known phases)
+  local issues=0
+
+  # Sub-check A: No hardcoded phase lists in other scripts
   for script in "$PROJECT_DIR"/scripts/afc-*.sh; do
     local scriptname
     scriptname=$(basename "$script")
@@ -233,12 +234,34 @@ check_phase_ssot() {
     # Check for hardcoded phase case patterns (spec|plan|...|clean style)
     if grep -qE 'spec\|plan\|.*\|clean' "$script" 2>/dev/null; then
       fail "$scriptname contains hardcoded phase list — use SSOT helpers from afc-state.sh"
-      dupes=$((dupes + 1))
+      issues=$((issues + 1))
     fi
   done
 
-  if [ "$dupes" -eq 0 ]; then
-    ok "Phase SSOT: no hardcoded phase lists found in scripts"
+  # Sub-check B: Every command name should map to a valid phase or be a known non-phase command
+  # Non-phase commands that are not pipeline phases
+  # NOTE: Update this list when adding non-phase commands to commands/
+  local non_phase_cmds="auto|init|doctor|principles|checkpoint|resume|launch|ideate|research|architect|security|debug|analyze|test"
+  local commands_dir="$PROJECT_DIR/commands"
+  if [ -d "$commands_dir" ]; then
+    for cmd_file in "$commands_dir"/*.md; do
+      [ -f "$cmd_file" ] || continue
+      local cmd_name
+      cmd_name=$(basename "$cmd_file" .md)
+      # Skip known non-phase commands
+      if printf '%s\n' "$non_phase_cmds" | tr '|' '\n' | grep -qxF "$cmd_name"; then
+        continue
+      fi
+      # Remaining commands should correspond to a valid phase
+      if ! afc_is_valid_phase "$cmd_name"; then
+        warn "Command '$cmd_name' is not a recognized phase in AFC_VALID_PHASES and not in non-phase list"
+        issues=$((issues + 1))
+      fi
+    done
+  fi
+
+  if [ "$issues" -eq 0 ]; then
+    ok "Phase SSOT: no hardcoded lists, all commands map to valid phases"
   fi
 }
 

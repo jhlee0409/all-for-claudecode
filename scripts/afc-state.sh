@@ -217,9 +217,7 @@ afc_state_checkpoint() {
     return 1
   fi
   local git_sha=""
-  if cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null; then
-    git_sha=$(git rev-parse --short HEAD 2>/dev/null || echo "")
-  fi
+  git_sha=$(cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null && git rev-parse --short HEAD 2>/dev/null || echo "")
   local now
   now=$(date +%s)
   if command -v jq >/dev/null 2>&1; then
@@ -234,23 +232,4 @@ afc_state_checkpoint() {
     fi
   fi
   # No sed fallback — phaseCheckpoints is array-typed, too complex for sed
-}
-
-# Legacy fallback: check if old flag files exist
-# Returns: 0 if legacy state found, 1 if not
-# Side effect: sets FEATURE and PHASE variables
-_afc_state_legacy_check() {
-  local dir="${_AFC_STATE_DIR}"
-  if [ -f "$dir/.afc-active" ]; then
-    # shellcheck disable=SC2034
-    FEATURE=$(head -1 "$dir/.afc-active" 2>/dev/null | tr -d '\n\r')
-    # shellcheck disable=SC2034
-    PHASE=""
-    if [ -f "$dir/.afc-phase" ]; then
-      # shellcheck disable=SC2034
-      PHASE=$(head -1 "$dir/.afc-phase" 2>/dev/null | tr -d '\n\r')
-    fi
-    return 0
-  fi
-  return 1
 }

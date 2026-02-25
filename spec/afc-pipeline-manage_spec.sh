@@ -40,6 +40,14 @@ Describe "afc-pipeline-manage.sh"
       The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "plan"
     End
 
+    It "records phase checkpoint with timestamp"
+      When run script scripts/afc-pipeline-manage.sh phase spec
+      The status should eq 0
+      The output should include "Phase: spec"
+      The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "phaseCheckpoints"
+      The contents of file "$TEST_DIR/.claude/.afc-state.json" should include '"phase"'
+    End
+
     Context "new phase names"
       It "accepts clarify phase"
         When run script scripts/afc-pipeline-manage.sh phase clarify

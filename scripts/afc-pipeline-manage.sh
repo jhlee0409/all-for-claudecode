@@ -76,6 +76,7 @@ case "$COMMAND" in
     if afc_is_valid_phase "$PHASE"; then
       afc_state_write "phase" "$PHASE"
       afc_state_invalidate_ci
+      afc_state_checkpoint "$PHASE"
       echo "Phase: $PHASE"
     else
       printf "[afc:pipeline] Invalid phase: %s\n  → Valid phases: %s\n" "$PHASE" "$AFC_VALID_PHASES" >&2
@@ -125,6 +126,13 @@ case "$COMMAND" in
       if [ -n "$CHANGES" ]; then
         CHANGE_COUNT=$(printf '%s\n' "$CHANGES" | wc -l | tr -d ' ')
         echo "Changes: $CHANGE_COUNT files"
+      fi
+      # Show checkpoint count if available
+      if command -v jq >/dev/null 2>&1; then
+        CP_COUNT=$(jq '.phaseCheckpoints | length' "$_AFC_STATE_FILE" 2>/dev/null || echo 0)
+        if [ "$CP_COUNT" -gt 0 ]; then
+          echo "Checkpoints: $CP_COUNT phases recorded"
+        fi
       fi
     else
       echo "No active pipeline"
