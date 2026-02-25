@@ -140,8 +140,18 @@ afc_state_remove() {
     else
       rm -f "$tmp"
     fi
+  else
+    # sed fallback: remove the field line from JSON
+    if grep -q "\"${field}\"" "$_AFC_STATE_FILE" 2>/dev/null; then
+      local tmp
+      tmp=$(mktemp)
+      # Remove line containing the field, then fix trailing commas
+      grep -v "\"${field}\"" "$_AFC_STATE_FILE" > "$tmp" 2>/dev/null || true
+      # Fix ",}" or ",]" left by removal
+      sed 's/,[[:space:]]*}/}/g; s/,[[:space:]]*\]/]/g' "$tmp" > "$_AFC_STATE_FILE"
+      rm -f "$tmp"
+    fi
   fi
-  # sed fallback: skip removal (non-critical)
 }
 
 # Initialize state for a new pipeline

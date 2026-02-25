@@ -40,16 +40,15 @@ case "$NOTIFICATION_TYPE" in
 esac
 
 # Detect platform and send notification (non-blocking via async: true in hooks.json)
-# Sanitize message (prevent AppleScript/shell injection)
-# shellcheck disable=SC1003
-SAFE_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/[\"\\$`]/\\&/g' | head -1 | cut -c1-200)
-# shellcheck disable=SC1003
-SAFE_TITLE=$(printf '%s' "$TITLE" | sed 's/[\"\\$`]/\\&/g')
+# Sanitize message (truncate, single line)
+SAFE_MESSAGE=$(printf '%s' "$MESSAGE" | head -1 | cut -c1-200)
+SAFE_TITLE=$(printf '%s' "$TITLE" | head -1 | cut -c1-50)
 
 OS=$(uname -s)
 case "$OS" in
   Darwin)
-    osascript -e "display notification \"$SAFE_MESSAGE\" with title \"$SAFE_TITLE\"" &>/dev/null || true
+    # Use positional arguments to avoid shell/AppleScript injection
+    osascript -e 'on run argv' -e 'display notification (item 2 of argv) with title (item 1 of argv)' -e 'end run' -- "$SAFE_TITLE" "$SAFE_MESSAGE" &>/dev/null || true
     ;;
   Linux)
     if command -v notify-send &>/dev/null; then

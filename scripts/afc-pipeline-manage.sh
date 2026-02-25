@@ -73,6 +73,10 @@ case "$COMMAND" in
 
   phase)
     PHASE="${2:?Phase name required}"
+    if ! afc_state_is_active; then
+      echo "[afc:pipeline] No active pipeline — run '$0 start <feature>' first" >&2
+      exit 1
+    fi
     if afc_is_valid_phase "$PHASE"; then
       afc_state_write "phase" "$PHASE"
       afc_state_invalidate_ci
@@ -85,6 +89,10 @@ case "$COMMAND" in
     ;;
 
   ci-pass)
+    if ! afc_state_is_active; then
+      echo "[afc:pipeline] No active pipeline — run '$0 start <feature>' first" >&2
+      exit 1
+    fi
     afc_state_ci_pass
     echo "CI passed at $(date '+%H:%M:%S')"
     ;;

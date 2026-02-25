@@ -59,7 +59,14 @@ if [ -f "$CONFIG_FILE" ]; then
   # Extract ci, gate, test values from YAML code block
   # Handles both quoted and unquoted: ci: "npm run lint" or ci: npm run lint
   for key in ci gate test; do
+    # Try double-quoted first, then single-quoted, then unquoted
     val=$(grep -E "^\s*${key}:\s*\"[^\"]*\"" "$CONFIG_FILE" 2>/dev/null | head -1 | sed 's/.*'"${key}"': *"\([^"]*\)".*/\1/' || true)
+    if [ -z "$val" ] || [ "$val" = '""' ]; then
+      val=$(grep -E "^\s*${key}:\s*'[^']*'" "$CONFIG_FILE" 2>/dev/null | head -1 | sed "s/.*${key}: *'\\([^']*\\)'.*/\\1/" || true)
+    fi
+    if [ -z "$val" ] || [ "$val" = '""' ]; then
+      val=$(grep -E "^\s*${key}:\s*[^\"']" "$CONFIG_FILE" 2>/dev/null | head -1 | sed "s/.*${key}:[[:space:]]*//" | sed 's/[[:space:]]*$//' || true)
+    fi
     if [ -n "$val" ] && [ "$val" != '""' ]; then
       DYNAMIC_WHITELIST="${DYNAMIC_WHITELIST:+${DYNAMIC_WHITELIST}|}${val}"
       # Generate PM-agnostic variants (npm → pnpm, yarn, bun)
@@ -101,6 +108,7 @@ fi
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
 if [ "$ALLOWED" = "false" ] && [ -n "$PLUGIN_ROOT" ]; then
   case "$COMMAND" in
+    *..*)  ;;  # Block path traversal
     "\"${PLUGIN_ROOT}/scripts/"*|"${PLUGIN_ROOT}/scripts/"*)
       ALLOWED=true
       ;;
@@ -117,11 +125,17 @@ if [ "$ALLOWED" = "false" ]; then
       ALLOWED=true
       ;;
     "chmod +x "*)
-      # Only allow paths within project directory (block path traversal)
+      # Only allow paths within project directory (block path traversal + symlinks)
       TARGET="${COMMAND#chmod +x }"
       case "$TARGET" in
         *..*)  ;;  # Block path traversal
-        "$PROJECT_DIR"/*|./scripts/*|scripts/*) ALLOWED=true ;;
+        "$PROJECT_DIR"/*|./scripts/*|scripts/*)
+          # Resolve symlinks to verify target is actually within project
+          RESOLVED=$(realpath -m "$TARGET" 2>/dev/null || echo "$TARGET")
+          case "$RESOLVED" in
+            "$PROJECT_DIR"/*) ALLOWED=true ;;
+          esac
+          ;;
       esac
       ;;
   esac

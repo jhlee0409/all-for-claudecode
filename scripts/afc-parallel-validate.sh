@@ -41,8 +41,9 @@ conflict_found=0
 conflict_messages=""
 
 TMPDIR_WORK="$(mktemp -d)"
-# shellcheck disable=SC2064
-trap "rm -rf '$TMPDIR_WORK'; :" EXIT
+# shellcheck disable=SC2329
+cleanup() { rm -rf "$TMPDIR_WORK"; }
+trap cleanup EXIT
 
 phase_index="$TMPDIR_WORK/phase_index.tsv"
 

@@ -203,8 +203,10 @@ check_version_sync() {
   else
     pkg_ver=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$pkg" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"//;s/"//')
     plugin_ver=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$plugin" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"//;s/"//')
-    market_meta=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$market" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"//;s/"//')
-    market_plugin=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$market" | sed -n '2p' | sed 's/.*"version"[[:space:]]*:[[:space:]]*"//;s/"//')
+    # Extract metadata.version (appears after "metadata" key) and plugins[].version (appears after "plugins" key)
+    # Use awk to track context instead of relying on field ordering
+    market_meta=$(awk '/"metadata"/{found=1} found && /"version"/{gsub(/.*"version"[[:space:]]*:[[:space:]]*"/,""); gsub(/".*/,""); print; exit}' "$market" 2>/dev/null || true)
+    market_plugin=$(awk '/"plugins"/{found=1} found && /"version"/{gsub(/.*"version"[[:space:]]*:[[:space:]]*"/,""); gsub(/".*/,""); print; exit}' "$market" 2>/dev/null || true)
   fi
 
   if [ "$pkg_ver" = "$plugin_ver" ] && [ "$plugin_ver" = "$market_meta" ] && [ "$market_meta" = "$market_plugin" ]; then

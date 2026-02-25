@@ -36,8 +36,9 @@ fi
 
 # Parse tasks and dependencies
 TMPDIR_WORK="$(mktemp -d)"
-# shellcheck disable=SC2064
-trap "rm -rf '$TMPDIR_WORK'; :" EXIT
+# shellcheck disable=SC2329
+cleanup() { rm -rf "$TMPDIR_WORK"; }
+trap cleanup EXIT
 
 NODES_FILE="$TMPDIR_WORK/nodes.txt"
 EDGES_FILE="$TMPDIR_WORK/edges.txt"

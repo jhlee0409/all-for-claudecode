@@ -60,7 +60,12 @@ while IFS= read -r file_path; do
   COUNT=$((COUNT + 1))
   [ "$COUNT" -gt 5 ] && break
 
-  FULL_PATH="$PROJECT_DIR/$file_path"
+  # Handle both absolute paths (from Claude tool_input) and relative paths
+  if [ "${file_path#/}" != "$file_path" ]; then
+    FULL_PATH="$file_path"
+  else
+    FULL_PATH="$PROJECT_DIR/$file_path"
+  fi
   [ -f "$FULL_PATH" ] || continue
 
   MARKERS=$(grep -nE '\b(TODO|FIXME|HACK)\b' "$FULL_PATH" 2>/dev/null | head -3 || true)
