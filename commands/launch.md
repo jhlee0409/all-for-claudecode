@@ -21,7 +21,7 @@ model: sonnet
 ## Arguments
 
 - `$ARGUMENTS` — (optional) One of:
-  - Version tag: `"v2.2.0"` — uses this as the release version
+  - Version tag: e.g. `"v2.2.1"` — uses this as the release version
   - `"auto"` — auto-detects version from package.json/Cargo.toml/pyproject.toml
   - Not specified: prompts for version
 
