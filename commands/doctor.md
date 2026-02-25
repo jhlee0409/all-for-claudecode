@@ -2,7 +2,6 @@
 name: afc:doctor
 description: "Diagnose project health and plugin setup"
 argument-hint: "[--verbose]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Grep

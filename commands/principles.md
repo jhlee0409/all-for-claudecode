@@ -2,7 +2,6 @@
 name: afc:principles
 description: "Manage project principles"
 argument-hint: "[action: add, remove, init]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Write

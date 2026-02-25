@@ -158,7 +158,7 @@ See [MIGRATION.md](MIGRATION.md) for step-by-step upgrade guide from v1.x.
 - Stop hook enhanced with agent handler for code completeness verification
 - Dynamic config injection via `!`command`` syntax in command prompts
 - `context: fork` for read-only commands (analyze, architect, security)
-- Invocation control: `user-invocable: false` (3 commands), `disable-model-invocation: true` (7 commands)
+- Invocation control: `user-invocable: false` (3 commands)
 - `/afc:doctor` project health diagnosis command
 - `/afc:test` test generation command
 - 3 preset templates: react-spa, express-api, monorepo

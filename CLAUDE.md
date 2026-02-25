@@ -20,7 +20,7 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 
 ### Core Layers
 
-- **commands/** — 18 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `disable-model-invocation`, `context`)
+- **commands/** — 18 markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`)
 - **agents/** — 3 subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
 - **hooks/hooks.json** — Declares 17 hook events with 3 handler types: `command` (shell scripts), `prompt` (LLM single-turn), `agent` (subagent with tools). 4 hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
@@ -50,7 +50,6 @@ Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claud
 ### Command Frontmatter Controls
 
 - `user-invocable: false` — hidden from `/` menu, only model-callable (3 commands: analyze, clarify, tasks)
-- `disable-model-invocation: true` — user-only, prevents auto-calling (7 commands: init, doctor, principles, checkpoint, resume, architect, security)
 - `context: fork` — runs in isolated subagent, result returned to main context (3 commands: analyze, architect, security). architect and security use custom agents with `memory: project` for persistent learning
 - `model: haiku|sonnet` — model routing per command complexity (haiku for mechanical tasks, sonnet for design/analysis, omit for orchestrator inheritance)
 

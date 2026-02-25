@@ -2,7 +2,6 @@
 name: afc:checkpoint
 description: "Save session state"
 argument-hint: "[checkpoint message]"
-disable-model-invocation: true
 model: haiku
 allowed-tools:
   - Read

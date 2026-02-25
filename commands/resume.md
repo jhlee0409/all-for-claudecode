@@ -2,7 +2,6 @@
 name: afc:resume
 description: "Restore session"
 argument-hint: "[no arguments]"
-disable-model-invocation: true
 model: haiku
 allowed-tools:
   - Read

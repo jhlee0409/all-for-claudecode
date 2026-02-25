@@ -21,7 +21,6 @@ Every command should have a `model:` field:
 
 ## Invocation Control
 - `user-invocable: false` — hidden from / menu, model-only (analyze, clarify, tasks)
-- `disable-model-invocation: true` — user-only (init, doctor, principles, checkpoint, resume, architect, security)
 - `context: fork` — isolated subagent execution (analyze, architect, security)
 
 ## Shared References

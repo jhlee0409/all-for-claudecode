@@ -2,7 +2,6 @@
 name: afc:security
 description: "Security scan (read-only)"
 argument-hint: "[scan scope: file/directory path or full]"
-disable-model-invocation: true
 context: fork
 agent: afc-security
 allowed-tools:

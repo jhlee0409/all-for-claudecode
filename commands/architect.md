@@ -2,7 +2,6 @@
 name: afc:architect
 description: "Architecture analysis and design advice"
 argument-hint: "[analysis target or design question]"
-disable-model-invocation: true
 context: fork
 agent: afc-architect
 allowed-tools:
