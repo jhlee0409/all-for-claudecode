@@ -15,13 +15,13 @@ Every command must have YAML frontmatter with:
 
 ## Model Assignment
 Every command should have a `model:` field:
-- `haiku` — mechanical/simple tasks (init, doctor, principles, analyze, checkpoint, resume)
-- `sonnet` — design/analysis tasks (spec, plan, tasks, clarify, review, research, debug, test, architect, security)
+- `haiku` — mechanical/simple tasks (init, doctor, principles, validate, checkpoint, resume)
+- `sonnet` — design/analysis tasks (spec, plan, tasks, clarify, review, research, debug, test, architect, security, analyze)
 - Omit for orchestrators (auto, implement) to inherit parent model
 
 ## Invocation Control
-- `user-invocable: false` — hidden from / menu, model-only (analyze, clarify, tasks)
-- `context: fork` — isolated subagent execution (analyze, architect, security)
+- `user-invocable: false` — hidden from / menu, model-only (validate, clarify, tasks)
+- `context: fork` — isolated subagent execution (validate, analyze, architect, security)
 
 ## Shared References
 - Critic Loop rules: reference `docs/critic-loop-rules.md`

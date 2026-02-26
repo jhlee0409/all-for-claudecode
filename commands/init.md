@@ -149,7 +149,7 @@ In the **unguarded** (non-marker-block) content only, find directives containing
 - `code-reviewer`, `quality-reviewer`, `style-reviewer`, `api-reviewer`, `security-reviewer`, `performance-reviewer` — conflicts with afc:review
 - `debugger` (in agent routing context) — conflicts with afc:debug
 - `planner` (in agent routing context) — conflicts with afc:plan
-- `analyst`, `verifier` — conflicts with afc:analyze
+- `analyst`, `verifier` — conflicts with afc:validate
 - `test-engineer` — conflicts with afc:test
 
 **C. Skill Routing Conflict Detection**
@@ -220,7 +220,8 @@ IMPORTANT: For requests matching the afc skill routing table below, always invok
 | Debug | `afc:debug` | bug, error, broken, fix |
 | Test | `afc:test` | test, coverage |
 | Design | `afc:plan` | design, plan, how to implement |
-| Analyze | `afc:analyze` | consistency, analyze, validate |
+| Validate | `afc:validate` | consistency, validate, validate artifacts |
+| Analyze | `afc:analyze` | analyze, explore, investigate code, root cause |
 | Spec | `afc:spec` | spec, specification |
 | Tasks | `afc:tasks` | break down tasks, decompose |
 | Research | `afc:research` | research, investigate |

@@ -1,125 +1,103 @@
 ---
 name: afc:analyze
-description: "Artifact consistency validation (read-only)"
-argument-hint: "[validation scope: spec-plan, tasks-only]"
-user-invocable: false
+description: "General-purpose code and component analysis"
+argument-hint: "<analysis target or question>"
+user-invocable: true
 context: fork
 allowed-tools:
   - Read
   - Grep
   - Glob
-model: haiku
+  - WebSearch
+model: sonnet
 ---
 
-# /afc:analyze — Artifact Consistency Validation
+# /afc:analyze — Code Analysis
 
-> Validates consistency and quality across spec.md, plan.md, and tasks.md.
+> Performs general-purpose codebase exploration and analysis based on a natural-language prompt.
 > **Read-only** — does not modify any files.
 
 ## Arguments
 
-- `$ARGUMENTS` — (optional) limit validation scope (e.g., "spec-plan", "tasks-only")
+- `$ARGUMENTS` — (required) description of what to analyze (e.g., "trace the login flow", "root cause of rendering bug", "how does the hook system work")
 
 ## Config Load
 
 **Always** read `.claude/afc.config.md` first. This file contains free-form markdown sections:
-- `## Architecture` — architecture pattern, layers, import rules (primary reference for this command)
+- `## Architecture` — architecture pattern, layers, import rules (primary reference for structural analysis)
 - `## Code Style` — language, naming conventions, lint rules
 - `## Project Context` — framework, state management, testing, etc.
 
-If config file is missing: read `CLAUDE.md` for architecture info. Assume "Layered Architecture" if neither source has it.
+If config file is missing: read `CLAUDE.md` for architecture info. Proceed without config if neither exists.
 
 ## Execution Steps
 
-### 1. Load Artifacts
+### 1. Parse Analysis Intent
 
-From `.claude/afc/specs/{feature}/`:
-- **spec.md** (required)
-- **plan.md** (required)
-- **tasks.md** (if present)
-- **research.md** (if present)
+Classify `$ARGUMENTS` into one of these analysis modes:
 
-Warn about missing files but proceed with what is available.
+| Mode | Trigger Keywords | Focus |
+|------|-----------------|-------|
+| **Root Cause** | "why", "cause", "bug", "error", "broken" | Error trace → data flow → hypothesis |
+| **Structural** | "how", "architecture", "flow", "trace", "structure" | Component relationships, call graphs, data flow |
+| **Exploratory** | "what", "find", "where", "which", "list" | File/function discovery, pattern matching |
+| **Comparative** | "difference", "compare", "vs", "between" | Side-by-side analysis of implementations |
 
-### 2. Run Validation
+If the intent doesn't clearly match a mode, default to **Exploratory**.
 
-Validate across 6 categories:
+### 2. Codebase Exploration
 
-#### A. Duplication Detection (DUPLICATION)
-- Similar requirements within spec.md
-- Overlapping tasks within tasks.md
+Based on the classified mode:
 
-#### B. Ambiguity Detection (AMBIGUITY)
-- Unmeasurable adjectives ("appropriate", "fast", "good")
-- Residual TODO/TBD/FIXME markers
-- Incomplete sentences
+1. **Identify scope**: determine which files/directories are relevant to `$ARGUMENTS`
+2. **Read code**: read relevant files using Read tool (prioritize by relevance)
+3. **Trace connections**: follow imports, function calls, and data flow
+4. **Gather evidence**: collect specific code references (file:line) for findings
 
-#### C. Coverage Gaps (COVERAGE)
-- spec → plan: Are all FR-*/NFR-* reflected in the plan?
-- plan → tasks: Are all items in the plan's File Change Map present in tasks?
-- spec → tasks: Are all requirements mapped to tasks?
+Exploration should be guided by `{config.architecture}` layer structure when available.
 
-#### D. Inconsistencies (INCONSISTENCY)
-- Terminology drift (different names for the same concept)
-- Conflicting requirements
-- Mismatches between technical decisions in plan and execution in tasks
+### 3. Analysis
 
-#### E. Principles Compliance (PRINCIPLES)
-- Validate against MUST principles in .claude/afc/memory/principles.md if present
-- Potential violations of {config.architecture} rules
+Apply the appropriate analysis lens:
 
-#### F. Unidentified Risks (RISK)
-- Are there risks not identified in plan.md?
-- External dependency risks
-- Potential performance bottlenecks
-
-### 3. Severity Classification
-
-| Severity | Criteria |
-|----------|----------|
-| **CRITICAL** | Principles violation, core feature blocker, security issue |
-| **HIGH** | Duplication/conflict, untestable, coverage gap |
-| **MEDIUM** | Terminology drift, ambiguous requirements |
-| **LOW** | Style improvements, minor duplication |
+- **Root Cause**: build a causal chain from symptom → intermediate causes → root cause
+- **Structural**: map component relationships, identify coupling and cohesion patterns
+- **Exploratory**: enumerate findings with code references
+- **Comparative**: highlight similarities, differences, and tradeoffs
 
 ### 4. Output Results (console)
 
 ```markdown
-## Consistency Analysis Results: {feature name}
+## Analysis: {summary of $ARGUMENTS}
+
+### Mode: {Root Cause | Structural | Exploratory | Comparative}
 
 ### Findings
-| ID | Category | Severity | Location | Summary | Recommended Action |
-|----|----------|----------|----------|---------|-------------------|
-| A-001 | COVERAGE | HIGH | spec FR-003 | No mapping in tasks | Add task |
-| A-002 | AMBIGUITY | MEDIUM | spec NFR-001 | "quickly" is unmeasurable | Add numeric threshold |
+{Numbered findings with code references (file:line)}
 
-### Coverage Summary
-| Mapping | Coverage |
-|---------|----------|
-| spec → plan | {N}% |
-| plan → tasks | {N}% |
-| spec → tasks | {N}% |
+### Key Relationships
+{Relevant component/function relationships discovered}
 
-### Metrics
-- Total requirements: {N}
-- Total tasks: {N}
-- Issues: CRITICAL {N} / HIGH {N} / MEDIUM {N} / LOW {N}
+### Summary
+{2-3 sentence conclusion answering the original question}
 
-### Next Steps
-{Concrete action proposals for CRITICAL/HIGH issues}
+### Suggested Next Steps
+{1-3 actionable suggestions based on the analysis}
 ```
 
 ### 5. Final Output
 
 ```
-Analysis complete
-├─ Found: CRITICAL {N} / HIGH {N} / MEDIUM {N} / LOW {N}
-├─ Coverage: spec→plan {N}%, plan→tasks {N}%, spec→tasks {N}%
-└─ Recommended: {next action}
+Analysis complete: {short summary}
+├─ Mode: {mode}
+├─ Files explored: {N}
+├─ Findings: {N}
+└─ Suggested next steps: {N}
 ```
 
 ## Notes
 
 - **Read-only**: Do not modify any files. Report only.
-- **Avoid false positives**: Do not over-flag ambiguity. Consider context.
-- **Optional**: Not required in the pipeline. Can proceed plan → implement directly.
+- **Scope discipline**: Focus analysis on what was asked. Do not expand scope unnecessarily.
+- **Code references**: Always include `file:line` references so the user can navigate to relevant code.
+- **Not artifact validation**: For spec/plan/tasks consistency checks, use `/afc:validate` instead.

@@ -138,7 +138,7 @@ Tasks generated
 ├─ Phases: {phase count}
 ├─ Coverage: FR {coverage}%, NFR {coverage}%
 ├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
-└─ Next step: /afc:analyze (optional) or /afc:implement
+└─ Next step: /afc:validate (optional) or /afc:implement
 ```
 
 ## Notes
