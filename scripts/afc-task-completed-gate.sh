@@ -37,7 +37,13 @@ if afc_is_ci_exempt "${CURRENT_PHASE:-}"; then
   exit 0
 fi
 
-# Implement/Review/Clean Phase (4-6) require CI to pass
+# Implement phase: allow individual task completions without CI
+# CI runs AFTER all tasks finish. Stop gate enforces CI at pipeline stop.
+if [ "${CURRENT_PHASE:-}" = "implement" ]; then
+  exit 0
+fi
+
+# Review/Clean phases require CI to pass
 CI_TIME="$(afc_state_read ciPassedAt 2>/dev/null || echo '')"
 CI_TIME="$(printf '%s' "$CI_TIME" | tr -dc '0-9')"
 CI_TIME="${CI_TIME:-0}"

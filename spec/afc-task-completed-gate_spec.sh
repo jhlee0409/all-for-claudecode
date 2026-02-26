@@ -37,11 +37,10 @@ Describe "afc-task-completed-gate.sh"
       setup_state_fixture "$TEST_DIR" "my-feature" "implement"
     }
 
-    It "exits 2 and reports CI not run"
+    It "exits 0 allowing task completion without CI (stop gate enforces CI separately)"
       Data '{}'
       When run script scripts/afc-task-completed-gate.sh
-      The status should eq 2
-      The stderr should include "CI has not been run"
+      The status should eq 0
     End
   End
 
