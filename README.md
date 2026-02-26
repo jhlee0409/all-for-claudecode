@@ -153,7 +153,7 @@ Every hook fires automatically — no configuration needed after install.
 | `PreToolUse` | Blocks dangerous commands (`push --force`, `reset --hard`) |
 | `PostToolUse` | Tracks file changes + auto-formats code |
 | `SubagentStart` | Injects pipeline context into subagents |
-| `Stop` | CI gate (shell) + code completeness check (agent) |
+| `Stop` | CI gate (shell) + code completeness check (shell) |
 | `SessionEnd` | Warns about unfinished pipeline |
 | `PostToolUseFailure` | Diagnostic hints for known error patterns |
 | `Notification` | Desktop alerts (macOS/Linux) |
@@ -166,7 +166,7 @@ Every hook fires automatically — no configuration needed after install.
 | `WorktreeCreate` | Sets up worktree isolation for parallel workers |
 | `WorktreeRemove` | Cleans up worktree after worker completion |
 
-Handler types: `command` (shell scripts, all events), `prompt` (LLM single-turn, TaskCompleted), `agent` (subagent with tools, Stop).
+Handler types: `command` (shell scripts, all events), `prompt` (LLM single-turn, TaskCompleted).
 
 ## Persistent Memory Agents
 

@@ -6,6 +6,7 @@ node_modules/
 
 # All-for-ClaudeCode pipeline state files (runtime artifacts)
 .claude/.afc-*
+.afc-failures.log
 
 # All-for-ClaudeCode pipeline artifacts (specs, memory, config)
 .claude/afc/

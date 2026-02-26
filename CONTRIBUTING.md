@@ -50,8 +50,8 @@ model: haiku|sonnet          # haiku for mechanical, sonnet for design/analysis,
 
 | Control | Value | When to use |
 |---------|-------|-------------|
-| `user-invocable: false` | Hidden from `/` menu | Commands that should only be called by other commands (analyze, clarify, tasks) |
-| `context: fork` | Isolated subagent | Read-only analysis commands that should not affect main context (analyze, architect, security) |
+| `user-invocable: false` | Hidden from `/` menu | Commands that should only be called by other commands (validate, clarify, tasks) |
+| `context: fork` | Isolated subagent | Read-only analysis commands that should not affect main context (validate, analyze, architect, security) |
 
 ### Step 3: Choose allowed-tools (optional)
 
