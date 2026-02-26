@@ -170,7 +170,7 @@ Execute `/afc:spec` logic inline:
 4. `[NEEDS CLARIFICATION]` items: **research first, then auto-resolve remaining** (clarify skipped if Phase 0.5 already ran)
    - Items answerable via research → resolve with researched facts, tag `[RESEARCHED]`
    - Items requiring user judgment → auto-resolve with best-guess, tag `[AUTO-RESOLVED]`
-5. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
+5. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
    - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
    - Were there scope-related issues in past specs? Warn about similar ambiguities.
 6. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
@@ -191,9 +191,9 @@ Execute `/afc:plan` logic inline:
 1. Load spec.md
 2. If technical uncertainties exist → auto-resolve via WebSearch/code exploration → create research.md
 3. **Memory loading** (skip gracefully if directories are empty or absent):
-   - **Quality history**: if `.claude/afc/memory/quality-history/*.json` exists, load recent entries and display trend summary: "Last {N} pipelines: avg critic_fixes {X}, avg ci_failures {Y}, avg escalations {Z}". Use trends to inform plan risk assessment.
-   - **Decisions**: if `.claude/afc/memory/decisions/` exists, load ADR entries and check for conflicts with the current feature's design direction. Flag any contradictions.
-   - **Reviews**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns (same file/category appearing in 2+ reviews). Flag as known risk areas.
+   - **Quality history**: if `.claude/afc/memory/quality-history/*.json` exists, load the **most recent 10 files** (sorted by filename descending) and display trend summary: "Last {N} pipelines: avg critic_fixes {X}, avg ci_failures {Y}, avg escalations {Z}". Use trends to inform plan risk assessment.
+   - **Decisions**: if `.claude/afc/memory/decisions/` exists, load the **most recent 30 files** (sorted by filename descending) and check for conflicts with the current feature's design direction. Flag any contradictions.
+   - **Reviews**: if `.claude/afc/memory/reviews/` exists, load the **most recent 15 files** (sorted by filename descending) and scan for recurring finding patterns (same file/category appearing in 2+ reviews). Flag as known risk areas.
 4. Create `.claude/afc/specs/{feature}/plan.md`
    - **If setting numerical targets (line counts etc.), include structure-analysis-based estimates** (e.g., "function A ~50 lines, component B ~80 lines → total ~130 lines")
 5. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
@@ -259,7 +259,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 #### Step 3.1: Task Generation + Validation
 
 1. Generate tasks.md from plan.md File Change Map (as defined in implement.md Step 1.3)
-2. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
+2. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
    - Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
    - Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
 3. Script validation (DAG + parallel overlap) — no critic loop, script-based only
@@ -414,8 +414,8 @@ Execute `/afc:review` logic inline — **follow all review perspectives defined 
    - **G. Maintainability** — AI/human comprehension, naming clarity, self-contained files (direct review)
    - **H. Extensibility** — extension points, OCP, future modification cost (direct review)
 4. **Auto-resolved validation**: Check all `[AUTO-RESOLVED]` items from spec phase — does the implementation match the guess? Flag mismatches as Critical.
-5. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns across past review reports. Prioritize those areas.
-6. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load and check:
+5. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, load the **most recent 15 files** (sorted by filename descending) and scan for recurring finding patterns across past review reports. Prioritize those areas.
+6. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 7. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
@@ -452,7 +452,23 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - **If retrospective.md exists** → record as patterns missed by the Plan phase Critic Loop in `.claude/afc/memory/retrospectives/` (reuse as RISK checklist items in future runs)
    - **If review-report.md exists** → copy to `.claude/afc/memory/reviews/{feature}-{date}.md` before .claude/afc/specs/ deletion
    - **If research.md exists** and was not already persisted in Plan phase → copy to `.claude/afc/memory/research/{feature}.md`
-   - **Agent memory consolidation**: architect and security agents have already updated their persistent MEMORY.md during Review phase — no additional action needed (agent memory survives across sessions independently)
+   - **Agent memory consolidation**: architect and security agents have already updated their persistent MEMORY.md during Review phase. **Size enforcement**: check each agent's MEMORY.md line count — if either exceeds 100 lines, invoke the respective agent to self-prune:
+     ```
+     Task("Memory cleanup: afc-architect", subagent_type: "afc:afc-architect",
+       prompt: "Your MEMORY.md exceeds 100 lines. Read it, prune old/redundant entries, and rewrite to under 100 lines following your size limit rules.")
+     ```
+     (Same pattern for afc-security if needed. Skip if both are under 100 lines.)
+   - **Memory rotation**: for each memory subdirectory, check file count and prune oldest files if over threshold:
+     | Directory | Threshold | Action |
+     |-----------|-----------|--------|
+     | `quality-history/` | 30 files | Delete oldest files beyond threshold |
+     | `reviews/` | 40 files | Delete oldest files beyond threshold |
+     | `retrospectives/` | 30 files | Delete oldest files beyond threshold |
+     | `research/` | 50 files | Delete oldest files beyond threshold |
+     | `decisions/` | 60 files | Delete oldest files beyond threshold |
+     - Sort by filename ascending (oldest first), delete excess
+     - Log: `"Memory rotation: {dir} pruned {N} files"`
+     - Skip directories that do not exist or are under threshold
 5. **Quality report** (structured pipeline metrics):
    - Generate `.claude/afc/memory/quality-history/{feature}-{date}.json` with the following structure:
      ```json
@@ -482,7 +498,7 @@ Artifact cleanup and codebase hygiene check after implementation and review:
      ```
    - Create `.claude/afc/memory/quality-history/` directory if it does not exist
 6. **Checkpoint reset**:
-   - Clear `.claude/afc/memory/checkpoint.md` (pipeline complete = session goal achieved)
+   - Clear `.claude/afc/memory/checkpoint.md` **and** `~/.claude/projects/{ENCODED_PATH}/auto-memory/checkpoint.md` (pipeline complete = session goal achieved, dual-delete prevents stale checkpoint in either location; `ENCODED_PATH` = project path with `/` replaced by `-`)
 7. **Timeline finalize**:
    ```bash
    "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"

@@ -96,7 +96,7 @@ If tasks.md already exists (e.g., from standalone `/afc:tasks` run): use as-is, 
 
 ### 1.7. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` exists, load and check:
+If `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
 - Were there implementation issues in past pipelines (e.g., file conflicts, unexpected dependencies, CI failures after parallel execution)?
 - Flag similar patterns in the current task list. Warn before implementation begins.
 - Skip gracefully if directory is empty or absent.

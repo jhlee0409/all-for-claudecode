@@ -87,7 +87,7 @@ Decompose tasks per Phase defined in plan.md.
 
 ### 3. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/afc/memory/retrospectives/` directory exists, load the **most recent 10 files** (sorted by filename descending) and check:
 - Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
 - Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
 

@@ -183,7 +183,7 @@ For each changed file, examine from the following perspectives:
 
 ### 5. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/afc/memory/retrospectives/` directory exists, load the **most recent 10 files** (sorted by filename descending) and check:
 - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
 - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 

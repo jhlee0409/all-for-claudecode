@@ -155,7 +155,7 @@ After writing the spec, check for `[NEEDS CLARIFICATION]` items:
 
 ### 4. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` directory exists, load retrospective files and check:
+If `.claude/afc/memory/retrospectives/` directory exists, load the **most recent 10 files** (sorted by filename descending) and check:
 - Were there previous `[AUTO-RESOLVED]` items that turned out wrong? Flag similar patterns.
 - Were there scope-related issues in past specs? Warn about similar ambiguities.
 

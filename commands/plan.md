@@ -45,9 +45,9 @@ If config file is missing:
 4. Read **.claude/afc/memory/principles.md** (if present)
 5. Read **CLAUDE.md** project context
 6. **Memory loading** (skip gracefully if directories are empty or absent):
-   - **Quality history**: if `.claude/afc/memory/quality-history/*.json` exists, load recent entries and display trend: "Last {N} pipelines: avg critic_fixes {X}, avg ci_failures {Y}". Use trends to inform risk assessment.
-   - **Decisions**: if `.claude/afc/memory/decisions/` exists, load ADR entries and check for conflicts with the current feature's design direction.
-   - **Reviews**: if `.claude/afc/memory/reviews/` exists, scan for recurring finding patterns (same file/category appearing in 2+ reviews). Flag as known risk areas.
+   - **Quality history**: if `.claude/afc/memory/quality-history/*.json` exists, load the **most recent 10 files** (sorted by filename descending) and display trend: "Last {N} pipelines: avg critic_fixes {X}, avg ci_failures {Y}". Use trends to inform risk assessment.
+   - **Decisions**: if `.claude/afc/memory/decisions/` exists, load the **most recent 30 files** (sorted by filename descending) and check for conflicts with the current feature's design direction.
+   - **Reviews**: if `.claude/afc/memory/reviews/` exists, load the **most recent 15 files** (sorted by filename descending) and scan for recurring finding patterns (same file/category appearing in 2+ reviews). Flag as known risk areas.
 
 ### 2. Clarification Check
 
@@ -205,7 +205,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | **FEASIBILITY** | Is it compatible with the existing codebase? Are dependencies available? |
 | **ARCHITECTURE** | Does it comply with {config.architecture} rules? |
 | **CROSS_CONSISTENCY** | Spec↔Plan cross-artifact validation (see checklist below) |
-| **RISK** | Are there any unidentified risks? Additionally, if `.claude/afc/memory/retrospectives/` directory contains files from previous pipeline runs, load each file and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
+| **RISK** | Are there any unidentified risks? Additionally, if `.claude/afc/memory/retrospectives/` directory contains files from previous pipeline runs, load the **most recent 10 files** (sorted by filename descending) and check whether the current plan addresses the patterns recorded there. Tag matched patterns with `[RETRO-CHECKED]`. |
 | **PRINCIPLES** | Does it not violate the MUST principles in principles.md? |
 
 **CROSS_CONSISTENCY checklist** (mandatory, check all 5):

@@ -45,6 +45,12 @@ At the end of each scan:
 1. Record newly discovered vulnerability patterns to MEMORY.md
 2. Record confirmed false positives with reasoning
 3. Note project-specific security characteristics (e.g., input sanitization patterns, auth flows)
+4. **Size limit**: MEMORY.md must not exceed **100 lines**. If adding new entries would exceed the limit:
+   - Remove the oldest false positive entries (patterns likely already fixed)
+   - Merge similar vulnerability patterns into single entries
+   - Remove entries for files/paths that no longer exist in the codebase
+   - Prioritize: active vulnerability patterns > project security profile > historical false positives
+   - Never remove entries for Critical-severity patterns regardless of age
 
 ## Memory Format
 

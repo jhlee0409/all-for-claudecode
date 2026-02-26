@@ -52,6 +52,11 @@ At the end of each analysis:
 1. Record new ADR decisions, discovered patterns, or architectural insights to MEMORY.md
 2. Keep entries concise — only stable patterns and confirmed decisions
 3. Remove outdated entries when architecture evolves
+4. **Size limit**: MEMORY.md must not exceed **100 lines**. If adding new entries would exceed the limit:
+   - Remove the oldest ADR entries (keep the most recent decisions)
+   - Merge similar architecture patterns into single entries
+   - Remove entries for deleted/refactored code that no longer exists
+   - Prioritize: active constraints > recent patterns > historical ADRs
 
 ## Memory Format
 

@@ -84,7 +84,21 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | No lingering safety tags | `git tag -l 'afc/pre-*'` | No tags, or tags match active pipeline | ⚠ Warning: lingering safety tag `afc/pre-{x}` found. Fix: `git tag -d afc/pre-{x}` |
 | Checkpoint state | Read `.claude/afc/memory/checkpoint.md` if exists | No checkpoint (clean), or checkpoint is from current session | ⚠ Warning: stale checkpoint from {date}. Fix: run `/afc:resume` to continue or delete `.claude/afc/memory/checkpoint.md` |
 
-### Category 6: Hook Health
+### Category 6: Memory Health
+
+> Checks `.claude/afc/memory/` subdirectory sizes and agent memory file sizes. If memory directory does not exist, print `✓ No memory directory` and skip this category.
+
+| Check | How | Pass | Fail |
+|-------|-----|------|------|
+| quality-history count | Count files in `.claude/afc/memory/quality-history/` | ≤ 30 files | ⚠ Warning: {N} files in quality-history/ (threshold: 30). Oldest files should be pruned. Fix: run a pipeline with `/afc:auto` (Clean phase auto-prunes) or manually delete oldest files |
+| reviews count | Count files in `.claude/afc/memory/reviews/` | ≤ 40 files | ⚠ Warning: {N} files in reviews/ (threshold: 40). Fix: run a pipeline or manually delete oldest files |
+| retrospectives count | Count files in `.claude/afc/memory/retrospectives/` | ≤ 30 files | ⚠ Warning: {N} files in retrospectives/ (threshold: 30). Fix: run a pipeline or manually delete oldest files |
+| research count | Count files in `.claude/afc/memory/research/` | ≤ 50 files | ⚠ Warning: {N} files in research/ (threshold: 50). Fix: run a pipeline or manually delete oldest files |
+| decisions count | Count files in `.claude/afc/memory/decisions/` | ≤ 60 files | ⚠ Warning: {N} files in decisions/ (threshold: 60). Fix: run a pipeline or manually delete oldest files |
+| afc-architect MEMORY.md size | Count lines in `.claude/agent-memory/afc-architect/MEMORY.md` (if exists) | ≤ 100 lines | ⚠ Warning: afc-architect MEMORY.md is {N} lines (limit: 100). Fix: invoke `/afc:architect` to trigger self-pruning, or manually edit the file |
+| afc-security MEMORY.md size | Count lines in `.claude/agent-memory/afc-security/MEMORY.md` (if exists) | ≤ 100 lines | ⚠ Warning: afc-security MEMORY.md is {N} lines (limit: 100). Fix: invoke `/afc:security` to trigger self-pruning, or manually edit the file |
+
+### Category 7: Hook Health
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
@@ -92,7 +106,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | All scripts exist | For each script referenced in hooks.json, check file exists | All scripts found | ✗ Fix: reinstall plugin |
 | Scripts executable | Check execute permission on each script in plugin's scripts/ | All have +x | Fix: `chmod +x` on the missing scripts, or reinstall plugin |
 
-### Category 7: Version Sync (development only)
+### Category 8: Version Sync (development only)
 
 > Only run if current directory is the all-for-claudecode source repo (check for `package.json` with `"name": "all-for-claudecode"`).
 
