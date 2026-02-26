@@ -1,5 +1,29 @@
 # Migration Guide
 
+## v2.3.0 — Memory Management + analyze/validate Split
+
+### What Changed
+
+| Item | Before (v2.2.x) | After (v2.3.0) |
+|------|-----------------|----------------|
+| `/afc:analyze` | Artifact consistency check (= validate) | General-purpose code analysis (user-invocable, sonnet, context: fork) |
+| `/afc:validate` | Did not exist separately | Artifact consistency check (model-only, haiku) |
+| Agent MEMORY.md | Unbounded size | 100-line limit with auto-pruning |
+| Memory directories | Unbounded file accumulation | Loading limits (most recent N files) + rotation in Clean phase |
+| `/afc:doctor` Category 6 | Hook Health | Memory Health (new); Hook Health → 7, Version Sync → 8 |
+| Checkpoint writes | Single location | Dual-write (project memory + auto-memory) |
+
+### Migration Steps
+
+**No action required for most users.** Changes are backwards-compatible and auto-applied.
+
+- If you previously used `/afc:analyze` for artifact consistency checking, use `/afc:validate` instead (or let the pipeline invoke it automatically).
+- Agent memory files (`.claude/agent-memory/afc-architect/MEMORY.md`, `.claude/agent-memory/afc-security/MEMORY.md`) exceeding 100 lines will be auto-pruned on next pipeline run.
+- Memory subdirectories exceeding rotation thresholds will be auto-pruned during the Clean phase.
+- Run `/afc:init` to update the `AFC:VERSION` tag in your CLAUDE.md.
+
+---
+
 ## v2.0 — Rebrand: selfish-pipeline → all-for-claudecode
 
 > all-for-claudecode v2.0 renames the package, plugin prefix, scripts, agents, and state files from `selfish` to `afc`.

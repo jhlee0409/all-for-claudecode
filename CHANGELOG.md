@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-02-26
+
+### Added
+- **Memory Health diagnostics**: New Category 6 in `/afc:doctor` with 7 checks — monitors memory subdirectory file counts and agent MEMORY.md sizes against defined thresholds
+- **Memory rotation in Clean phase**: Auto-prunes oldest files in memory subdirectories when exceeding thresholds (quality-history: 30, reviews: 40, retrospectives: 30, research: 50, decisions: 60)
+- **Agent memory size limits**: afc-architect and afc-security MEMORY.md files capped at 100 lines with prioritized self-pruning rules
+- **Agent memory enforcement in Clean phase**: Auto-invokes agents to self-prune when MEMORY.md exceeds 100 lines
+- **Checkpoint dual-write**: Phase gate checkpoints written to both `.claude/afc/memory/` and auto-memory location for compaction resilience
+- **Checkpoint dual-delete**: Clean phase clears checkpoint from both locations to prevent stale state
+- **Resume auto-memory fallback**: `/afc:resume` checks auto-memory checkpoint when primary location is empty
+- **`/afc:validate` command**: Separated from analyze — artifact consistency validation (user-invocable: false, haiku)
+- **`/afc:analyze` command**: Rewritten as general-purpose code analysis (user-invocable: true, sonnet, context: fork)
+
+### Changed
+- **Memory loading limits**: All memory directory reads now load only the most recent N files (sorted by filename descending) instead of loading everything — prevents unbounded growth from degrading performance
+- **Doctor categories renumbered**: Hook Health → Category 7, Version Sync → Category 8 (Memory Health inserted as Category 6)
+- **Task-completed gate**: Fixed blocking behavior during implement phase task updates
+
+### Fixed
+- **Documentation inaccuracies**: Fixed inconsistencies found by consistency scan across multiple command files
+- **Hardcoded version**: Fixed version reference in launch.md example
+
 ## [2.2.1] - 2026-02-26
 
 ### Changed
