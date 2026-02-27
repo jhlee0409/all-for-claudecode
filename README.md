@@ -121,6 +121,7 @@ Performance: ✓ no N+1 queries
 | `/afc:launch` | Generate release artifacts (changelog, tag, publish) |
 | `/afc:validate` | Verify artifact consistency |
 | `/afc:analyze` | General-purpose code and component analysis |
+| `/afc:consult` | Expert consultation (backend, infra, PM, design, marketing) |
 | `/afc:clarify` | Resolve spec ambiguities |
 
 ### Individual Command Examples
@@ -175,6 +176,44 @@ Handler types: `command` (shell scripts, all events), `prompt` (LLM single-turn,
 | `afc-architect` | Remembers ADR decisions and architecture patterns across sessions. Auto-invoked during Plan (ADR recording) and Review (architecture compliance). |
 | `afc-security` | Remembers vulnerability patterns and false positives across sessions. Auto-invoked during Review (security scanning). Runs in isolated worktree. |
 | `afc-impl-worker` | Parallel implementation worker. Receives pre-assigned tasks from orchestrator. Ephemeral (no memory). |
+
+## Expert Consultation
+
+Get advice from domain specialists — each with persistent memory of your project:
+
+```bash
+/afc:consult backend "Should I use JWT or session cookies?"
+/afc:consult infra "How should I set up CI/CD?"
+/afc:consult pm "How should I prioritize my backlog?"
+/afc:consult design "Is this form accessible?"
+/afc:consult marketing "How to improve SEO?"
+/afc:consult legal "Do I need GDPR compliance?"
+/afc:consult security "Is storing JWT in localStorage safe?"
+/afc:consult advisor "I need a database for my Next.js app"
+
+# Auto-detect domain from question
+/afc:consult "My API is slow when loading the dashboard"
+
+# Exploratory mode — expert asks diagnostic questions
+/afc:consult backend
+```
+
+| Expert | Domain |
+|---|---|
+| `backend` | API design, database, authentication, server architecture |
+| `infra` | Deployment, CI/CD, cloud, monitoring, scaling |
+| `pm` | Product strategy, prioritization, user stories, metrics |
+| `design` | UI/UX, accessibility, components, user flows |
+| `marketing` | SEO, analytics, growth, content strategy |
+| `legal` | GDPR, privacy, licenses, compliance, terms of service |
+| `security` | Application security, OWASP, threat modeling, secure coding |
+| `advisor` | Technology/library/framework selection, ecosystem navigation |
+
+Features:
+- **Persistent memory**: experts remember your project's decisions across sessions
+- **Overengineering Guard**: recommendations scaled to your actual project size
+- **Domain adapters**: industry-specific guardrails (fintech, ecommerce, healthcare)
+- **Pipeline-aware**: when a pipeline is active, experts consider the current phase context
 
 ## Task Orchestration
 

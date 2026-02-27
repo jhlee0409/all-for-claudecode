@@ -21,11 +21,11 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 ### Core Layers
 
 - **commands/** — Markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`). Includes standalone utilities (ideate, launch) outside the main pipeline.
-- **agents/** — Subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation)
+- **agents/** — Subagents: afc-architect, afc-security (persistent memory with `memory: project`), afc-impl-worker (ephemeral parallel worker with worktree isolation), 8 expert consultation agents (afc-backend-expert, afc-infra-expert, afc-pm-expert, afc-design-expert, afc-marketing-expert, afc-legal-expert, afc-appsec-expert, afc-tech-advisor — persistent memory, read-only, routed via `consult` command)
 - **hooks/hooks.json** — Hook event declarations with handler types: `command` (shell scripts), `prompt` (LLM single-turn). Some hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
 - **scripts/** — Bash hook/utility scripts (afc-*.sh + non-afc utilities) + Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
-- **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md) referenced by commands
+- **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md, expert-protocol.md) referenced by commands. Includes `domain-adapters/` subdirectory with industry-specific guardrails (fintech, ecommerce, healthcare)
 - **templates/** — config template (`afc.config.template.md`) defining free-form markdown structure with fixed CI Commands YAML section
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
 - **.claude-plugin/** — Plugin manifest (`plugin.json`) and marketplace registration (`marketplace.json`)

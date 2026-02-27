@@ -123,6 +123,17 @@ Write sections as natural descriptions — **no YAML code blocks** except for CI
 For items that cannot be inferred: note `TODO: Adjust for your project` inline.
 Save to `.claude/afc.config.md`.
 
+### 4.5. Generate Project Profile
+
+Generate `.claude/afc/project-profile.md` for expert consultation agents:
+
+1. Create `.claude/afc/` directory if it does not exist
+2. If `.claude/afc/project-profile.md` already exists: skip (do not overwrite)
+3. If not exists: generate from the detected project information using `${CLAUDE_PLUGIN_ROOT}/templates/project-profile.template.md` as the structure
+   - Fill in Stack, Architecture, and Domain fields from the analysis in Step 3
+   - Leave Team, Scale, and Constraints as template placeholders for user to fill
+4. Print: `Project profile: .claude/afc/project-profile.md (review and adjust team/scale/domain fields)`
+
 ### 5. Scan Global CLAUDE.md and Detect Conflicts
 
 Read `~/.claude/CLAUDE.md` and analyze in the following order.
@@ -228,6 +239,7 @@ IMPORTANT: For requests matching the afc skill routing table below, always invok
 | Ideate | `afc:ideate` | idea, brainstorm, what to build, product brief |
 | Ambiguous | `afc:clarify` | auto-triggered when requirements are unclear |
 | Full auto | `afc:auto` | do it automatically, auto-run |
+| Consult | `afc:consult` | consult, ask expert, advice, which library, what tool, recommend, compare, stack decision, ask backend, ask infra, ask PM, ask design, ask marketing, ask legal, ask security, ask advisor, GDPR, OWASP, SEO, accessibility |
 
 User-only (not auto-triggered — inform user on request):
 - `afc:launch` — inform user when release artifact generation is requested
@@ -237,6 +249,7 @@ User-only (not auto-triggered — inform user on request):
 - `afc:checkpoint` — inform user when session save is requested
 - `afc:resume` — inform user when session restore is requested
 - `afc:principles` — inform user when project principles management is requested
+- `afc:consult` — inform user when expert consultation is requested
 
 ## Pipeline
 
