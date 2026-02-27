@@ -213,136 +213,58 @@ if [ -s "$HOOKS_REFS" ]; then
   mv "$TMPDIR_WORK/hooks_unique.txt" "$HOOKS_REFS"
 fi
 
-# ── Cycle detection (DFS) ────────────────────────────────
-# Build adjacency: sourced -> sourcer (if sourced changes, sourcer is affected)
-# But for cycles we care about: A sources B, B sources A
-# So we detect cycles in the "sources" graph: edge from sourcer to sourced
+# ── Cycle detection ──────────────────────────────────────
+# Detect cycles using reachability: for each edge A→B, check if B can reach A.
+# Simple and portable — no file-based DFS or md5 hashing needed.
 
 CYCLE_FOUND=0
-NODES_FILE="$TMPDIR_WORK/nodes.txt"
-: > "$NODES_FILE"
 
-# Collect all unique nodes from deps
 if [ -s "$ALL_DEPS" ]; then
-  cut -f1 "$ALL_DEPS" >> "$NODES_FILE"
-  cut -f2 "$ALL_DEPS" >> "$NODES_FILE"
-  sort -u "$NODES_FILE" > "$TMPDIR_WORK/nodes_unique.txt"
-  mv "$TMPDIR_WORK/nodes_unique.txt" "$NODES_FILE"
-fi
+  # Check each edge: if A sources B, does B (transitively) source A?
+  while IFS=$'\t' read -r src dst || [ -n "$src" ]; do
+    [ -z "$src" ] || [ -z "$dst" ] && continue
 
-NODE_COUNT=$(wc -l < "$NODES_FILE" | tr -d ' ')
+    # BFS from dst to see if we can reach src
+    visited="$TMPDIR_WORK/visited.txt"
+    queue="$TMPDIR_WORK/queue.txt"
+    printf '%s\n' "$dst" > "$queue"
+    : > "$visited"
 
-if [ "$NODE_COUNT" -gt 0 ]; then
-  COLOR_DIR="$TMPDIR_WORK/colors"
-  mkdir -p "$COLOR_DIR"
+    while [ -s "$queue" ]; do
+      current=$(head -1 "$queue")
+      # Remove first line from queue
+      tail -n +2 "$queue" > "$TMPDIR_WORK/queue_tmp.txt"
+      mv "$TMPDIR_WORK/queue_tmp.txt" "$queue"
 
-  # Initialize all nodes as WHITE (0)
-  while IFS= read -r node || [ -n "$node" ]; do
-    [ -z "$node" ] && continue
-    # Use md5/hash for safe filenames (paths contain /)
-    node_hash=$(printf '%s' "$node" | md5sum 2>/dev/null | cut -d' ' -f1 || printf '%s' "$node" | md5 2>/dev/null || printf '%s' "$node" | tr '/' '_')
-    printf '0' > "$COLOR_DIR/$node_hash"
-    # Map hash back to name
-    printf '%s\t%s\n' "$node_hash" "$node" >> "$TMPDIR_WORK/hash_map.txt"
-  done < "$NODES_FILE"
-
-  # DFS from each white node
-  dfs_visit() {
-    local start_hash="$1"
-    local stack_file="$TMPDIR_WORK/dfs_stack.txt"
-    local path_file="$TMPDIR_WORK/dfs_path.txt"
-    printf '%s\n' "$start_hash" > "$stack_file"
-    : > "$path_file"
-
-    while [ -s "$stack_file" ]; do
-      current_hash="$(tail -1 "$stack_file")"
-
-      color_file="$COLOR_DIR/$current_hash"
-      if [ ! -f "$color_file" ]; then
-        # Remove from stack
-        sed -i '' '$d' "$stack_file" 2>/dev/null || sed -i '$d' "$stack_file"
+      # Skip if already visited
+      if grep -qxF "$current" "$visited" 2>/dev/null; then
         continue
       fi
+      printf '%s\n' "$current" >> "$visited"
 
-      color="$(cat "$color_file")"
-
-      if [ "$color" = "0" ]; then
-        # Mark GRAY (in progress)
-        printf '1' > "$color_file"
-        printf '%s\n' "$current_hash" >> "$path_file"
-
-        # Get current node name
-        current_name=$(grep -E "^${current_hash}\t" "$TMPDIR_WORK/hash_map.txt" 2>/dev/null | cut -f2 | head -1 || true)
-        [ -z "$current_name" ] && { sed -i '' '$d' "$stack_file" 2>/dev/null || sed -i '$d' "$stack_file"; continue; }
-
-        # Find neighbors (files this script sources)
-        has_neighbor=0
-        while IFS=$'\t' read -r src dst || [ -n "$src" ]; do
-          if [ "$src" = "$current_name" ]; then
-            dst_hash=$(printf '%s' "$dst" | md5sum 2>/dev/null | cut -d' ' -f1 || printf '%s' "$dst" | md5 2>/dev/null || printf '%s' "$dst" | tr '/' '_')
-            dst_color_file="$COLOR_DIR/$dst_hash"
-            [ ! -f "$dst_color_file" ] && continue
-
-            dst_color="$(cat "$dst_color_file")"
-            if [ "$dst_color" = "1" ]; then
-              # Back edge found -> cycle
-              CYCLE_FOUND=1
-              # Reconstruct cycle path
-              dst_name=$(grep -E "^${dst_hash}\t" "$TMPDIR_WORK/hash_map.txt" 2>/dev/null | cut -f2 | head -1 || true)
-              cycle_str="CYCLE:"
-              in_cycle=0
-              while IFS= read -r ph || [ -n "$ph" ]; do
-                if [ "$ph" = "$dst_hash" ]; then
-                  in_cycle=1
-                fi
-                if [ "$in_cycle" -eq 1 ]; then
-                  pname=$(grep -E "^${ph}\t" "$TMPDIR_WORK/hash_map.txt" 2>/dev/null | cut -f2 | head -1 || true)
-                  if [ -n "$pname" ]; then
-                    cycle_str="${cycle_str} ${pname} ->"
-                  fi
-                fi
-              done < "$path_file"
-              cycle_str="${cycle_str} ${dst_name}"
-              printf '%s\n' "$cycle_str" > "$CYCLE_RESULT"
-              return
-            elif [ "$dst_color" = "0" ]; then
-              printf '%s\n' "$dst_hash" >> "$stack_file"
-              has_neighbor=1
-            fi
-          fi
-        done < "$ALL_DEPS"
-
-        if [ "$has_neighbor" -eq 0 ]; then
-          # Leaf node, mark BLACK
-          printf '2' > "$color_file"
-          sed -i '' '$d' "$stack_file" 2>/dev/null || sed -i '$d' "$stack_file"
-          sed -i '' '$d' "$path_file" 2>/dev/null || sed -i '$d' "$path_file"
-        fi
-      elif [ "$color" = "1" ]; then
-        # Returning from recursion, mark BLACK
-        printf '2' > "$color_file"
-        sed -i '' '$d' "$stack_file" 2>/dev/null || sed -i '$d' "$stack_file"
-        sed -i '' '$d' "$path_file" 2>/dev/null || sed -i '$d' "$path_file"
-      else
-        # Already BLACK, skip
-        sed -i '' '$d' "$stack_file" 2>/dev/null || sed -i '$d' "$stack_file"
-      fi
-    done
-  }
-
-  while IFS= read -r node || [ -n "$node" ]; do
-    [ -z "$node" ] && continue
-    node_hash=$(printf '%s' "$node" | md5sum 2>/dev/null | cut -d' ' -f1 || printf '%s' "$node" | md5 2>/dev/null || printf '%s' "$node" | tr '/' '_')
-    color_file="$COLOR_DIR/$node_hash"
-    [ ! -f "$color_file" ] && continue
-    color="$(cat "$color_file")"
-    if [ "$color" = "0" ]; then
-      dfs_visit "$node_hash"
-      if [ "$CYCLE_FOUND" -eq 1 ]; then
+      # Check if we reached src → cycle
+      if [ "$current" = "$src" ]; then
+        CYCLE_FOUND=1
+        # Build cycle path from visited trail
+        cycle_str="CYCLE: ${src} -> ${dst} -> ${src}"
+        printf '%s\n' "$cycle_str" > "$CYCLE_RESULT"
         break
       fi
+
+      # Enqueue neighbors (files that current sources)
+      while IFS=$'\t' read -r s d || [ -n "$s" ]; do
+        if [ "$s" = "$current" ] && [ -n "$d" ]; then
+          if ! grep -qxF "$d" "$visited" 2>/dev/null; then
+            printf '%s\n' "$d" >> "$queue"
+          fi
+        fi
+      done < "$ALL_DEPS"
+    done
+
+    if [ "$CYCLE_FOUND" -eq 1 ]; then
+      break
     fi
-  done < "$NODES_FILE"
+  done < "$ALL_DEPS"
 fi
 
 # ── Generate Report ──────────────────────────────────────
