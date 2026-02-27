@@ -152,7 +152,7 @@ Follow-up options:
 
 ## Notes
 
-- **Read-only agents**: Expert agents cannot modify your code. They only read and analyze.
+- **Limited write scope**: Expert agents can create/update project profiles and their own memory files, but should not modify your application code.
 - **Persistent memory**: Each expert remembers your project's decisions across sessions (stored in `.claude/agent-memory/afc-{domain}-expert/MEMORY.md`).
 - **Project profile**: Shared context at `.claude/afc/project-profile.md` — auto-created on first consultation, review and adjust as needed.
 - **Domain adapters**: Industry-specific guardrails (fintech, ecommerce, healthcare) auto-loaded based on project profile.

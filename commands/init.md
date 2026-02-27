@@ -249,7 +249,6 @@ User-only (not auto-triggered — inform user on request):
 - `afc:checkpoint` — inform user when session save is requested
 - `afc:resume` — inform user when session restore is requested
 - `afc:principles` — inform user when project principles management is requested
-- `afc:consult` — inform user when expert consultation is requested
 
 ## Pipeline
 

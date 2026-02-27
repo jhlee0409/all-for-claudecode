@@ -20,37 +20,17 @@
 - Backups: encrypted, tested restoration, geographically restricted
 - No PHI in logs, error messages, or analytics events
 
-## Architecture Guardrails
+## Domain-Specific Guardrails
 
-- PHI data must be isolated in dedicated storage (not mixed with general application data)
-- Authentication: MFA required for all PHI access
-- Session management: automatic timeout (15 min for clinical, 30 min for admin)
-- Audit trail: immutable log of all data access and modifications
-- API access: OAuth 2.0 with scoped permissions per data type
-
-## Integration Standards
-
-- **HL7 FHIR**: preferred for clinical data exchange (R4 or later)
-- **ICD-10**: diagnosis coding standard
-- **SNOMED CT**: clinical terminology
-- **DICOM**: medical imaging data
-- EHR integration: expect legacy systems, plan for adapter patterns
-
-## UI/UX Considerations
-
-- Clinical workflows: minimize clicks for frequent actions (clinician time is critical)
-- Error prevention: confirmation dialogs for medication dosing, patient identification
-- Accessibility: WCAG AA minimum (many users have visual/motor impairments)
-- Patient-facing: health literacy considerations (plain language, reading level)
-- Emergency access: break-glass procedures for critical situations
-
-## Testing Requirements
-
-- PHI boundary testing: verify PHI doesn't leak to logs, analytics, error reports
-- Access control: verify role-based access (nurse vs doctor vs admin vs patient)
-- Audit log completeness: every PHI access generates a log entry
-- De-identification verification: ensure output contains no identifiable information
-- Concurrent access: multiple providers accessing same patient record
+- **Architecture**: PHI data must be isolated in dedicated storage (not mixed with general application data)
+- **Authentication**: MFA required for all PHI access
+- **Session management**: automatic timeout (15 min for clinical, 30 min for admin)
+- **Audit trail**: immutable log of all data access and modifications
+- **API access**: OAuth 2.0 with scoped permissions per data type
+- **Integration standards**: HL7 FHIR (R4+) for clinical data, ICD-10 for diagnosis, SNOMED CT for terminology, DICOM for imaging
+- **EHR integration**: expect legacy systems, plan for adapter patterns
+- **Clinical UX**: minimize clicks for frequent actions, confirmation dialogs for medication dosing, emergency break-glass access
+- **Patient-facing**: health literacy considerations (plain language, WCAG AA minimum)
 
 ## Security Heightened Checks
 
@@ -60,6 +40,14 @@
 - Penetration testing: annual requirement for HIPAA compliance
 - Vulnerability scanning: continuous for production systems
 - Incident response plan: documented and tested
+
+## Testing Requirements
+
+- PHI boundary testing: verify PHI doesn't leak to logs, analytics, error reports
+- Access control: verify role-based access (nurse vs doctor vs admin vs patient)
+- Audit log completeness: every PHI access generates a log entry
+- De-identification verification: ensure output contains no identifiable information
+- Concurrent access: multiple providers accessing same patient record
 
 ## Scale Considerations
 

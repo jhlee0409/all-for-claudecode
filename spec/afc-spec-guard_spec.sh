@@ -34,6 +34,30 @@ Describe "afc-spec-guard.sh"
       The stdout should include "immutable during implement"
     End
 
+    It "denies spec.md write in nested directory"
+      Data '{"tool_input":{"file_path":"/path/.claude/afc/specs/domain/auth/spec.md"}}'
+      When run bash "$GUARD_SCRIPT"
+      The status should eq 0
+      The stdout should include "deny"
+      The stdout should include "immutable during implement"
+    End
+
+    It "denies spec.md write with path traversal"
+      Data '{"tool_input":{"file_path":".claude/afc/specs/feat/../feat/spec.md"}}'
+      When run bash "$GUARD_SCRIPT"
+      The status should eq 0
+      The stdout should include "deny"
+      The stdout should include "immutable during implement"
+    End
+
+    It "denies spec.md write with relative path (no leading slash)"
+      Data '{"tool_input":{"file_path":"specs/my-feature/spec.md"}}'
+      When run bash "$GUARD_SCRIPT"
+      The status should eq 0
+      The stdout should include "deny"
+      The stdout should include "immutable during implement"
+    End
+
     It "allows non-spec file write"
       Data '{"tool_input":{"file_path":"src/main.ts"}}'
       When run bash "$GUARD_SCRIPT"

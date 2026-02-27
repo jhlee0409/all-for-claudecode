@@ -17,7 +17,7 @@
 - Transaction logs: append-only, never delete or modify
 - PII encryption at rest: names, SSN, account numbers
 
-## API Design Guardrails
+## Domain-Specific Guardrails
 
 - Idempotency keys required on all mutation endpoints (prevent duplicate transactions)
 - Rate limiting on authentication and transaction endpoints

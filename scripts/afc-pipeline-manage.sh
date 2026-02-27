@@ -80,7 +80,7 @@ case "$COMMAND" in
     if afc_is_valid_phase "$PHASE"; then
       afc_state_write "phase" "$PHASE"
       afc_state_invalidate_ci
-      afc_state_write "promptCount" "0"
+      afc_state_write "promptCount" "0"  # numeric: afc_state_write detects digits and stores as JSON number
       afc_state_checkpoint "$PHASE"
       echo "Phase: $PHASE"
     else

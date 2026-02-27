@@ -13,6 +13,9 @@ _AFC_STATE_FILE="${_AFC_STATE_DIR}/.afc-state.json"
 AFC_VALID_PHASES="spec|plan|tasks|implement|review|clean|clarify|test-pre-gen|blast-radius|fast-path"
 # Phases that do NOT require CI gate to pass (preparatory phases)
 AFC_CI_EXEMPT_PHASES="spec|plan|tasks|clarify|test-pre-gen|blast-radius"
+# Prompt count threshold for drift checkpoint injection (implement/review phases)
+# shellcheck disable=SC2034
+AFC_DRIFT_THRESHOLD=50
 
 # Check if a phase name is valid
 # Usage: afc_is_valid_phase <phase>

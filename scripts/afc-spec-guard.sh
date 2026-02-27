@@ -54,9 +54,22 @@ if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
+# Normalize path: resolve traversal sequences (..) to prevent bypass
+# Use realpath if the file exists, otherwise strip .. segments manually
+NORM_PATH="$FILE_PATH"
+if command -v realpath &> /dev/null && [ -e "$FILE_PATH" ]; then
+  NORM_PATH=$(realpath "$FILE_PATH" 2>/dev/null || printf '%s' "$FILE_PATH")
+fi
+# Fallback: collapse /../ segments (handles non-existent paths and missing realpath)
+while printf '%s' "$NORM_PATH" | grep -q '/[^/][^/]*/\.\./'; do
+  NORM_PATH=$(printf '%s' "$NORM_PATH" | sed 's|/[^/][^/]*/\.\./|/|')
+done
+# Remove trailing /.. and leading /../
+NORM_PATH=$(printf '%s' "$NORM_PATH" | sed 's|/[^/][^/]*/\.\.$||; s|^\.\./||g')
+
 # Check if file path targets spec.md inside afc specs directory
-# Match: any path containing /specs/ and ending with spec.md
-if printf '%s' "$FILE_PATH" | grep -qE '/specs/[^/]+/spec\.md$'; then
+# Match: path containing /specs/ or starting with specs/ and ending with spec.md
+if printf '%s' "$NORM_PATH" | grep -qE '(^|/)specs/.+/spec\.md$'; then
   printf '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"[afc:guard] spec.md is immutable during %s phase. Acceptance criteria cannot be modified after spec phase."}}\n' "$PHASE"
   exit 0
 fi

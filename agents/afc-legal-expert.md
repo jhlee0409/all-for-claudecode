@@ -7,6 +7,8 @@ tools:
   - Glob
   - Bash
   - WebSearch
+  - Write
+  - Edit
 model: sonnet
 memory: project
 ---

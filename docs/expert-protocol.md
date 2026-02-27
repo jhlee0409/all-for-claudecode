@@ -1,6 +1,6 @@
 # Expert Consultation Protocol
 
-> Shared protocol for all expert consultation agents (backend, infra, pm, design, marketing).
+> Shared protocol for all expert consultation agents.
 > Each agent references this document in its `## Reference Documents` section.
 
 ## Session Start Protocol

@@ -35,9 +35,9 @@ afc_state_increment totalPromptCount >/dev/null 2>&1 || echo "[afc:prompt-submit
 # Build context message
 CONTEXT="[Pipeline: ${FEATURE}] [Phase: ${PHASE}]"
 
-# Drift checkpoint: inject plan constraints at every 50 prompts during implement/review
-DRIFT_THRESHOLD=50
-if [ "$CALL_COUNT" -gt 0 ] && [ $((CALL_COUNT % DRIFT_THRESHOLD)) -eq 0 ]; then
+# Drift checkpoint: inject plan constraints at every N prompts during implement/review
+# AFC_DRIFT_THRESHOLD sourced from afc-state.sh (SSOT)
+if [ "$CALL_COUNT" -gt 0 ] && [ $((CALL_COUNT % AFC_DRIFT_THRESHOLD)) -eq 0 ]; then
   case "$PHASE" in
     implement|review)
       DRIFT_MSG="[DRIFT CHECKPOINT: ${CALL_COUNT} prompts in phase] Re-read plan.md constraints and acceptance criteria. Verify current work aligns with spec intent."
@@ -47,6 +47,13 @@ if [ "$CALL_COUNT" -gt 0 ] && [ $((CALL_COUNT % DRIFT_THRESHOLD)) -eq 0 ]; then
 fi
 
 # Output additionalContext to stdout (injected into Claude context)
-printf '{"hookSpecificOutput":{"additionalContext":"%s"}}\n' "$CONTEXT"
+# Use jq for safe JSON encoding; printf fallback strips remaining quotes
+if command -v jq &> /dev/null; then
+  jq -n --arg c "$CONTEXT" '{"hookSpecificOutput":{"additionalContext":$c}}'
+else
+  SAFE_CONTEXT="${CONTEXT//\\/\\\\}"
+  SAFE_CONTEXT="${SAFE_CONTEXT//\"/\\\"}"
+  printf '{"hookSpecificOutput":{"additionalContext":"%s"}}\n' "$SAFE_CONTEXT"
+fi
 
 exit 0

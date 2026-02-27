@@ -2,11 +2,11 @@
 
 > Guardrails for ecommerce and retail projects. Auto-loaded when project-profile domain is `ecommerce`.
 
-## Core Flows to Protect
+## Compliance Requirements
 
-- **Cart → Checkout → Payment → Fulfillment**: each transition must be atomic
-- **Inventory management**: prevent overselling (stock reservation on add-to-cart or checkout)
-- **Order state machine**: clear state transitions (pending → paid → shipped → delivered → returned)
+- Payment processing: PCI-DSS compliance via third-party (Stripe, PayPal) — never process cards directly
+- Cookie consent: GDPR/ePrivacy for EU customers (tracking, analytics, marketing cookies)
+- Consumer protection: clear return/refund policy, accurate product descriptions
 
 ## Data Handling Rules
 
@@ -16,27 +16,22 @@
 - Tax calculation: use external service (TaxJar, Avalara) — tax rules change frequently
 - Discount/coupon stacking rules: define clearly before building
 
-## Performance Guardrails
+## Domain-Specific Guardrails
 
-- Product listing pages: paginate, never load all products
-- Search: use dedicated search service (Algolia, Elasticsearch, Meilisearch) for > 1K products
-- Image optimization: WebP/AVIF with responsive sizes, lazy loading
-- Cart: client-side optimistic updates + server validation
-- Category pages: cache aggressively (product data changes infrequently)
+- **Core Flows**: Cart → Checkout → Payment → Fulfillment — each transition must be atomic
+- **Inventory management**: prevent overselling (stock reservation on add-to-cart or checkout)
+- **Order state machine**: clear state transitions (pending → paid → shipped → delivered → returned)
+- **SEO**: unique title + meta description + JSON-LD Product schema per product page
+- **URLs**: human-readable slugs (`/products/blue-widget` not `/products/12345`)
+- **Sitemap**: include all product pages, update frequency based on price/stock changes
+- **Performance**: paginate product listings, lazy-load images (WebP/AVIF), cache category pages
 
-## SEO Requirements
+## Security Heightened Checks
 
-- Product pages: unique title, meta description, structured data (JSON-LD Product schema)
-- Category pages: canonical URLs, proper pagination (rel=next/prev or infinite scroll with SEO fallback)
-- Sitemap: include all product pages, update frequency based on price/stock changes
-- URL structure: human-readable slugs (`/products/blue-widget` not `/products/12345`)
-
-## Security Considerations
-
-- Payment: always server-side (Stripe, PayPal) — never process cards directly
 - User accounts: password reset flow, account lockout after failed attempts
 - Admin panel: separate authentication, audit logging for price/inventory changes
 - CSRF protection on all form submissions
+- Cart tampering: server-side price validation (never trust client-side price)
 
 ## Testing Requirements
 
