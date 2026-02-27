@@ -309,6 +309,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 #### Step 3.4: Execution
 
+0. **Baseline test** (follows implement.md Step 1, item 5): if `{config.test}` is non-empty, run `{config.test}` before starting task execution. On failure, report pre-existing test failures to user and ask: "(1) Proceed anyway (2) Fix first (3) Abort". On pass or empty config, continue.
 1. Execute tasks phase by phase using implement.md orchestration rules (sequential/batch/swarm based on [P] count)
 2. **Implementation Context injection**: Every sub-agent prompt includes the `## Implementation Context` section from plan.md (ensures spec intent propagates to workers)
 3. Perform **3-step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
@@ -493,7 +494,7 @@ Artifact cleanup and codebase hygiene check after implementation and review:
            "security_agent": { "invoked": true/false, "findings": N },
            "critic_passes": N, "critic_fixes": N, "escalations": N }
        },
-       "totals": { "changed_files": N, "auto_resolved": N, "escalations": N }
+       "totals": { "changed_files": N, "auto_resolved": N, "escalations": N, "totalPromptCount": N }
      }
      ```
    - Create `.claude/afc/memory/quality-history/` directory if it does not exist

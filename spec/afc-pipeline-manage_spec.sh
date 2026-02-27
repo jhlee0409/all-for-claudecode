@@ -48,6 +48,19 @@ Describe "afc-pipeline-manage.sh"
       The contents of file "$TEST_DIR/.claude/.afc-state.json" should include '"phase"'
     End
 
+    It "resets promptCount on phase change"
+      # Set a counter value first
+      . scripts/afc-state.sh
+      _AFC_STATE_DIR="$TEST_DIR/.claude"
+      _AFC_STATE_FILE="$TEST_DIR/.claude/.afc-state.json"
+      afc_state_write "promptCount" "42"
+      When run script scripts/afc-pipeline-manage.sh phase review
+      The status should eq 0
+      The output should include "Phase: review"
+      # Verify promptCount is exactly 0 (not just "42 is gone")
+      The contents of file "$TEST_DIR/.claude/.afc-state.json" should include '"promptCount": 0'
+    End
+
     Context "new phase names"
       It "accepts clarify phase"
         When run script scripts/afc-pipeline-manage.sh phase clarify

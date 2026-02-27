@@ -63,7 +63,7 @@ afc_state_read() {
       | head -1 | sed 's/.*:[[:space:]]*"\(.*\)"/\1/')
     if [ -z "$val" ]; then
       # Try numeric value
-      val=$(grep -o "\"${field}\"[[:space:]]*:[[:space:]]*[0-9]*" "$_AFC_STATE_FILE" 2>/dev/null \
+      val=$(grep -o "\"${field}\"[[:space:]]*:[[:space:]]*[0-9][0-9]*" "$_AFC_STATE_FILE" 2>/dev/null \
         | head -1 | sed 's/.*:[[:space:]]*//')
     fi
     [ -n "$val" ] && printf '%s\n' "$val" && return 0
@@ -224,6 +224,25 @@ afc_state_ci_pass() {
   local now
   now=$(date +%s)
   afc_state_write "ciPassedAt" "$now"
+}
+
+# Increment a numeric field (read-modify-write; safe for single-process use)
+# Usage: afc_state_increment <field>
+# Returns: new value on stdout
+afc_state_increment() {
+  local field="$1"
+  if [ ! -f "$_AFC_STATE_FILE" ]; then
+    return 1
+  fi
+  local current=0
+  current=$(afc_state_read "$field" 2>/dev/null || echo 0)
+  # Ensure numeric
+  if ! printf '%s' "$current" | grep -qE '^[0-9]+$'; then
+    current=0
+  fi
+  local new_val=$((current + 1))
+  afc_state_write "$field" "$new_val"
+  printf '%s\n' "$new_val"
 }
 
 # Record a phase checkpoint with git SHA

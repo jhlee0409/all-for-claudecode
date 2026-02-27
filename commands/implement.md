@@ -59,7 +59,11 @@ This enables Stop Gate and CI Gate hooks during standalone implementation. Relea
 3. **Recent changes**: run `git log --oneline -20` to understand what changed recently (context for implementation)
 4. **Smoke test**: run `{config.gate}` before starting implementation:
    - If it fails → diagnose before implementing (existing code is broken — fix first or report to user)
-   - If it passes → baseline confirmed, proceed
+   - If it passes → continue to baseline test
+5. **Baseline test** (if `{config.test}` is non-empty): run `{config.test}` before starting implementation:
+   - If it fails → report pre-existing test failures to user and ask: "(1) Proceed anyway (tests were already broken) (2) Fix first (3) Abort"
+   - If it passes → full baseline confirmed, proceed
+   - If `{config.test}` is empty → skip (no test framework configured)
 
 ### 1.3. Task List Generation (if tasks.md absent)
 

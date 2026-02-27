@@ -264,6 +264,73 @@ Describe "afc-state.sh"
     End
   End
 
+  Describe "afc_state_increment"
+    Context "when state file does not exist"
+      It "returns 1"
+        When call afc_state_increment "promptCount"
+        The status should eq 1
+      End
+    End
+
+    Context "when state file exists with no counter"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+      }
+
+      It "initializes counter to 1"
+        When call afc_state_increment "promptCount"
+        The status should eq 0
+        The stdout should eq 1
+      End
+    End
+
+    Context "when counter already exists"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+        afc_state_write "promptCount" "5"
+      }
+
+      It "increments by 1"
+        When call afc_state_increment "promptCount"
+        The status should eq 0
+        The stdout should eq 6
+      End
+    End
+
+    Context "when value is non-numeric"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+        afc_state_write "promptCount" "abc"
+      }
+
+      It "resets to 1"
+        When call afc_state_increment "promptCount"
+        The status should eq 0
+        The stdout should eq 1
+      End
+    End
+
+    Context "when called consecutively"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+      }
+
+      It "increments correctly across two calls"
+        When call eval 'afc_state_increment "promptCount" > /dev/null; afc_state_increment "promptCount"'
+        The status should eq 0
+        The stdout should eq 2
+      End
+    End
+  End
+
   Describe "afc_state_checkpoint"
     Context "when state file does not exist"
       It "returns 1"

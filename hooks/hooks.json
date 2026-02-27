@@ -34,6 +34,16 @@
             "statusMessage": "Checking command safety..."
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-spec-guard.sh\"",
+            "statusMessage": "Checking spec immutability..."
+          }
+        ]
       }
     ],
     "PostToolUse": [
