@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ShellSpec
+        run: npm run setup:test
+
+      - name: Install shellcheck
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y shellcheck
+
+      - name: Install shellcheck (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install shellcheck
+
+      - name: Run lint and tests
+        run: npm run test:all

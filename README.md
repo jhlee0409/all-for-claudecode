@@ -6,10 +6,11 @@
 
 **Claude Code plugin that automates the full development cycle — spec → plan → implement → review → clean.**
 
+[![CI](https://github.com/jhlee0409/all-for-claudecode/actions/workflows/ci.yml/badge.svg)](https://github.com/jhlee0409/all-for-claudecode/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
 [![npm downloads](https://img.shields.io/npm/dm/all-for-claudecode)](https://www.npmjs.com/package/all-for-claudecode)
 [![license](https://img.shields.io/github/license/jhlee0409/all-for-claudecode)](./LICENSE)
-[![test](https://img.shields.io/badge/tests-passing-brightgreen)](#how-it-works)
+[![GitHub stars](https://img.shields.io/github/stars/jhlee0409/all-for-claudecode?style=social)](https://github.com/jhlee0409/all-for-claudecode)
 
 > One command (`/afc:auto`) runs the entire cycle. Zero runtime dependencies — pure markdown commands + bash hook scripts.
 
