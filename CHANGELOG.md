@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-02-28
+
+### Added
+- **Expert consultation system**: 8 domain specialist agents (backend, infra, PM, design, marketing, legal, security, tech-advisor) with persistent memory, routed via `/afc:consult` command
+- **Consult router command**: Auto-detects domain from question keywords, supports explicit domain selection, exploratory Socratic mode, and depth hints (brief/deep/auto)
+- **Expert protocol**: Shared consultation protocol with Progressive Disclosure response format, Anti-Sycophancy rules, and Overengineering Guard
+- **Domain adapters**: Industry-specific guardrails for fintech, ecommerce, and healthcare projects (auto-loaded from project profile)
+- **Project profile template**: `.claude/afc/project-profile.md` generated during init for expert context
+- **Spec guard hook**: PreToolUse hook blocking spec.md writes during implement/review/clean phases (spec immutability enforcement)
+- **Drift detection**: Per-phase prompt counter with checkpoint injection every 50 prompts during implement/review — reminds agents to re-read plan constraints
+- **Baseline test step**: `{config.test}` verification before implementation starts, reports pre-existing failures with proceed/fix/abort options
+- **`afc_state_increment`**: Read-modify-write numeric field helper in afc-state.sh with validation
+- **`AFC_DRIFT_THRESHOLD`**: SSOT constant for drift checkpoint interval
+
+### Fixed
+- **Spec guard path traversal bypass**: Normalize `../` sequences and support relative paths — prevents spec immutability circumvention
+- **Spec guard MultiEdit gap**: Added MultiEdit to PreToolUse matcher (was only Edit|Write|NotebookEdit)
+- **JSON injection in user-prompt-submit**: Use jq for safe JSON encoding with manual escaping fallback
+- **Expert agent Write/Edit tools missing**: Added Write and Edit tools to all 8 experts + tech-advisor (enables memory updates and project-profile creation)
+- **Consult duplicate registration**: Removed from user-only section in init.md (kept in auto-trigger routing table)
+- **expert-protocol.md agent list**: Removed incomplete enumeration from description line
+- **Numeric fallback regex**: Fixed `[0-9]*` → `[0-9][0-9]*` in afc_state_read (prevented matching empty strings)
+
+### Changed
+- **Domain adapters standardized**: Unified section structure across fintech/ecommerce/healthcare (6 common sections: Compliance, Data Handling, Domain-Specific, Security, Testing, Scale)
+- **Drift threshold extracted**: Moved hardcoded `DRIFT_THRESHOLD=50` to afc-state.sh SSOT constant
+- **promptCount reset**: Phase changes now reset per-phase prompt counter to 0, preserving pipeline-wide totalPromptCount
+- **Quality metrics**: Added totalPromptCount to auto.md quality report
+
+### Tests
+- 191 → 194 examples, 0 failures
+- New: afc-spec-guard_spec.sh (13 cases including path traversal and relative path bypass)
+- New: afc_state_increment tests (5 cases: missing file, new counter, existing counter, non-numeric, consecutive)
+- New: drift checkpoint tests (4 cases: threshold trigger, below threshold, second threshold, non-implement phase)
+- New: promptCount phase reset test
+
 ## [2.3.0] - 2026-02-26
 
 ### Added
