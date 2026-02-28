@@ -243,7 +243,7 @@ check_phase_ssot() {
   # Sub-check B: Every command name should map to a valid phase or be a known non-phase command
   # Non-phase commands that are not pipeline phases
   # NOTE: Update this list when adding non-phase commands to commands/
-  local non_phase_cmds="auto|init|doctor|principles|checkpoint|resume|launch|ideate|research|architect|security|debug|analyze|validate|test|consult"
+  local non_phase_cmds="auto|init|doctor|principles|checkpoint|resume|launch|ideate|research|architect|security|debug|analyze|validate|test|consult|triage"
   local commands_dir="$PROJECT_DIR/commands"
   if [ -d "$commands_dir" ]; then
     for cmd_file in "$commands_dir"/*.md; do
