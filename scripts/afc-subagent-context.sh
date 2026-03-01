@@ -32,7 +32,7 @@ FEATURE=$(afc_state_read feature || echo "unknown")
 PHASE=$(afc_state_read phase || echo "unknown")
 
 # 3. Build context string
-CONTEXT="[AFC PIPELINE] Feature: $FEATURE | Phase: $PHASE"
+CONTEXT="[AFC PIPELINE] Feature: $FEATURE | Phase: $PHASE | [AFC] When this task matches an AFC skill (analyze, implement, review, debug, test, plan, spec, research, ideate), use the Skill tool to invoke it. Do not substitute with raw Task agents. When analyzing external systems, verify against official documentation."
 
 # 4. Extract config sections from afc.config.md
 CONFIG_FILE="$PROJECT_DIR/.claude/afc.config.md"

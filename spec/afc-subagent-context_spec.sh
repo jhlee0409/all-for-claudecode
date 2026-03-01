@@ -32,6 +32,15 @@ Describe "afc-subagent-context.sh"
       The output should include "Feature: subagent-test"
       The output should include "Phase: implement"
     End
+
+    It "includes AFC routing rule in output"
+      Data '{}'
+      When run script scripts/afc-subagent-context.sh
+      The status should eq 0
+      The output should include "[AFC]"
+      The output should include "Skill tool"
+      The output should include "official documentation"
+    End
   End
 
   Context "when config has Project Context section"

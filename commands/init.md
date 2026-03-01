@@ -226,17 +226,17 @@ IMPORTANT: For requests matching the afc skill routing table below, always invok
 
 | Intent | Skill | Trigger Keywords |
 |--------|-------|-----------------|
-| Implement/Modify | `afc:implement` | add, modify, refactor, implement |
-| Review | `afc:review` | review, check code, check PR |
-| Debug | `afc:debug` | bug, error, broken, fix |
-| Test | `afc:test` | test, coverage |
-| Design | `afc:plan` | design, plan, how to implement |
+| Implement/Modify | `afc:implement` | add, modify, refactor, implement, 구현, 추가, 수정, 리팩, 만들어, 개발 |
+| Review | `afc:review` | review, check code, check PR, 리뷰, 검토 |
+| Debug | `afc:debug` | bug, error, broken, fix, 버그, 에러, 오류, 고쳐, 안됨 |
+| Test | `afc:test` | test, coverage, 테스트, 커버리지 |
+| Design | `afc:plan` | design, plan, how to implement, 설계, 플랜, 아키텍처 |
 | Validate | `afc:validate` | consistency, validate, validate artifacts |
-| Analyze | `afc:analyze` | analyze, explore, investigate code, root cause |
-| Spec | `afc:spec` | spec, specification |
+| Analyze | `afc:analyze` | analyze, explore, investigate code, root cause, 분석, 조사, 탐색, 살펴, 점검 |
+| Spec | `afc:spec` | spec, specification, 스펙, 요구사항, 명세 |
 | Tasks | `afc:tasks` | break down tasks, decompose |
-| Research | `afc:research` | research, investigate |
-| Ideate | `afc:ideate` | idea, brainstorm, what to build, product brief |
+| Research | `afc:research` | research, investigate, 리서치, 연구 |
+| Ideate | `afc:ideate` | idea, brainstorm, what to build, product brief, 아이디어, 브레인스톰 |
 | Ambiguous | `afc:clarify` | auto-triggered when requirements are unclear |
 | Full auto | `afc:auto` | do it automatically, auto-run |
 | Consult | `afc:consult` | consult, ask expert, advice, which library, what tool, recommend, compare, stack decision, ask backend, ask infra, ask PM, ask design, ask marketing, ask legal, ask security, ask advisor, GDPR, OWASP, SEO, accessibility |
@@ -257,6 +257,13 @@ spec → plan → implement → review → clean
 ## Override Rules
 
 NEVER use executor, deep-executor, debugger, planner, analyst, verifier, test-engineer, code-reviewer, quality-reviewer, style-reviewer, api-reviewer, security-reviewer, performance-reviewer for tasks that an afc skill covers above. ALWAYS invoke the afc skill instead.
+
+## Source Verification
+
+When analyzing or making claims about external systems, APIs, SDKs, or third-party tools:
+- Verify against official documentation, NOT project-internal docs
+- Do not hardcode reference data when delegating to sub-agents — instruct them to look up primary sources
+- Cross-verify high-severity findings before reporting
 </afc-pipeline>
 <!-- AFC:END -->
 ```
