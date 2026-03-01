@@ -1,6 +1,6 @@
 {
   "name": "all-for-claudecode",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Claude Code plugin that automates the full dev cycle — spec, plan, implement, review, clean.",
   "bin": {
     "all-for-claudecode": "bin/cli.mjs"
