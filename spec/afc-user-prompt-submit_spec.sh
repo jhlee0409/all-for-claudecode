@@ -11,106 +11,18 @@ Describe "afc-user-prompt-submit.sh"
   After "cleanup"
 
   Context "when pipeline is inactive"
-    It "exits 0 and output is empty with no prompt"
+    It "exits 0 with empty output (routing delegated to CLAUDE.md)"
+      Data '{"prompt":"add user authentication to the app"}'
+      When run script scripts/afc-user-prompt-submit.sh
+      The status should eq 0
+      The output should eq ""
+    End
+
+    It "exits 0 with empty output for empty input"
       Data '{}'
       When run script scripts/afc-user-prompt-submit.sh
       The status should eq 0
       The output should eq ""
-    End
-
-    It "exits 0 and output is empty for short prompt"
-      Data '{"prompt":"ㅇㅇ"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should eq ""
-    End
-
-    It "exits 0 and output is empty when no keyword matches"
-      Data '{"prompt":"hello there friend"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should eq ""
-    End
-
-    It "does not false-positive on substrings like latest or prefix"
-      Data '{"prompt":"explain the latest prefix contest"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should eq ""
-    End
-
-    It "injects analyze routing hint for Korean analysis keyword"
-      Data '{"prompt":"프로젝트 분석해줘"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "AFC ROUTE"
-      The output should include "afc:analyze"
-    End
-
-    It "injects source verify hint for analyze skill"
-      Data '{"prompt":"analyze the API integration"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:analyze"
-      The output should include "SOURCE VERIFY"
-    End
-
-    It "injects review routing hint for English keyword"
-      Data '{"prompt":"review this PR please"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "AFC ROUTE"
-      The output should include "afc:review"
-    End
-
-    It "injects implement routing hint for Korean keyword"
-      Data '{"prompt":"이 기능 구현해주세요"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:implement"
-    End
-
-    It "injects debug routing hint for error keyword"
-      Data '{"prompt":"이 에러 좀 고쳐줘"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:debug"
-    End
-
-    It "injects research routing hint with source verify"
-      Data '{"prompt":"research this library deeply"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:research"
-      The output should include "SOURCE VERIFY"
-    End
-
-    It "injects plan routing hint for design keyword"
-      Data '{"prompt":"how to implement auth flow"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:plan"
-    End
-
-    It "injects test routing hint"
-      Data '{"prompt":"테스트 커버리지 높여줘"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:test"
-    End
-
-    It "injects spec routing hint"
-      Data '{"prompt":"스펙 문서 작성해줘"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:spec"
-    End
-
-    It "injects ideate routing hint"
-      Data '{"prompt":"아이디어 브레인스톰 해보자"}'
-      When run script scripts/afc-user-prompt-submit.sh
-      The status should eq 0
-      The output should include "afc:ideate"
     End
   End
 
@@ -204,7 +116,7 @@ Describe "afc-user-prompt-submit.sh"
     End
   End
 
-  Context "when pipeline is active with keyword in prompt"
+  Context "when pipeline is active with any prompt"
     setup() {
       setup_tmpdir TEST_DIR
       setup_state_fixture "$TEST_DIR" "test-feature" "implement"

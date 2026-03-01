@@ -8,6 +8,11 @@ tools:
   - Bash
   - Task
   - WebSearch
+disallowedTools:
+  - Write
+  - Edit
+  - MultiEdit
+  - NotebookEdit
 model: sonnet
 memory: project
 isolation: worktree

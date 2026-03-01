@@ -180,11 +180,13 @@ Task("T004: Create AuthService", subagent_type: "afc:afc-impl-worker", isolation
 
 **Failure Recovery** (per-task, not per-batch):
 1. Identify the failed task from the agent's error return
-2. Reset: `TaskUpdate(taskId, status: "pending")`
-3. Track: `TaskUpdate(taskId, metadata: { retryCount: N })`
-4. If retryCount < 3 → re-launch in the next batch round (not immediately — wait for current batch to finish)
-5. If retryCount >= 3 → mark as failed, report: `"T{ID} failed after 3 attempts: {last error}"`
-6. Continue with remaining tasks — a single failure does not block the entire phase
+2. Capture the `agentId` from the failed agent's result (returned in Task tool output)
+3. Reset: `TaskUpdate(taskId, status: "pending")`
+4. Track: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
+5. If retryCount < 3 → re-launch with `resume: lastAgentId` in the next batch round. The resumed agent retains full context from the previous attempt (what it tried, what failed, partial progress), enabling more targeted retry instead of starting from scratch.
+   - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
+6. If retryCount >= 3 → mark as failed, report: `"T{ID} failed after 3 attempts: {last error}"`
+7. Continue with remaining tasks — a single failure does not block the entire phase
 
 #### Swarm Mode (6+ [P] tasks)
 
@@ -247,11 +249,13 @@ Task("Worker 2: T008, T010, T012", subagent_type: "afc:afc-impl-worker", isolati
 When a worker agent returns an error:
 1. Identify which tasks the worker was assigned (from the pre-assigned list)
 2. Check which tasks the worker actually completed (from its result summary)
-3. Reset uncompleted tasks: `TaskUpdate(taskId, status: "pending")`
-4. Track retry count: `TaskUpdate(taskId, metadata: { retryCount: N })`
-5. If retryCount < 3 → reassign to next worker batch
-6. If retryCount >= 3 → mark as failed, report: `"T{ID} failed after 3 attempts: {last error}"`
-7. Continue with remaining tasks
+3. Capture the `agentId` from the failed worker's result
+4. Reset uncompleted tasks: `TaskUpdate(taskId, status: "pending")`
+5. Track retry count: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
+6. If retryCount < 3 → re-launch with `resume: lastAgentId` to preserve context from the previous attempt. The resumed agent retains its full conversation history (files read, changes attempted, errors encountered), enabling targeted retry.
+   - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
+7. If retryCount >= 3 → mark as failed, report: `"T{ID} failed after 3 attempts: {last error}"`
+8. Continue with remaining tasks
 
 > Single task failure does not block the phase. The orchestrator reassigns failed tasks to subsequent batches.
 

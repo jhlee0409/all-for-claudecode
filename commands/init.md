@@ -224,22 +224,30 @@ IMPORTANT: For requests matching the afc skill routing table below, always invok
 
 ## Skill Routing
 
-| Intent | Skill | Trigger Keywords |
-|--------|-------|-----------------|
-| Implement/Modify | `afc:implement` | add, modify, refactor, implement, 구현, 추가, 수정, 리팩, 만들어, 개발 |
-| Review | `afc:review` | review, check code, check PR, 리뷰, 검토 |
-| Debug | `afc:debug` | bug, error, broken, fix, 버그, 에러, 오류, 고쳐, 안됨 |
-| Test | `afc:test` | test, coverage, 테스트, 커버리지 |
-| Design | `afc:plan` | design, plan, how to implement, 설계, 플랜, 아키텍처 |
-| Validate | `afc:validate` | consistency, validate, validate artifacts |
-| Analyze | `afc:analyze` | analyze, explore, investigate code, root cause, 분석, 조사, 탐색, 살펴, 점검 |
-| Spec | `afc:spec` | spec, specification, 스펙, 요구사항, 명세 |
-| Tasks | `afc:tasks` | break down tasks, decompose |
-| Research | `afc:research` | research, investigate, 리서치, 연구 |
-| Ideate | `afc:ideate` | idea, brainstorm, what to build, product brief, 아이디어, 브레인스톰 |
-| Ambiguous | `afc:clarify` | auto-triggered when requirements are unclear |
-| Full auto | `afc:auto` | do it automatically, auto-run |
-| Consult | `afc:consult` | consult, ask expert, advice, which library, what tool, recommend, compare, stack decision, ask backend, ask infra, ask PM, ask design, ask marketing, ask legal, ask security, ask advisor, GDPR, OWASP, SEO, accessibility |
+Classify the user's intent and route to the matching skill. Use semantic understanding — not keyword matching.
+
+| User Intent | Skill | Route When |
+|-------------|-------|------------|
+| Full lifecycle | `afc:auto` | User wants end-to-end feature development, or the request is a non-trivial new feature without an existing plan |
+| Specification | `afc:spec` | User wants to define or write requirements, acceptance criteria, or success conditions |
+| Design/Plan | `afc:plan` | User wants to plan HOW to implement before coding — approach, architecture decisions, design |
+| Implement | `afc:implement` | User wants specific code changes with a clear scope: add feature, refactor, modify. Requires existing plan or precise instructions |
+| Review | `afc:review` | User wants code review, PR review, or quality check on existing/changed code |
+| Debug/Fix | `afc:debug` | User reports a bug, error, or broken behavior and wants diagnosis and fix |
+| Test | `afc:test` | User wants to write tests, improve coverage, or verify behavior |
+| Validate | `afc:validate` | User wants to check consistency or validate existing pipeline artifacts |
+| Analyze | `afc:analyze` | User wants to understand, explore, or audit existing code without modifying it |
+| Research | `afc:research` | User wants deep investigation of external tools, libraries, APIs, or technical concepts |
+| Ideate | `afc:ideate` | User wants to brainstorm ideas, explore possibilities, or draft a product brief |
+| Consult | `afc:consult` | User wants expert advice on a decision: library choice, architecture direction, legal/security/infra guidance |
+| Tasks | `afc:tasks` | User explicitly wants to decompose work into a task breakdown |
+| Ambiguous | `afc:clarify` | User's request is too vague or underspecified to route confidently |
+
+### Routing Rules
+
+1. **Auto vs Implement**: A new feature request without an existing plan routes to `afc:auto`. Only use `afc:implement` when the user has a clear, scoped task or an existing plan/spec.
+2. **Compound intents**: Route to the primary intent. The pipeline handles sequencing internally.
+3. **Design-first**: When scope is non-trivial (multiple files, architectural decisions needed), prefer `afc:auto` or `afc:plan` over direct `afc:implement`.
 
 User-only (not auto-triggered — inform user on request):
 - `afc:launch` — inform user when release artifact generation is requested
@@ -249,6 +257,9 @@ User-only (not auto-triggered — inform user on request):
 - `afc:checkpoint` — inform user when session save is requested
 - `afc:resume` — inform user when session restore is requested
 - `afc:principles` — inform user when project principles management is requested
+- `afc:triage` — inform user when parallel PR/issue triage is requested
+- `afc:pr-comment` — inform user when posting PR review comments to GitHub is requested
+- `afc:release-notes` — inform user when generating release notes from git history is requested
 
 ## Pipeline
 

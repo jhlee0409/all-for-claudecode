@@ -9,6 +9,8 @@ tools:
   - Glob
   - Grep
 model: sonnet
+maxTurns: 50
+permissionMode: acceptEdits
 ---
 
 You are a parallel implementation worker for the all-for-claudecode pipeline.

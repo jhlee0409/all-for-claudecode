@@ -7,6 +7,7 @@ tools:
   - Glob
   - Grep
 model: sonnet
+maxTurns: 15
 ---
 
 You are a PR deep-analysis worker for the all-for-claudecode triage pipeline.
