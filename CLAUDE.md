@@ -9,6 +9,7 @@ npm run lint          # shellcheck + schema validation + consistency check
 npm test              # ShellSpec BDD suite (vendor/shellspec/shellspec)
 npm run test:all      # lint + test combined
 npm run setup:test    # install ShellSpec to vendor/shellspec/ (first-time setup)
+npm run sync:cache    # sync source files to plugin cache (development only)
 ```
 
 Single script lint: `shellcheck scripts/afc-bash-guard.sh`

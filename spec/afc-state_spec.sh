@@ -65,6 +65,32 @@ Describe "afc-state.sh"
         The status should eq 1
       End
     End
+
+    Context "when feature is null (zombie state)"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        printf '{"feature": null, "phase": "spec"}' > "$TEST_DIR/.claude/.afc-state.json"
+      }
+
+      It "returns 1"
+        When call afc_state_is_active
+        The status should eq 1
+      End
+    End
+
+    Context "when feature is empty string (zombie state)"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        printf '{"feature": "", "phase": "spec"}' > "$TEST_DIR/.claude/.afc-state.json"
+      }
+
+      It "returns 1"
+        When call afc_state_is_active
+        The status should eq 1
+      End
+    End
   End
 
   Describe "afc_state_read"

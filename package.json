@@ -37,7 +37,8 @@
     "lint": "shellcheck -x --source-path=scripts --severity=warning scripts/*.sh && bash scripts/afc-schema-validate.sh --all && bash scripts/afc-consistency-check.sh",
     "test": "vendor/shellspec/shellspec",
     "test:all": "npm run lint && npm run test",
-    "setup:test": "bash scripts/install-shellspec.sh"
+    "setup:test": "bash scripts/install-shellspec.sh",
+    "sync:cache": "bash scripts/afc-sync-cache.sh"
   },
   "engines": {
     "node": ">=18"

@@ -37,11 +37,11 @@ afc_is_ci_exempt() {
 # Returns: 0 if active, 1 if not
 afc_state_is_active() {
   [ -f "$_AFC_STATE_FILE" ] && [ -s "$_AFC_STATE_FILE" ] || return 1
-  # Validate JSON structure — reject corrupt/truncated files
+  # Validate JSON structure — reject corrupt/truncated files and zombie states (null/empty feature)
   if command -v jq >/dev/null 2>&1; then
-    jq -e '.feature // empty' "$_AFC_STATE_FILE" >/dev/null 2>&1 || return 1
+    jq -e '.feature // empty | select(length > 0)' "$_AFC_STATE_FILE" >/dev/null 2>&1 || return 1
   else
-    grep -q '"feature"' "$_AFC_STATE_FILE" 2>/dev/null || return 1
+    grep -qE '"feature"[[:space:]]*:[[:space:]]*"[^"]' "$_AFC_STATE_FILE" 2>/dev/null || return 1
   fi
 }
 

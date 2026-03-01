@@ -41,10 +41,12 @@ Before anything else, detect and migrate v1.x (selfish-pipeline) artifacts:
   - Rename: `mv .claude/selfish .claude/afc`
   - Print: `Migrated: .claude/selfish/ → .claude/afc/`
 
-**D. Git tag migration**
-- Check `git tag -l 'selfish/pre-*' 'selfish/phase-*'`
-- If any found: rename each tag (`git tag afc/... selfish/... && git tag -d selfish/...`)
-- Print: `Migrated: {count} git tags (selfish/* → afc/*)`
+**D. Git tag cleanup**
+- Check `git tag -l 'selfish/*'`
+- If any found:
+  - Known patterns (`selfish/pre-*`, `selfish/phase-*`): rename to `afc/` equivalent (`git tag afc/... selfish/... && git tag -d selfish/...`)
+  - All remaining `selfish/*`: delete (`git tag -d`)
+- Print: `Migrated: {renamed} renamed, {deleted} deleted`
 
 ### 2. Check for Existing Config
 

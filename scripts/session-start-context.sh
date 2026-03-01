@@ -49,6 +49,32 @@ if afc_state_is_active; then
   if [ -n "$CI_TIMESTAMP" ]; then
     OUTPUT="$OUTPUT | Last CI: PASSED ($CI_TIMESTAMP)"
   fi
+elif [ -f "$PROJECT_DIR/.claude/.afc-state.json" ]; then
+  # 1a. Zombie state cleanup — file exists but afc_state_is_active returned false
+  rm -f "$PROJECT_DIR/.claude/.afc-state.json"
+  OUTPUT="${OUTPUT:+$OUTPUT | }[ZOMBIE STATE CLEANED] Removed invalid .afc-state.json"
+fi
+
+# 1b. Version mismatch detection
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -f "$PLUGIN_ROOT/package.json" ]; then
+  # Read plugin version
+  if command -v jq >/dev/null 2>&1; then
+    PLUGIN_VERSION=$(jq -r '.version // empty' "$PLUGIN_ROOT/package.json" 2>/dev/null || true)
+  else
+    PLUGIN_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_ROOT/package.json" 2>/dev/null | head -1 | sed 's/.*: *"//;s/"//') || true
+  fi
+
+  if [ -n "${PLUGIN_VERSION:-}" ]; then
+    # Read AFC block version from global CLAUDE.md
+    GLOBAL_CLAUDE="$HOME/.claude/CLAUDE.md"
+    if [ -f "$GLOBAL_CLAUDE" ]; then
+      BLOCK_VERSION=$(grep -o 'AFC:VERSION:[0-9][0-9.]*' "$GLOBAL_CLAUDE" 2>/dev/null | head -1 | sed 's/AFC:VERSION://' || true)
+      if [ -n "${BLOCK_VERSION:-}" ] && [ "$BLOCK_VERSION" != "$PLUGIN_VERSION" ]; then
+        OUTPUT="${OUTPUT:+$OUTPUT | }[AFC VERSION MISMATCH] v$PLUGIN_VERSION installed but CLAUDE.md block is v$BLOCK_VERSION. Run /afc:init to update."
+      fi
+    fi
+  fi
 fi
 
 # 2. Check if checkpoint exists (project-local first, fallback to auto-memory)

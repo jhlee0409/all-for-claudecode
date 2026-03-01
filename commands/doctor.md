@@ -59,7 +59,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 |-------|-----|------|------|
 | Global CLAUDE.md exists | Read `~/.claude/CLAUDE.md` | File exists | ⚠ Warning: no global CLAUDE.md. all-for-claudecode skills won't auto-trigger from intent. Fix: run `/afc:init` |
 | all-for-claudecode block present | Grep for `<!-- AFC:START -->` and `<!-- AFC:END -->` in `~/.claude/CLAUDE.md` | Both markers found | Fix: run `/afc:init` to inject all-for-claudecode block |
-| all-for-claudecode block version | Extract version from `<!-- AFC:VERSION:X.Y.Z -->` in CLAUDE.md. Then read `${CLAUDE_PLUGIN_ROOT}/package.json` to get the actual plugin version. Compare the two. | Block version ≥ plugin version | ⚠ Warning: all-for-claudecode block is outdated (found {block_version}, current {plugin_version}). Fix: run `/afc:init` to update |
+| all-for-claudecode block version | Extract version from `<!-- AFC:VERSION:X.Y.Z -->` in CLAUDE.md. Read `${CLAUDE_PLUGIN_ROOT}/package.json` (`.version`) to get the actual plugin version. Compare the two. | Block version = plugin version | ⚠ Warning: all-for-claudecode block is outdated (found {block_version}, current {plugin_version}). Fix: run `/afc:init` to update |
 | No conflicting routing | Grep for conflicting agent patterns (`executor`, `deep-executor`, `debugger`, `code-reviewer`) outside all-for-claudecode block that could intercept afc intents | No conflicts or conflicts are inside other tool blocks | ⚠ Warning: found agent routing that may conflict with afc skills. Review `~/.claude/CLAUDE.md` |
 
 ### Category 4: Legacy Migration (v1.x → v2.0)
@@ -112,7 +112,7 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| Version triple match | Compare versions in `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both `metadata.version` and `plugins[0].version`) | All identical | ✗ Fix: update mismatched files to the same version |
+| Version triple match | Compare versions in `package.json` (`.version`), `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.metadata.version` and `.plugins[0].version`) | All identical | ✗ Fix: update mismatched files to the same version |
 | Cache in sync | Compare `commands/auto.md` content between source and `~/.claude/plugins/cache/all-for-claudecode/afc/{version}/commands/auto.md` | Content matches | ⚠ Warning: plugin cache is stale. Fix: copy source files to cache directory |
 
 ### Category 9: Command Definitions (development only)
@@ -151,29 +151,17 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 
 ## Execution
 
-1. Print header:
+1. Run the automated health check script:
    ```
-   all-for-claudecode Doctor
-   =======================
+   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-doctor.sh" $ARGUMENTS
    ```
+   This covers Categories 1-8 automatically.
 
-2. Run each category in order. For each check:
-   - Print `  ✓ {check name}` on pass
-   - Print `  ⚠ {check name}: {brief reason}` on warning
-   - Print `  ✗ {check name}: {brief reason}` on fail
-   - On fail/warning, print `    Fix: {command}` indented below
+2. Print the script's stdout output as-is (already formatted with pass/warn/fail markers).
 
-3. If `--verbose` is in `$ARGUMENTS`:
-   - Print additional details for each check (command output, file paths, versions found)
+3. If in the source repo (package.json `name` = `"all-for-claudecode"`), continue with Categories 9-11 manually using the check tables above.
 
-4. Print summary:
-   ```
-   ─────────────────────────
-   Results: {pass} passed, {warn} warnings, {fail} failures
-   ```
-   - If all pass: `No issues found!`
-   - If warnings only: `{N} warnings found. Non-blocking but review recommended.`
-   - If any failures: `{N} issues need attention. Run the Fix commands above.`
+4. Print combined summary (script summary + any additional findings from Categories 9-11).
 
 ## Example Output
 
