@@ -14,13 +14,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Consume stdin immediately (prevents SIGPIPE if exiting early)
+INPUT=$(cat)
+
 # If pipeline is inactive -> skip
 if ! afc_state_is_active; then
   exit 0
 fi
-
-# Parse tool input from stdin
-INPUT=$(cat)
 
 # Skip if stdin is empty
 if [ -z "$INPUT" ]; then
