@@ -421,7 +421,7 @@ npm run setup:test    # install ShellSpec 0.28.1 to vendor/shellspec/ (first-tim
 
 ```bash
 npm test              # ShellSpec BDD suite (vendor/shellspec/shellspec)
-npm run lint          # shellcheck scripts/*.sh
+npm run lint          # shellcheck + schema validation + consistency check
 npm run test:all      # lint + test combined
 ```
 
