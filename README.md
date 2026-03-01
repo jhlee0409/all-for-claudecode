@@ -123,6 +123,9 @@ Performance: ✓ no N+1 queries
 | `/afc:validate` | Verify artifact consistency |
 | `/afc:analyze` | General-purpose code and component analysis |
 | `/afc:consult` | Expert consultation (backend, infra, PM, design, marketing) |
+| `/afc:triage` | Analyze open PRs and issues in parallel |
+| `/afc:pr-comment` | Generate structured PR review comments |
+| `/afc:release-notes` | Generate release notes from git history |
 | `/afc:clarify` | Resolve spec ambiguities |
 
 ### Individual Command Examples
@@ -142,6 +145,12 @@ Performance: ✓ no N+1 queries
 
 # Explore and structure a product idea
 /afc:ideate "real-time collaboration feature"
+
+# Triage open PRs and issues
+/afc:triage              # all open PRs + issues
+/afc:triage --pr         # PRs only
+/afc:triage --deep       # deep analysis with diff review
+/afc:triage 42 99        # specific items by number
 ```
 
 ## Hook Events
@@ -161,7 +170,7 @@ Every hook fires automatically — no configuration needed after install.
 | `Notification` | Desktop alerts (macOS/Linux) |
 | `TaskCompleted` | CI gate (shell) + acceptance criteria verification (LLM) |
 | `SubagentStop` | Tracks subagent completion in pipeline log |
-| `UserPromptSubmit` | Injects Phase/Feature context per prompt |
+| `UserPromptSubmit` | Injects Phase/Feature context + drift checkpoint during active pipeline |
 | `PermissionRequest` | Auto-allows CI commands during implement/review |
 | `ConfigChange` | Audits/blocks settings changes during active pipeline |
 | `TeammateIdle` | Prevents Agent Teams idle during implement/review |
@@ -176,7 +185,8 @@ Handler types: `command` (shell scripts, all events), `prompt` (LLM single-turn,
 |---|---|
 | `afc-architect` | Remembers ADR decisions and architecture patterns across sessions. Auto-invoked during Plan (ADR recording) and Review (architecture compliance). |
 | `afc-security` | Remembers vulnerability patterns and false positives across sessions. Auto-invoked during Review (security scanning). Runs in isolated worktree. |
-| `afc-impl-worker` | Parallel implementation worker. Receives pre-assigned tasks from orchestrator. Ephemeral (no memory). |
+| `afc-impl-worker` | Parallel implementation worker. Receives pre-assigned tasks from orchestrator. Ephemeral (no memory). Max 50 turns, auto-approve edits. |
+| `afc-pr-analyst` | PR deep analysis worker for triage. Runs in isolated worktree with diff access. Max 15 turns. |
 
 ## Expert Consultation
 
