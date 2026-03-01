@@ -12,8 +12,9 @@ Describe "afc-triage.sh"
 
   Context "when gh CLI is not available"
     mock_no_gh() {
-      # Override PATH to exclude gh
-      PATH="/usr/bin:/bin"
+      # Create an empty dir and set PATH to only that dir
+      mkdir -p "$TEST_DIR/empty_bin"
+      PATH="$TEST_DIR/empty_bin"
       export PATH
     }
 
