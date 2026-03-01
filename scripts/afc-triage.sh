@@ -78,8 +78,13 @@ if [ ${#SPECIFIC_NUMBERS[@]} -gt 0 ]; then
       if command -v jq >/dev/null 2>&1; then
         PR_ITEMS=$(printf '%s\n' "$PR_ITEMS" | jq --argjson item "$pr_data" '. + [$item]')
       else
-        # Fallback: append raw JSON (best effort)
-        PR_ITEMS="$pr_data"
+        # Fallback: accumulate newline-delimited JSON objects
+        if [ "$PR_ITEMS" = "[]" ]; then
+          PR_ITEMS="$pr_data"
+        else
+          PR_ITEMS="$PR_ITEMS
+$pr_data"
+        fi
       fi
     else
       # Try as issue
@@ -90,7 +95,13 @@ if [ ${#SPECIFIC_NUMBERS[@]} -gt 0 ]; then
         if command -v jq >/dev/null 2>&1; then
           ISSUE_ITEMS=$(printf '%s\n' "$ISSUE_ITEMS" | jq --argjson item "$issue_data" '. + [$item]')
         else
-          ISSUE_ITEMS="$issue_data"
+          # Fallback: accumulate newline-delimited JSON objects
+          if [ "$ISSUE_ITEMS" = "[]" ]; then
+            ISSUE_ITEMS="$issue_data"
+          else
+            ISSUE_ITEMS="$ISSUE_ITEMS
+$issue_data"
+          fi
         fi
       else
         printf '[afc:triage] Warning: #%s not found as PR or issue\n' "$num" >&2

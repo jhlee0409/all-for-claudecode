@@ -48,6 +48,14 @@ FILE_PATH=$(printf '%s' "$FILE_PATH" | head -1 | tr -d '\n\r' | cut -c1-500)
 
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
 
+# Auto-rotate if audit log exceeds 1 MB
+if [ -f "$AUDIT_LOG" ]; then
+  LOG_SIZE=$(wc -c < "$AUDIT_LOG" | tr -d ' ')
+  if [ "$LOG_SIZE" -ge 1048576 ]; then
+    mv "$AUDIT_LOG" "${AUDIT_LOG}.1"
+  fi
+fi
+
 # policy_settings changes are logged only (not blocked)
 if [ "$SOURCE" = "policy_settings" ]; then
   printf '[%s] source=%s path=%s\n' "$TIMESTAMP" "$SOURCE" "$FILE_PATH" >> "$AUDIT_LOG"

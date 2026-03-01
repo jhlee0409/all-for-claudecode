@@ -43,7 +43,7 @@ Scripts receive stdin JSON from Claude Code and respond via stdout JSON or stder
 
 Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claude/.afc-state.json`:
 - All scripts source `scripts/afc-state.sh` for state access (afc_state_is_active, afc_state_read, afc_state_write)
-- Fields: `feature`, `phase`, `ciPassedAt`, `changes[]`, `startedAt`
+- Fields: `feature`, `phase`, `ciPassedAt`, `changes[]`, `startedAt`, `promptCount`, `totalPromptCount`, `phaseCheckpoints[]`
 - When inactive: file does not exist
 - jq-first with grep/sed fallback for jq-less environments
 

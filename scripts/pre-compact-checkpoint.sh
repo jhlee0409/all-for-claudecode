@@ -79,14 +79,14 @@ fi
 # Guard against empty lists
 if [ -n "$MODIFIED" ]; then
   # shellcheck disable=SC2001
-  MODIFIED_LIST=$(echo "$MODIFIED" | sed 's/^/  - /')
+  MODIFIED_LIST=$(printf '%s\n' "$MODIFIED" | sed 's/^/  - /')
 else
   MODIFIED_LIST="  (none)"
 fi
 
 if [ -n "$STAGED" ]; then
   # shellcheck disable=SC2001
-  STAGED_LIST=$(echo "$STAGED" | sed 's/^/  - /')
+  STAGED_LIST=$(printf '%s\n' "$STAGED" | sed 's/^/  - /')
 else
   STAGED_LIST="  (none)"
 fi

@@ -499,7 +499,7 @@ Artifact cleanup and codebase hygiene check after implementation and review:
      ```
    - Create `.claude/afc/memory/quality-history/` directory if it does not exist
 6. **Checkpoint reset**:
-   - Clear `.claude/afc/memory/checkpoint.md` **and** `~/.claude/projects/{ENCODED_PATH}/auto-memory/checkpoint.md` (pipeline complete = session goal achieved, dual-delete prevents stale checkpoint in either location; `ENCODED_PATH` = project path with `/` replaced by `-`)
+   - Clear `.claude/afc/memory/checkpoint.md` **and** `~/.claude/projects/{ENCODED_PATH}/memory/checkpoint.md` (pipeline complete = session goal achieved, dual-delete prevents stale checkpoint in either location; `ENCODED_PATH` = project path with `/` replaced by `-`)
 7. **Timeline finalize**:
    ```bash
    "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"

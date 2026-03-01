@@ -33,6 +33,13 @@ ERROR="${ERROR:-}"
 # If pipeline is active, log failure (normalize error message to single line)
 if afc_state_is_active && [ -n "$ERROR" ]; then
   ERROR_ONELINE=$(printf '%s\n' "$ERROR" | head -1 | cut -c1-200)
+  # Auto-rotate if log exceeds 1 MB
+  if [ -f "$FAILURES_LOG" ]; then
+    LOG_SIZE=$(wc -c < "$FAILURES_LOG" | tr -d ' ')
+    if [ "$LOG_SIZE" -ge 1048576 ]; then
+      mv "$FAILURES_LOG" "${FAILURES_LOG}.1"
+    fi
+  fi
   printf '%s\n' "$(date +%s) $TOOL_NAME: $ERROR_ONELINE" >> "$FAILURES_LOG"
 fi
 
@@ -67,13 +74,13 @@ if [ -n "$HINT" ]; then
   # Generate safe JSON with jq if available, otherwise strip special chars and use printf
   if command -v jq &> /dev/null; then
     jq -n --arg ctx "[afc:hint] $HINT (tool: $TOOL_NAME)" \
-      '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":$ctx}}' 2>/dev/null || true
+      '{"hookSpecificOutput":{"additionalContext":$ctx}}' 2>/dev/null || true
   else
     # shellcheck disable=SC1003
     SAFE_HINT=$(printf '%s' "$HINT" | tr -d '"' | tr -d '\\')
     # shellcheck disable=SC1003
     SAFE_TOOL=$(printf '%s' "$TOOL_NAME" | tr -d '"' | tr -d '\\')
-    printf '{"hookSpecificOutput":{"hookEventName":"PostToolUseFailure","additionalContext":"[afc:hint] %s (tool: %s)"}}\n' "$SAFE_HINT" "$SAFE_TOOL"
+    printf '{"hookSpecificOutput":{"additionalContext":"[afc:hint] %s (tool: %s)"}}\n' "$SAFE_HINT" "$SAFE_TOOL"
   fi
 fi
 

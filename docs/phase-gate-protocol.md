@@ -34,7 +34,7 @@ Quantitatively inspect changed files within the Phase against `{config.code_styl
 After passing the Phase gate, automatically save session state:
 
 1. Create `.claude/afc/memory/` directory if it does not exist
-2. Write/update `.claude/afc/memory/checkpoint.md` **and** `~/.claude/projects/{ENCODED_PATH}/auto-memory/checkpoint.md` (dual-write for compaction resilience — `ENCODED_PATH` = project path with `/` replaced by `-`):
+2. Write/update `.claude/afc/memory/checkpoint.md` **and** `~/.claude/projects/{ENCODED_PATH}/memory/checkpoint.md` (dual-write for compaction resilience — `ENCODED_PATH` = project path with `/` replaced by `-`):
 
 ```markdown
 # Phase Gate Checkpoint

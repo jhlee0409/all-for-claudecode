@@ -62,7 +62,7 @@ fi
 
 if [ -n "$CHECKPOINT_FILE" ]; then
   RAW_LINE=$(grep 'Auto-generated:' "$CHECKPOINT_FILE" 2>/dev/null || echo "")
-  FIRST_LINE=$(echo "$RAW_LINE" | head -1)
+  FIRST_LINE=$(printf '%s\n' "$RAW_LINE" | head -1)
   CHECKPOINT_DATE="${FIRST_LINE##*Auto-generated: }"
   if [ -n "$CHECKPOINT_DATE" ]; then
     if [ -n "$OUTPUT" ]; then
