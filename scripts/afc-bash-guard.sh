@@ -14,14 +14,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Consume stdin immediately (prevents SIGPIPE if exiting early)
+INPUT=$(cat)
+
 # If pipeline is inactive -> allow
 if ! afc_state_is_active; then
   printf '{"hookSpecificOutput":{"permissionDecision":"allow"}}\n'
   exit 0
 fi
-
-# Parse tool input from stdin
-INPUT=$(cat)
 
 # If stdin is empty -> allow
 if [ -z "$INPUT" ]; then
