@@ -115,6 +115,38 @@ Run ALL checks regardless of earlier failures. Do not short-circuit.
 | Version triple match | Compare versions in `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both `metadata.version` and `plugins[0].version`) | All identical | ✗ Fix: update mismatched files to the same version |
 | Cache in sync | Compare `commands/auto.md` content between source and `~/.claude/plugins/cache/all-for-claudecode/afc/{version}/commands/auto.md` | Content matches | ⚠ Warning: plugin cache is stale. Fix: copy source files to cache directory |
 
+### Category 9: Command Definitions (development only)
+
+> Only run if current directory is the all-for-claudecode source repo (same condition as Category 8).
+
+| Check | How | Pass | Fail |
+|-------|-----|------|------|
+| Frontmatter exists | Each `commands/*.md` file has opening and closing `---` block | All files have frontmatter | ✗ Fix: add YAML frontmatter block to `commands/{file}.md` |
+| Required fields | Each command frontmatter contains `name:` and `description:` | All files have both fields | ✗ Fix: add missing `name:` or `description:` to `commands/{file}.md` |
+| Name-filename match | `name:` value follows `afc:{filename}` pattern (e.g. `auto.md` → `name: afc:auto`) | All names match filenames | ✗ Fix: rename `name:` field in `commands/{file}.md` to `afc:{filename}` |
+| Fork-agent reference | Commands with `context: fork` and `agent:` field reference a file that exists in `agents/` (e.g. `agent: afc-architect` → `agents/afc-architect.md` exists) | All agent references resolve | ✗ Fix: create missing agent file `agents/{name}.md` or fix `agent:` field in `commands/{file}.md` |
+
+### Category 10: Agent Definitions (development only)
+
+> Only run if current directory is the all-for-claudecode source repo (same condition as Category 8).
+
+| Check | How | Pass | Fail |
+|-------|-----|------|------|
+| Frontmatter exists | Each `agents/*.md` file has opening and closing `---` block | All files have frontmatter | ✗ Fix: add YAML frontmatter block to `agents/{file}.md` |
+| Required fields | Each agent frontmatter contains `name:`, `description:`, and `model:` | All files have all 3 fields | ✗ Fix: add missing field to `agents/{file}.md` |
+| Name-filename match | `name:` value equals the filename without extension (e.g. `afc-architect.md` → `name: afc-architect`) | All names match filenames | ✗ Fix: rename `name:` field in `agents/{file}.md` to match filename |
+| Expert memory | All 8 expert consultation agents (`afc-backend-expert`, `afc-infra-expert`, `afc-pm-expert`, `afc-design-expert`, `afc-marketing-expert`, `afc-legal-expert`, `afc-appsec-expert`, `afc-tech-advisor`) have `memory: project` | All experts have memory field | ✗ Fix: add `memory: project` to `agents/{name}.md` frontmatter |
+| Worker maxTurns | `afc-impl-worker` and `afc-pr-analyst` have `maxTurns:` field | Both workers have maxTurns | ✗ Fix: add `maxTurns:` to `agents/{name}.md` frontmatter |
+
+### Category 11: Doc References (development only)
+
+> Only run if current directory is the all-for-claudecode source repo (same condition as Category 8).
+
+| Check | How | Pass | Fail |
+|-------|-----|------|------|
+| Referenced docs exist | Scan commands and agents for file references to `docs/` (e.g. `docs/critic-loop-rules.md`, `docs/phase-gate-protocol.md`). Each referenced file must exist. | All referenced docs found | ✗ Fix: create missing `docs/{file}.md` or fix the reference |
+| Domain adapters exist | `docs/domain-adapters/` directory contains at least one `.md` file | ≥ 1 adapter file found | ✗ Fix: add domain adapter files to `docs/domain-adapters/` |
+
 ---
 
 ## Execution
@@ -178,8 +210,29 @@ Hook Health
   ✓ All scripts exist
   ✓ All scripts executable
 
+Version Sync (dev)
+  ✓ Version triple match
+  ✓ Cache in sync
+
+Command Definitions (dev)
+  ✓ Frontmatter exists (25 files)
+  ✓ Required fields present
+  ✓ Name-filename match
+  ✓ Fork-agent references valid
+
+Agent Definitions (dev)
+  ✓ Frontmatter exists (12 files)
+  ✓ Required fields present
+  ✓ Name-filename match
+  ✓ Expert memory configured (8/8)
+  ✓ Worker maxTurns configured (2/2)
+
+Doc References (dev)
+  ✓ Referenced docs exist
+  ✓ Domain adapters exist (3 files)
+
 ─────────────────────────
-Results: 14 passed, 2 warnings, 0 failures
+Results: 28 passed, 2 warnings, 0 failures
 2 warnings found. Non-blocking but review recommended.
 ```
 
@@ -189,4 +242,4 @@ Results: 14 passed, 2 warnings, 0 failures
 - **Always run all checks**: do not stop on first failure. The full picture is the value.
 - **Actionable fixes**: every non-pass result must include a Fix line. Never report a problem without a solution.
 - **Fast execution**: skip CI/gate command checks if `--fast` is in arguments (these are the slowest checks).
-- **Development checks**: Category 7 (Version Sync) only runs when inside the all-for-claudecode source repo.
+- **Development checks**: Categories 8–11 (Version Sync, Command Definitions, Agent Definitions, Doc References) only run when inside the all-for-claudecode source repo.
