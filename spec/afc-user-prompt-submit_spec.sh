@@ -20,8 +20,8 @@ Describe "afc-user-prompt-submit.sh"
         The output should include "afc:debug"
       End
 
-      It "routes review intent"
-        Data '{"prompt":"review this PR please"}'
+      It "routes review intent from code review keyword"
+        Data '{"prompt":"please do a code review of this PR"}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
         The output should include "afc:route"
@@ -60,12 +60,86 @@ Describe "afc-user-prompt-submit.sh"
         The output should include "afc:implement"
       End
 
-      It "routes launch intent from release keyword"
-        Data '{"prompt":"prepare a release with changelog"}'
+      It "routes launch intent from changelog keyword"
+        Data '{"prompt":"generate the changelog for this release"}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
         The output should include "afc:route"
         The output should include "afc:launch"
+      End
+
+      It "routes security intent from security scan keyword"
+        Data '{"prompt":"run a security scan on the codebase"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:security"
+      End
+
+      It "routes security intent from security audit keyword"
+        Data '{"prompt":"perform a security audit of the project"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:security"
+      End
+
+      It "routes architect intent"
+        Data '{"prompt":"review the system design and architecture"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:architect"
+      End
+
+      It "routes doctor intent"
+        Data '{"prompt":"run a health check on the project"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:doctor"
+      End
+
+      It "routes qa intent"
+        Data '{"prompt":"run a quality audit on the project"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:qa"
+      End
+
+      It "routes spec intent from specification keyword"
+        Data '{"prompt":"write a specification for the auth feature"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:spec"
+      End
+
+      It "routes ideate intent from brainstorm keyword"
+        Data '{"prompt":"brainstorm ideas for the new dashboard"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:ideate"
+      End
+
+      It "routes consult intent from expert advice keyword"
+        Data '{"prompt":"I need expert advice on database design"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:consult"
+      End
+    End
+
+    Context "priority ordering"
+      It "debug takes priority over review when both match"
+        Data '{"prompt":"review the bug fix in the login"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:debug"
+        The output should not include "afc:review"
       End
     End
 
@@ -74,7 +148,7 @@ Describe "afc-user-prompt-submit.sh"
         Data '{"prompt":"hello how are you"}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
-        The output should include "afc"
+        The output should include "[afc] If this request"
         The output should include "Skill tool"
         The output should not include "afc:route"
       End
@@ -89,20 +163,20 @@ Describe "afc-user-prompt-submit.sh"
       End
     End
 
-    Context "task hygiene"
-      It "includes task hygiene reminder in routed output"
-        Data '{"prompt":"fix the broken test"}'
+    Context "no task hygiene in inactive mode"
+      It "does not include TASK HYGIENE in routed output"
+        Data '{"prompt":"there is a crash in the app"}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
-        The output should include "TASK HYGIENE"
-        The output should include "TaskUpdate"
+        The output should include "afc:debug"
+        The output should not include "TASK HYGIENE"
       End
 
-      It "includes task hygiene reminder in fallback output"
+      It "does not include TASK HYGIENE in fallback output"
         Data '{"prompt":"hello"}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
-        The output should include "TASK HYGIENE"
+        The output should not include "TASK HYGIENE"
       End
     End
 
@@ -111,7 +185,7 @@ Describe "afc-user-prompt-submit.sh"
         Data '{}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
-        The output should include "afc"
+        The output should include "[afc] If this request"
       End
     End
   End

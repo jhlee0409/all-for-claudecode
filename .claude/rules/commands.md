@@ -10,7 +10,7 @@ Markdown command files define slash commands for the afc pipeline plugin.
 ## Frontmatter Requirements
 Every command must have YAML frontmatter with:
 - `name:` — afc:{command-name} format
-- `description:` — concise English description
+- `description:` — concise English description with trigger phrases: `"Terse label — use when the user [specific trigger phrases]"`. Trigger phrases help the LLM route user intent to the correct skill. Avoid overlapping phrases with other commands.
 - `argument-hint:` — usage hint in brackets
 
 ## Model Assignment

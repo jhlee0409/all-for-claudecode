@@ -108,7 +108,7 @@ HEREDOC
     End
   End
 
-  Context "when pipeline inactive with auto-memory checkpoint"
+  Context "when pipeline inactive with auto-memory checkpoint and project-local exists"
     setup() {
       setup_tmpdir TEST_DIR
       # Create auto-memory checkpoint (no active pipeline)
@@ -117,9 +117,12 @@ HEREDOC
       encoded_path="${project_path//\//-}"
       mkdir -p "$TEST_DIR/.claude/projects/$encoded_path/memory"
       printf '# Checkpoint\nAuto-generated: 2026-03-01 12:00:00\n' > "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md"
+      # Also create project-local checkpoint (guard condition)
+      mkdir -p "$TEST_DIR/.claude/afc/memory"
+      printf '# Checkpoint\nAuto-generated: 2026-03-01 12:00:00\n' > "$TEST_DIR/.claude/afc/memory/checkpoint.md"
     }
 
-    It "deletes auto-memory checkpoint"
+    It "deletes auto-memory checkpoint when project-local exists"
       Data ""
       When run script scripts/session-start-context.sh
       The status should eq 0
@@ -128,6 +131,33 @@ HEREDOC
       project_path=$(cd "$TEST_DIR" && pwd)
       encoded_path="${project_path//\//-}"
       The path "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md" should not be exist
+      # Project-local checkpoint message should still appear
+      The output should include "2026-03-01"
+    End
+  End
+
+  Context "when pipeline inactive with auto-memory only (no project-local)"
+    setup() {
+      setup_tmpdir TEST_DIR
+      # Create auto-memory checkpoint only (no project-local copy)
+      local project_path encoded_path
+      project_path=$(cd "$TEST_DIR" && pwd)
+      encoded_path="${project_path//\//-}"
+      mkdir -p "$TEST_DIR/.claude/projects/$encoded_path/memory"
+      printf '# Checkpoint\nAuto-generated: 2026-03-01 12:00:00\n' > "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md"
+    }
+
+    It "preserves auto-memory checkpoint when no project-local exists"
+      Data ""
+      When run script scripts/session-start-context.sh
+      The status should eq 0
+      # Auto-memory checkpoint should NOT be removed (only copy)
+      local project_path encoded_path
+      project_path=$(cd "$TEST_DIR" && pwd)
+      encoded_path="${project_path//\//-}"
+      The path "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md" should be exist
+      # No output (project-local doesn't exist, auto-memory not used for notification)
+      The output should eq ""
     End
   End
 

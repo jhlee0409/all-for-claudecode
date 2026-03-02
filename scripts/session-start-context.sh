@@ -30,9 +30,11 @@ ENCODED_PATH="${PROJECT_PATH//\//-}"
 MEMORY_DIR="$HOME/.claude/projects/$ENCODED_PATH/memory"
 CHECKPOINT="$MEMORY_DIR/checkpoint.md"
 OUTPUT=""
+PIPELINE_ACTIVE=0
 
 # 1. Check for active pipeline
 if afc_state_is_active; then
+  PIPELINE_ACTIVE=1
   FEATURE=$(afc_state_read feature || true)
   OUTPUT="[AFC PIPELINE ACTIVE] Feature: $FEATURE"
 
@@ -80,13 +82,13 @@ fi
 # 2. Auto-memory checkpoint cleanup (prevent stale context pollution)
 # Auto-memory files are auto-loaded into every conversation by Claude Code.
 # Stale checkpoints from previous sessions can confuse the model.
-# When pipeline is inactive, remove auto-memory copy (project-local remains for /afc:resume).
-if ! afc_state_is_active && [ -f "$CHECKPOINT" ]; then
+# Only remove auto-memory when project-local copy also exists (prevents stranded checkpoint data loss).
+LOCAL_CHECKPOINT="$PROJECT_DIR/.claude/afc/memory/checkpoint.md"
+if [ "$PIPELINE_ACTIVE" -eq 0 ] && [ -f "$CHECKPOINT" ] && [ -f "$LOCAL_CHECKPOINT" ]; then
   rm -f "$CHECKPOINT"
 fi
 
 # 3. Check if project-local checkpoint exists (for user notification only)
-LOCAL_CHECKPOINT="$PROJECT_DIR/.claude/afc/memory/checkpoint.md"
 if [ -f "$LOCAL_CHECKPOINT" ]; then
   RAW_LINE=$(grep 'Auto-generated:' "$LOCAL_CHECKPOINT" 2>/dev/null || echo "")
   FIRST_LINE=$(printf '%s\n' "$RAW_LINE" | head -1)

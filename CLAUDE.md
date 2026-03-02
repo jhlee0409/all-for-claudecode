@@ -38,7 +38,7 @@ Scripts receive stdin JSON from Claude Code and respond via stdout JSON or stder
 - **PreToolUse**: stdin has `tool_input` → respond `{"hookSpecificOutput":{"permissionDecision":"allow"}}` or `{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"..."}}`
 - **PostToolUse/PostToolUseFailure**: respond with `{"hookSpecificOutput":{"additionalContext":"..."}}`
 - **SessionEnd/Notification**: stderr shows to user, stdout goes to Claude context
-- **UserPromptSubmit**: stdout `{"hookSpecificOutput":{"additionalContext":"..."}}` injects context per prompt
+- **UserPromptSubmit**: stdout `{"hookSpecificOutput":{"additionalContext":"..."}}` injects context per prompt. Pipeline INACTIVE: detects intent keywords from prompt and suggests matching afc skill. Pipeline ACTIVE: injects Feature/Phase context and drift checkpoint at threshold prompts
 - **PermissionRequest**: stdout `{"hookSpecificOutput":{"decision":{"behavior":"allow"}}}` auto-allows whitelisted Bash commands
 - **TaskCompleted (prompt)**: `type: "prompt"` with haiku — LLM verifies acceptance criteria (supplements command CI gate)
 - **Stop (command)**: two `type: "command"` handlers — CI gate verification (`afc-stop-gate.sh`) and TODO/FIXME check in changed files (`afc-stop-todo-check.sh`)

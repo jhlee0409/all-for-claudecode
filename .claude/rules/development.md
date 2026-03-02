@@ -2,6 +2,7 @@
 paths:
   - "CONTRIBUTING.md"
   - ".claude/**"
+  - ".claude-plugin/**"
   - "commands/**"
   - "scripts/**"
   - "hooks/**"

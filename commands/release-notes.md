@@ -1,6 +1,6 @@
 ---
 name: afc:release-notes
-description: "Generate user-facing release notes from git history — use when the user asks to write release notes, summarize changes between versions, or prepare user-facing changelog"
+description: "Generate user-facing release notes from git history — use when the user asks to write release notes, summarize changes between versions, or generate a changelog"
 argument-hint: "[v1.0.0..v2.0.0 | v2.0.0 | --post]"
 allowed-tools:
   - Read

@@ -1,6 +1,6 @@
 ---
 name: afc:implement
-description: "Execute code implementation — use when the user asks to implement, add a feature, refactor, modify code, or build something"
+description: "Execute code implementation — use when the user asks to implement a feature, execute a planned refactor, modify code from a plan, or build something"
 argument-hint: "[task ID or phase specification]"
 ---
 
