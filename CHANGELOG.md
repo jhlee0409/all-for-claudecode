@@ -10,8 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **`/afc:qa` command**: Project quality audit — detects gaps between structural correctness and actual runtime behavior. Analyzes 5 categories: test confidence, error resilience, build & CI integrity, API & contract safety, and code health signals. Runs as isolated fork (read-only) with Critic Loop (capped at 3 rounds)
 - **Internal QA audit script** (`afc-qa-audit.sh`): Plugin self-testing via `npm run qa` — checks hook I/O safety, test assertion strength, UX completeness, and build/deploy integrity
+- **Automatic command-documentation gap detection**: `npm run lint` now detects missing command references in README.md, init.md, and CLAUDE.md — eliminates the manual checklist when adding new commands
 - **Failure hint patterns**: 4 new error recognitions — test failures, syntax errors, timeout/network, disk full
 - **Doctor validation categories**: Command/agent/doc validation for comprehensive health checks
+
+### Changed
+- Removed hardcoded `non_phase_cmds` list from consistency check — non-phase commands are now auto-accepted
+- Consistency check grep patterns upgraded to boundary-aware regex to prevent false positives on prefix-matching names
 
 ### Fixed
 - SIGPIPE in `track-afc-changes.sh` and PreToolUse hooks by consuming stdin before early exit
@@ -20,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-platform grep tab handling in DAG validator bash fallback (GNU grep `-E` does not interpret `\t` as tab)
 
 ### Tests
-- 308 examples, 0 failures (+46 new test cases across 12 spec files)
+- 311 examples, 0 failures (+106 new test cases since v2.5.0 across 12+ spec files)
 - New: afc-qa-audit_spec.sh, afc-sync-cache_spec.sh, afc-doctor_spec.sh, afc-failure-hint_spec.sh
 - Strengthened assertion density in previously weak specs
 
