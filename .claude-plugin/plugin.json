@@ -7,5 +7,7 @@
   "repository": "https://github.com/jhlee0409/all-for-claudecode",
   "license": "MIT",
   "keywords": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"],
-  "commands": "./commands/"
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json"
 }

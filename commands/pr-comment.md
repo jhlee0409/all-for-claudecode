@@ -1,6 +1,6 @@
 ---
 name: afc:pr-comment
-description: "Post PR review comments to GitHub"
+description: "Post PR review comments to GitHub — use when the user asks to comment on a PR, post review feedback, or submit structured PR review comments"
 argument-hint: "<PR number> [--severity critical,warning,info]"
 allowed-tools:
   - Read

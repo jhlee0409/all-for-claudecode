@@ -1,6 +1,6 @@
 ---
 name: afc:research
-description: "Technical research"
+description: "Technical research — use when the user asks to research a topic, investigate a technology, compare libraries, or explore options before deciding"
 argument-hint: "[research topic]"
 allowed-tools:
   - Read

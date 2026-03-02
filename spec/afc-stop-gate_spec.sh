@@ -11,10 +11,11 @@ Describe "afc-stop-gate.sh"
   After "cleanup"
 
   Context "when pipeline is inactive"
-    It "exits 0"
+    It "exits 0 with task hygiene reminder"
       Data '{}'
       When run script scripts/afc-stop-gate.sh
       The status should eq 0
+      The stderr should include "TaskUpdate"
     End
   End
 

@@ -1,6 +1,6 @@
 ---
 name: afc:spec
-description: "Generate feature specification"
+description: "Generate feature specification — use when the user asks to write a spec, define requirements, create acceptance criteria, or specify a feature"
 argument-hint: "[feature description in natural language]"
 allowed-tools:
   - Read

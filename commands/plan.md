@@ -1,6 +1,6 @@
 ---
 name: afc:plan
-description: "Implementation design"
+description: "Implementation design — use when the user asks to plan, design an implementation, create a file change map, or figure out how to implement something"
 argument-hint: "[additional context or constraints]"
 allowed-tools:
   - Read

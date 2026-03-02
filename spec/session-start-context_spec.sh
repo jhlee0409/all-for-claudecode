@@ -91,15 +91,12 @@ HEREDOC
     End
   End
 
-  Context "when checkpoint exists"
+  Context "when project-local checkpoint exists"
     setup() {
       setup_tmpdir TEST_DIR
-      # Create auto-memory checkpoint
-      local project_path encoded_path
-      project_path=$(cd "$TEST_DIR" && pwd)
-      encoded_path="${project_path//\//-}"
-      mkdir -p "$TEST_DIR/.claude/projects/$encoded_path/memory"
-      printf '# Checkpoint\nAuto-generated: 2026-03-01 12:00:00\n' > "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md"
+      # Create project-local checkpoint
+      mkdir -p "$TEST_DIR/.claude/afc/memory"
+      printf '# Checkpoint\nAuto-generated: 2026-03-01 12:00:00\n' > "$TEST_DIR/.claude/afc/memory/checkpoint.md"
     }
 
     It "reports checkpoint existence"
@@ -108,6 +105,54 @@ HEREDOC
       The status should eq 0
       The output should include "CHECKPOINT EXISTS"
       The output should include "2026-03-01"
+    End
+  End
+
+  Context "when pipeline inactive with auto-memory checkpoint"
+    setup() {
+      setup_tmpdir TEST_DIR
+      # Create auto-memory checkpoint (no active pipeline)
+      local project_path encoded_path
+      project_path=$(cd "$TEST_DIR" && pwd)
+      encoded_path="${project_path//\//-}"
+      mkdir -p "$TEST_DIR/.claude/projects/$encoded_path/memory"
+      printf '# Checkpoint\nAuto-generated: 2026-03-01 12:00:00\n' > "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md"
+    }
+
+    It "deletes auto-memory checkpoint"
+      Data ""
+      When run script scripts/session-start-context.sh
+      The status should eq 0
+      # Auto-memory checkpoint should be removed
+      local project_path encoded_path
+      project_path=$(cd "$TEST_DIR" && pwd)
+      encoded_path="${project_path//\//-}"
+      The path "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md" should not be exist
+    End
+  End
+
+  Context "when pipeline active with auto-memory checkpoint"
+    setup() {
+      setup_tmpdir TEST_DIR
+      setup_state_fixture "$TEST_DIR" "active-test"
+      # Create auto-memory checkpoint
+      local project_path encoded_path
+      project_path=$(cd "$TEST_DIR" && pwd)
+      encoded_path="${project_path//\//-}"
+      mkdir -p "$TEST_DIR/.claude/projects/$encoded_path/memory"
+      printf '# Checkpoint\nAuto-generated: 2026-03-01 12:00:00\n' > "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md"
+    }
+
+    It "keeps auto-memory checkpoint when pipeline is active"
+      Data ""
+      When run script scripts/session-start-context.sh
+      The status should eq 0
+      The output should include "AFC PIPELINE"
+      # Auto-memory checkpoint should NOT be removed
+      local project_path encoded_path
+      project_path=$(cd "$TEST_DIR" && pwd)
+      encoded_path="${project_path//\//-}"
+      The path "$TEST_DIR/.claude/projects/$encoded_path/memory/checkpoint.md" should be exist
     End
   End
 

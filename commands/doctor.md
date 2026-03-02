@@ -1,6 +1,6 @@
 ---
 name: afc:doctor
-description: "Diagnose project health and plugin setup"
+description: "Diagnose project health and plugin setup — use when the user asks for a health check, wants to diagnose project issues, or verify plugin installation"
 argument-hint: "[--verbose]"
 allowed-tools:
   - Read

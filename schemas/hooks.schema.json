@@ -6,6 +6,10 @@
   "required": ["hooks"],
   "additionalProperties": false,
   "properties": {
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the hook configuration"
+    },
     "hooks": {
       "type": "object",
       "patternProperties": {

@@ -45,9 +45,13 @@
       "type": "string",
       "description": "Path to commands directory"
     },
+    "agents": {
+      "type": "string",
+      "description": "Path to agents directory"
+    },
     "hooks": {
       "type": "string",
-      "description": "Path to hooks directory"
+      "description": "Path to hooks configuration file"
     }
   }
 }

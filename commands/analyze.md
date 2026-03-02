@@ -1,6 +1,6 @@
 ---
 name: afc:analyze
-description: "General-purpose code and component analysis"
+description: "General-purpose code and component analysis — use when the user asks to analyze code, trace a flow, audit consistency, understand how something works, or inspect components"
 argument-hint: "<analysis target or question>"
 user-invocable: true
 context: fork

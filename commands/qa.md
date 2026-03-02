@@ -1,6 +1,6 @@
 ---
 name: afc:qa
-description: "Project quality audit — detect gaps between structure and runtime behavior"
+description: "Project quality audit — use when the user asks for a quality audit, QA check, test confidence assessment, or wants to detect gaps in error handling and code health"
 argument-hint: "[scope: all, tests, errors, coverage, or specific concern]"
 user-invocable: true
 context: fork

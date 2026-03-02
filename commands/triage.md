@@ -1,6 +1,6 @@
 ---
 name: afc:triage
-description: "Parallel triage of open PRs and issues"
+description: "Parallel triage of open PRs and issues — use when the user asks to triage PRs, review open issues, or prioritize the backlog of pull requests and issues"
 argument-hint: "[scope: --pr, --issue, --all (default), or specific numbers]"
 allowed-tools:
   - Read

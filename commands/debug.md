@@ -1,6 +1,6 @@
 ---
 name: afc:debug
-description: "Bug diagnosis and fix"
+description: "Bug diagnosis and fix — use when the user reports a bug, error, crash, exception, broken behavior, or something not working and wants root-cause analysis and a targeted fix"
 argument-hint: "[bug description, error message, or reproduction steps]"
 allowed-tools:
   - Read

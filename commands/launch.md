@@ -1,6 +1,6 @@
 ---
 name: afc:launch
-description: "Generate release artifacts"
+description: "Generate release artifacts — use when the user asks to prepare a release, generate changelog, bump version, publish a package, or create release tags"
 argument-hint: "[version tag or 'auto']"
 allowed-tools:
   - Read

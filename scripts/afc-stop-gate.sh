@@ -22,8 +22,9 @@ trap cleanup EXIT
 # Consume stdin (required -- pipe breaks if not consumed)
 INPUT=$(cat)
 
-# If pipeline is not active -> pass through
+# If pipeline is not active -> remind about task hygiene and pass through
 if ! afc_state_is_active; then
+  echo "[afc:gate] Before stopping: ensure all tasks created via TaskCreate are marked completed or deleted via TaskUpdate." >&2
   exit 0
 fi
 

@@ -1,6 +1,6 @@
 ---
 name: afc:security
-description: "Security scan (read-only)"
+description: "Security scan (read-only) — use when the user asks for a security scan, security review, vulnerability check, or threat assessment"
 argument-hint: "[scan scope: file/directory path or full]"
 context: fork
 agent: afc-security

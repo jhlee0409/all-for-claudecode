@@ -1,3 +1,15 @@
+---
+paths:
+  - "CONTRIBUTING.md"
+  - ".claude/**"
+  - "commands/**"
+  - "scripts/**"
+  - "hooks/**"
+  - "agents/**"
+  - "docs/**"
+  - "spec/**"
+---
+
 # Development Rules
 
 When adding or modifying features in all-for-claudecode, follow these rules.

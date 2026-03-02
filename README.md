@@ -108,6 +108,7 @@ Performance: ✓ no N+1 queries
 | `/afc:implement` | Execute code implementation with CI gates |
 | `/afc:test` | Test strategy planning and test writing |
 | `/afc:review` | Code review with architecture/security scanning |
+| `/afc:clean` | Pipeline artifact cleanup and codebase hygiene |
 | `/afc:research` | Technical research with persistent storage |
 | `/afc:debug` | Bug diagnosis and fix |
 | `/afc:init` | Project setup — detects stack and generates config |
@@ -259,7 +260,7 @@ No. Pure markdown commands + bash hook scripts. No npm packages are imported at 
 Debug-based RCA: traces the error, forms a hypothesis, applies a targeted fix. Halts after 3 failed attempts with full diagnosis.
 
 ### Can I run individual phases?
-Yes. Each phase has its own command (`/afc:spec`, `/afc:plan`, `/afc:implement`, `/afc:review`). `/afc:auto` runs them all.
+Yes. Each phase has its own command (`/afc:spec`, `/afc:plan`, `/afc:implement`, `/afc:review`, `/afc:clean`). `/afc:auto` runs them all.
 
 ### What are Critic Loops?
 Convergence-based quality checks after each phase. They evaluate output against criteria and auto-fix issues until stable. 4 verdicts: PASS, FAIL, ESCALATE (asks user), DEFER.

@@ -2,9 +2,8 @@
 set -euo pipefail
 
 # UserPromptSubmit Hook: Two modes of operation:
-# 1. Pipeline INACTIVE: No action (routing handled by CLAUDE.md intent-based skill table)
+# 1. Pipeline INACTIVE: Detect user intent from prompt and inject specific skill routing hint
 # 2. Pipeline ACTIVE: Inject Phase/Feature context + drift checkpoint at thresholds
-# Exit 0 immediately if no action needed (minimize overhead)
 
 # shellcheck source=afc-state.sh
 . "$(dirname "$0")/afc-state.sh"
@@ -15,13 +14,84 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Consume stdin (required -- pipe breaks if not consumed)
-cat > /dev/null
+# Read stdin (contains user prompt JSON)
+INPUT=$(cat)
 
-# --- Branch: Pipeline INACTIVE → no action needed ---
-# Routing is handled by CLAUDE.md intent-based skill routing table.
-# The main model classifies user intent natively — no hook-level keyword matching.
+# --- Branch: Pipeline INACTIVE → intent-based skill routing ---
+# The model has CLAUDE.md routing table but static instructions lose effectiveness
+# as context grows. Reading the actual prompt and suggesting a SPECIFIC skill
+# is far more actionable than a generic "check routing table" reminder.
 if ! afc_state_is_active; then
+
+  # Extract prompt text from stdin JSON
+  USER_TEXT=""
+  if command -v jq &> /dev/null; then
+    USER_TEXT=$(printf '%s' "$INPUT" | jq -r '.prompt // empty' 2>/dev/null || true)
+  else
+    # shellcheck disable=SC2001
+    USER_TEXT=$(printf '%s' "$INPUT" | sed 's/.*"prompt"[[:space:]]*:[[:space:]]*"//;s/".*//' 2>/dev/null || true)
+  fi
+
+  # Skip if prompt is already an explicit slash command
+  if printf '%s' "$USER_TEXT" | grep -qE '^\s*/afc:' 2>/dev/null; then
+    exit 0
+  fi
+
+  # Normalize: lowercase + truncate for matching (no word boundary needed — patterns are specific enough)
+  LOWER=$(printf '%s' "$USER_TEXT" | tr '[:upper:]' '[:lower:]' | cut -c1-500)
+
+  # Intent detection: conservative keyword patterns ordered by specificity
+  # Each pattern targets strong-signal phrases to minimize false positives.
+  # The model retains final authority — this is a hint, not enforcement.
+  SKILL=""
+  # High confidence: distinctive keywords
+  # shellcheck disable=SC2254
+  if printf '%s' "$LOWER" | grep -qE '(bug|error|broken|fix |debug|not working|fails|crash|exception)' 2>/dev/null; then
+    SKILL="afc:debug"
+  elif printf '%s' "$LOWER" | grep -qE '(review|code review|pr review|check.*(code|pr))' 2>/dev/null; then
+    SKILL="afc:review"
+  elif printf '%s' "$LOWER" | grep -qE '(write test|add test|test coverage|improve coverage)' 2>/dev/null; then
+    SKILL="afc:test"
+  elif printf '%s' "$LOWER" | grep -qE '(release|changelog|version bump|publish)' 2>/dev/null; then
+    SKILL="afc:launch"
+  elif printf '%s' "$LOWER" | grep -qE '(security scan|security review|vulnerabilit)' 2>/dev/null; then
+    SKILL="afc:security"
+  elif printf '%s' "$LOWER" | grep -qE '(architecture|architect|system design)' 2>/dev/null; then
+    SKILL="afc:architect"
+  elif printf '%s' "$LOWER" | grep -qE '(doctor|health check|diagnose.*project)' 2>/dev/null; then
+    SKILL="afc:doctor"
+  elif printf '%s' "$LOWER" | grep -qE '(quality audit|qa audit|project quality)' 2>/dev/null; then
+    SKILL="afc:qa"
+  # Medium confidence: still distinctive but broader
+  elif printf '%s' "$LOWER" | grep -qE '(analyz|audit|trace.*flow|how does.*work)' 2>/dev/null; then
+    SKILL="afc:analyze"
+  elif printf '%s' "$LOWER" | grep -qE '(research|investigat|compare.*lib)' 2>/dev/null; then
+    SKILL="afc:research"
+  elif printf '%s' "$LOWER" | grep -qE '(spec |specification|requirements|acceptance criteria)' 2>/dev/null; then
+    SKILL="afc:spec"
+  elif printf '%s' "$LOWER" | grep -qE '(plan |design.*implement|how to implement)' 2>/dev/null; then
+    SKILL="afc:plan"
+  elif printf '%s' "$LOWER" | grep -qE '(brainstorm|ideate|what to build|product brief)' 2>/dev/null; then
+    SKILL="afc:ideate"
+  elif printf '%s' "$LOWER" | grep -qE '(consult|expert advice)' 2>/dev/null; then
+    SKILL="afc:consult"
+  # Lower confidence: common verbs that often mean "implement"
+  elif printf '%s' "$LOWER" | grep -qE '(implement|add feature|refactor|modify.*code)' 2>/dev/null; then
+    SKILL="afc:implement"
+  fi
+
+  # Build output
+  if [ -n "$SKILL" ]; then
+    HINT="[afc:route → ${SKILL}] Detected intent from user prompt. Invoke /${SKILL} via Skill tool. TASK HYGIENE: Mark completed tasks via TaskUpdate before finishing."
+  else
+    HINT="[afc] If this request matches an afc skill, invoke it via Skill tool. See CLAUDE.md routing table. TASK HYGIENE: Mark completed tasks via TaskUpdate before finishing."
+  fi
+
+  if command -v jq &> /dev/null; then
+    jq -n --arg c "$HINT" '{"hookSpecificOutput":{"additionalContext":$c}}'
+  else
+    printf '{"hookSpecificOutput":{"additionalContext":"%s"}}\n' "$HINT"
+  fi
   exit 0
 fi
 
@@ -38,7 +108,7 @@ CALL_COUNT=$(afc_state_increment promptCount 2>/dev/null || echo 0)
 afc_state_increment totalPromptCount >/dev/null 2>&1 || echo "[afc:prompt-submit] totalPromptCount increment failed" >&2
 
 # Build context message
-CONTEXT="[Pipeline: ${FEATURE}] [Phase: ${PHASE}]"
+CONTEXT="[Pipeline: ${FEATURE}] [Phase: ${PHASE}] [TASK HYGIENE: Mark completed tasks via TaskUpdate(status: completed) — do not leave stale tasks]"
 
 # Drift checkpoint: inject plan constraints at every N prompts during implement/review
 # AFC_DRIFT_THRESHOLD sourced from afc-state.sh (SSOT)

@@ -1,4 +1,5 @@
 {
+  "description": "Event hooks for the all-for-claudecode pipeline — CI gates, safety guards, context injection, and workflow automation",
   "hooks": {
     "SessionStart": [
       {

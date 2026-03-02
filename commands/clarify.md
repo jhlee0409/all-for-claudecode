@@ -1,6 +1,6 @@
 ---
 name: afc:clarify
-description: "Resolve spec ambiguities"
+description: "Resolve spec ambiguities — auto-triggered when requirements are unclear to ask clarifying questions before proceeding"
 argument-hint: "[focus area: security, performance, UI flow]"
 user-invocable: false
 allowed-tools:

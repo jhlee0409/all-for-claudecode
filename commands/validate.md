@@ -1,6 +1,6 @@
 ---
 name: afc:validate
-description: "Artifact consistency validation (read-only)"
+description: "Artifact consistency validation (read-only) — auto-invoked to verify spec, plan, and task artifacts are consistent with each other"
 argument-hint: "[validation scope: spec-plan, tasks-only]"
 user-invocable: false
 context: fork

@@ -6,7 +6,7 @@ tools:
   - Grep
   - Glob
   - Bash
-  - Task
+  - Agent
   - WebSearch
 disallowedTools:
   - Write

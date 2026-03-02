@@ -1,6 +1,6 @@
 ---
 name: afc:init
-description: "Project initial setup"
+description: "Project initial setup — use when the user asks to set up the project, initialize afc, configure the plugin, or detect the tech stack"
 argument-hint: "[additional context]"
 allowed-tools:
   - Read
@@ -260,6 +260,7 @@ User-only (not auto-triggered — inform user on request):
 - `afc:checkpoint` — inform user when session save is requested
 - `afc:resume` — inform user when session restore is requested
 - `afc:principles` — inform user when project principles management is requested
+- `afc:clean` — inform user when pipeline cleanup is requested (artifact cleanup, dead code scan, pipeline flag release)
 - `afc:triage` — inform user when parallel PR/issue triage is requested
 - `afc:pr-comment` — inform user when posting PR review comments to GitHub is requested
 - `afc:release-notes` — inform user when generating release notes from git history is requested

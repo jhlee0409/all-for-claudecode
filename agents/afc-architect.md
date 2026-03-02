@@ -7,7 +7,7 @@ tools:
   - Grep
   - Glob
   - Bash
-  - Task
+  - Agent
   - WebSearch
 model: sonnet
 memory: project

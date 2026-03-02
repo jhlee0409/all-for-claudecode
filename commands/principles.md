@@ -1,6 +1,6 @@
 ---
 name: afc:principles
-description: "Manage project principles"
+description: "Manage project principles — use when the user asks to add, remove, or view project coding principles and conventions"
 argument-hint: "[action: add, remove, init]"
 allowed-tools:
   - Read

@@ -77,17 +77,18 @@ if [ -f "$PLUGIN_ROOT/package.json" ]; then
   fi
 fi
 
-# 2. Check if checkpoint exists (project-local first, fallback to auto-memory)
-LOCAL_CHECKPOINT="$PROJECT_DIR/.claude/afc/memory/checkpoint.md"
-CHECKPOINT_FILE=""
-if [ -f "$LOCAL_CHECKPOINT" ]; then
-  CHECKPOINT_FILE="$LOCAL_CHECKPOINT"
-elif [ -f "$CHECKPOINT" ]; then
-  CHECKPOINT_FILE="$CHECKPOINT"
+# 2. Auto-memory checkpoint cleanup (prevent stale context pollution)
+# Auto-memory files are auto-loaded into every conversation by Claude Code.
+# Stale checkpoints from previous sessions can confuse the model.
+# When pipeline is inactive, remove auto-memory copy (project-local remains for /afc:resume).
+if ! afc_state_is_active && [ -f "$CHECKPOINT" ]; then
+  rm -f "$CHECKPOINT"
 fi
 
-if [ -n "$CHECKPOINT_FILE" ]; then
-  RAW_LINE=$(grep 'Auto-generated:' "$CHECKPOINT_FILE" 2>/dev/null || echo "")
+# 3. Check if project-local checkpoint exists (for user notification only)
+LOCAL_CHECKPOINT="$PROJECT_DIR/.claude/afc/memory/checkpoint.md"
+if [ -f "$LOCAL_CHECKPOINT" ]; then
+  RAW_LINE=$(grep 'Auto-generated:' "$LOCAL_CHECKPOINT" 2>/dev/null || echo "")
   FIRST_LINE=$(printf '%s\n' "$RAW_LINE" | head -1)
   CHECKPOINT_DATE="${FIRST_LINE##*Auto-generated: }"
   if [ -n "$CHECKPOINT_DATE" ]; then
@@ -99,7 +100,7 @@ if [ -n "$CHECKPOINT_FILE" ]; then
   fi
 fi
 
-# 3. Check for safety tag
+# 4. Check for safety tag
 HAS_SAFETY_TAG=$(cd "$PROJECT_DIR" 2>/dev/null && git tag -l 'afc/pre-*' 2>/dev/null | head -1 || echo "")
 if [ -n "$HAS_SAFETY_TAG" ]; then
   if [ -n "$OUTPUT" ]; then

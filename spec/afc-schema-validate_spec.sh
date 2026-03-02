@@ -152,7 +152,7 @@ EOF
   End
 
   Describe "plugin.json specific validation"
-    It "rejects agents field (SC3 edge case)"
+    It "rejects agents field with wrong type (SC3 edge case)"
       setup_tmpdir TEST_DIR
       setup_schema_fixture "$TEST_DIR"
       cat > "$TEST_DIR/.claude-plugin/plugin.json" << 'EOF'
@@ -165,7 +165,7 @@ EOF
 EOF
       When run script scripts/afc-schema-validate.sh --json-file "$TEST_DIR/.claude-plugin/plugin.json" --schema "$TEST_DIR/schemas/plugin.schema.json"
       The status should eq 1
-      The stderr should include "unexpected property"
+      The stderr should include "expected string, got array"
     End
   End
 
