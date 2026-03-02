@@ -243,6 +243,7 @@ Classify the user's intent and route to the matching skill. Use semantic underst
 | Research | `afc:research` | User wants deep investigation of external tools, libraries, APIs, or technical concepts |
 | Ideate | `afc:ideate` | User wants to brainstorm ideas, explore possibilities, or draft a product brief |
 | Consult | `afc:consult` | User wants expert advice on a decision: library choice, architecture direction, legal/security/infra guidance |
+| Launch | `afc:launch` | User wants to prepare a release — generate changelog, release notes, version bump, or tag |
 | Tasks | `afc:tasks` | User explicitly wants to decompose work into a task breakdown |
 | Ambiguous | `afc:clarify` | User's request is too vague or underspecified to route confidently |
 
@@ -253,7 +254,6 @@ Classify the user's intent and route to the matching skill. Use semantic underst
 3. **Design-first**: When scope is non-trivial (multiple files, architectural decisions needed), prefer `afc:auto` or `afc:plan` over direct `afc:implement`.
 
 User-only (not auto-triggered — inform user on request):
-- `afc:launch` — inform user when release artifact generation is requested
 - `afc:doctor` — inform user when health check is requested
 - `afc:architect` — inform user when architecture review is requested
 - `afc:security` — inform user when security scan is requested
