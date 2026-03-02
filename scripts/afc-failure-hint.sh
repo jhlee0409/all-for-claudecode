@@ -64,6 +64,21 @@ case "$ERROR" in
   *"ENOMEM"*|*"Cannot allocate"*)
     HINT="Out of memory. Terminate other processes or check resources."
     ;;
+  *"ETIMEDOUT"*|*"timed out"*|*"timeout"*)
+    HINT="Request timed out. Check network connectivity or increase timeout."
+    ;;
+  *"ENOSPC"*|*"No space left"*)
+    HINT="Disk full. Free up space and retry."
+    ;;
+  *"syntax error"*|*"SyntaxError"*)
+    HINT="Syntax error detected. Check recent changes for typos or missing brackets."
+    ;;
+  *"FAILED"*|*"failures"*|*"failed"*)
+    HINT="Test/build failures detected. Review the output above for specific errors."
+    ;;
+  *"Exit code"*)
+    HINT="Command exited with non-zero status. Check the output above for details."
+    ;;
   *)
     HINT=""
     ;;

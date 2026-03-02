@@ -68,6 +68,56 @@ Describe "afc-failure-hint.sh"
     End
   End
 
+  Context "when error is timeout"
+    It "exits 0 and hints about network/timeout"
+      Data '{"tool_name":"Bash","error":"ETIMEDOUT: connection timed out"}'
+      When run script scripts/afc-failure-hint.sh
+      The status should eq 0
+      The output should include "afc:hint"
+      The output should include "timed out"
+    End
+  End
+
+  Context "when error is disk full"
+    It "exits 0 and hints about disk space"
+      Data '{"tool_name":"Write","error":"ENOSPC: No space left on device"}'
+      When run script scripts/afc-failure-hint.sh
+      The status should eq 0
+      The output should include "afc:hint"
+      The output should include "Disk"
+    End
+  End
+
+  Context "when error is syntax error"
+    It "exits 0 and hints about syntax"
+      Data '{"tool_name":"Bash","error":"SyntaxError: Unexpected token"}'
+      When run script scripts/afc-failure-hint.sh
+      The status should eq 0
+      The output should include "afc:hint"
+      The output should include "Syntax"
+    End
+  End
+
+  Context "when error contains test failures"
+    It "exits 0 and hints to review output"
+      Data '{"tool_name":"Bash","error":"Exit code 101\n3 examples, 2 failures"}'
+      When run script scripts/afc-failure-hint.sh
+      The status should eq 0
+      The output should include "afc:hint"
+      The output should include "failures"
+    End
+  End
+
+  Context "when error is generic exit code"
+    It "exits 0 and hints to check output"
+      Data '{"tool_name":"Bash","error":"Exit code 1"}'
+      When run script scripts/afc-failure-hint.sh
+      The status should eq 0
+      The output should include "afc:hint"
+      The output should include "non-zero"
+    End
+  End
+
   Context "when pipeline is active and error is ENOENT"
     setup() {
       setup_tmpdir TEST_DIR
