@@ -69,6 +69,27 @@ SCRIPT
     # Matching spec file
     touch "$dir/spec/afc-hook_spec.sh"
 
+    # README.md with command table entries
+    cat > "$dir/README.md" << 'README'
+# Test Project
+| `/afc:spec` | Write spec |
+| `/afc:init` | Project setup |
+README
+
+    # CLAUDE.md with fork list
+    cat > "$dir/CLAUDE.md" << 'CLAUDEMD'
+# Architecture
+- `context: fork` — runs in isolated subagent (validate, analyze, qa, architect, security)
+CLAUDEMD
+
+    # init.md with skill routing
+    cat > "$dir/commands/init.md" << 'INIT'
+---
+name: afc:init
+---
+| Specification | `afc:spec` | spec command |
+INIT
+
     # Version files (all matching)
     printf '{"version": "1.0.0"}\n' > "$dir/package.json"
     printf '{"name": "test", "version": "1.0.0", "description": "test"}\n' > "$dir/.claude-plugin/plugin.json"
@@ -197,12 +218,12 @@ SCRIPT
     End
   End
 
-  Describe "when command name is not a valid phase and not in non-phase list"
+  Describe "when command is missing from README.md"
     setup_tmpdir DIR9
     BeforeAll "setup_project_fixture $DIR9"
     AfterAll "cleanup_tmpdir $DIR9"
 
-    It "warns on unrecognized command name"
+    It "warns on undocumented command"
       cat > "$DIR9/commands/unknown-phase.md" << 'CMD'
 ---
 name: afc:unknown-phase
@@ -214,7 +235,7 @@ CMD
       The status should eq 0
       The output should include "Done"
       The stderr should include "unknown-phase"
-      The stderr should include "not a recognized phase"
+      The stderr should include "missing from README.md"
     End
   End
 
@@ -235,6 +256,88 @@ CMD
       The status should eq 1
       The output should include "Done"
       The stderr should include "should use"
+    End
+  End
+
+  Describe "when user-invocable command is missing from init.md"
+    setup_tmpdir DIR10
+    BeforeAll "setup_project_fixture $DIR10"
+    AfterAll "cleanup_tmpdir $DIR10"
+
+    It "warns on missing init.md routing"
+      cat > "$DIR10/commands/newcmd.md" << 'CMD'
+---
+name: afc:newcmd
+description: "New command"
+---
+New command body
+CMD
+      printf '| `/afc:newcmd` | New |\n' >> "$DIR10/README.md"
+      When run bash "$SCRIPT" "$DIR10"
+      The status should eq 0
+      The output should include "Done"
+      The stderr should include "newcmd"
+      The stderr should include "missing from init.md"
+    End
+  End
+
+  Describe "when context:fork command is missing from CLAUDE.md"
+    setup_tmpdir DIR11
+    BeforeAll "setup_project_fixture $DIR11"
+    AfterAll "cleanup_tmpdir $DIR11"
+
+    It "warns on missing CLAUDE.md fork list entry"
+      cat > "$DIR11/commands/newfork.md" << 'CMD'
+---
+name: afc:newfork
+description: "New fork command"
+context: fork
+user-invocable: false
+---
+Fork command body
+CMD
+      printf '| `/afc:newfork` | New fork |\n' >> "$DIR11/README.md"
+      When run bash "$SCRIPT" "$DIR11"
+      The status should eq 0
+      The output should include "Done"
+      The stderr should include "newfork"
+      The stderr should include "missing from CLAUDE.md fork list"
+    End
+  End
+
+  Describe "when all command docs are present including fork and non-invocable"
+    setup_tmpdir DIR12
+    BeforeAll "setup_project_fixture $DIR12"
+    AfterAll "cleanup_tmpdir $DIR12"
+
+    It "passes with no warnings for documented commands"
+      # Add a context:fork command properly documented in all places
+      cat > "$DIR12/commands/analyze.md" << 'CMD'
+---
+name: afc:analyze
+description: "Analysis command"
+context: fork
+---
+Analysis body
+CMD
+      printf '| `/afc:analyze` | Analysis |\n' >> "$DIR12/README.md"
+      printf '| Analyze | `afc:analyze` | analysis |\n' >> "$DIR12/commands/init.md"
+      # Add analyze to CLAUDE.md fork list
+      printf '%s\n' '- `context: fork` — runs in subagent (validate, analyze, qa, architect, security)' > "$DIR12/CLAUDE.md"
+      # Add a user-invocable:false command (should NOT require init.md entry)
+      cat > "$DIR12/commands/hidden.md" << 'CMD'
+---
+name: afc:hidden
+description: "Hidden command"
+user-invocable: false
+---
+Hidden body
+CMD
+      printf '| `/afc:hidden` | Hidden |\n' >> "$DIR12/README.md"
+      When run bash "$SCRIPT" "$DIR12"
+      The status should eq 0
+      The output should include "Command docs: all commands referenced"
+      The output should include "0 errors, 0 warnings"
     End
   End
 End

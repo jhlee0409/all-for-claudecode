@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # afc-consistency-check.sh — Cross-reference validation for project consistency
-# Checks: config placeholders, agent names, hook scripts, test coverage
+# Checks: config placeholders, agent names, hook scripts, test coverage, command docs
 # Run as part of: npm run lint
 
 # shellcheck disable=SC2329
@@ -30,6 +30,15 @@ warn() {
 
 ok() {
   printf "[afc:consistency] ✓ %s\n" "$1"
+}
+
+# Extract a field value from command file YAML frontmatter
+get_cmd_field() {
+  local file="$1" field="$2"
+  awk '/^---$/{n++; next} n==1{print} n>=2{exit}' "$file" \
+    | grep "^${field}:" \
+    | sed "s/^${field}:[[:space:]]*//" \
+    | tr -d '"' | head -1 || true
 }
 
 # --- Check 1: Config Placeholder Validation ---
@@ -240,30 +249,59 @@ check_phase_ssot() {
     fi
   done
 
-  # Sub-check B: Every command name should map to a valid phase or be a known non-phase command
-  # Non-phase commands that are not pipeline phases
-  # NOTE: Update this list when adding non-phase commands to commands/
-  local non_phase_cmds="auto|init|doctor|principles|checkpoint|resume|launch|ideate|research|architect|security|debug|analyze|validate|test|consult|triage|qa|pr-comment|release-notes"
+  if [ "$issues" -eq 0 ]; then
+    ok "Phase SSOT: no hardcoded phase lists in scripts"
+  fi
+}
+
+# --- Check 7: Command Documentation Cross-Reference ---
+# Verify commands are documented in README.md, init.md, and CLAUDE.md
+
+check_command_docs() {
   local commands_dir="$PROJECT_DIR/commands"
-  if [ -d "$commands_dir" ]; then
-    for cmd_file in "$commands_dir"/*.md; do
-      [ -f "$cmd_file" ] || continue
-      local cmd_name
-      cmd_name=$(basename "$cmd_file" .md)
-      # Skip known non-phase commands
-      if printf '%s\n' "$non_phase_cmds" | tr '|' '\n' | grep -qxF "$cmd_name"; then
-        continue
-      fi
-      # Remaining commands should correspond to a valid phase
-      if ! afc_is_valid_phase "$cmd_name"; then
-        warn "Command '$cmd_name' is not a recognized phase in AFC_VALID_PHASES and not in non-phase list"
+  [ -d "$commands_dir" ] || return
+
+  local readme="$PROJECT_DIR/README.md"
+  local init_cmd="$commands_dir/init.md"
+  local claude_md="$PROJECT_DIR/CLAUDE.md"
+  local issues=0
+
+  for cmd_file in "$commands_dir"/*.md; do
+    [ -f "$cmd_file" ] || continue
+    local cmd_name
+    cmd_name=$(basename "$cmd_file" .md)
+
+    # Sub-check A: README.md should mention /afc:{name}
+    if [ -f "$readme" ]; then
+      if ! grep -qE "/afc:${cmd_name}([^a-z0-9-]|$)" "$readme" 2>/dev/null; then
+        warn "Command '$cmd_name' missing from README.md command table"
         issues=$((issues + 1))
       fi
-    done
-  fi
+    fi
+
+    # Sub-check B: init.md should mention afc:{name} for user-invocable commands
+    local invocable
+    invocable=$(get_cmd_field "$cmd_file" "user-invocable")
+    if [ "$invocable" != "false" ] && [ -f "$init_cmd" ]; then
+      if ! grep -qE "afc:${cmd_name}([^a-z0-9-]|$)" "$init_cmd" 2>/dev/null; then
+        warn "Command '$cmd_name' missing from init.md skill routing"
+        issues=$((issues + 1))
+      fi
+    fi
+
+    # Sub-check C: CLAUDE.md fork list for context:fork commands
+    local ctx
+    ctx=$(get_cmd_field "$cmd_file" "context")
+    if [ "$ctx" = "fork" ] && [ -f "$claude_md" ]; then
+      if ! grep "context: fork" "$claude_md" 2>/dev/null | grep -qE "([(, ])${cmd_name}([,) ]|$)"; then
+        warn "Command '$cmd_name' (context:fork) missing from CLAUDE.md fork list"
+        issues=$((issues + 1))
+      fi
+    fi
+  done
 
   if [ "$issues" -eq 0 ]; then
-    ok "Phase SSOT: no hardcoded lists, all commands map to valid phases"
+    ok "Command docs: all commands referenced in README.md, init.md, CLAUDE.md"
   fi
 }
 
@@ -277,6 +315,7 @@ check_hook_scripts
 check_test_coverage
 check_version_sync
 check_phase_ssot
+check_command_docs
 
 printf "\n[afc:consistency] Done: %d errors, %d warnings\n" "$ERRORS" "$WARNINGS"
 

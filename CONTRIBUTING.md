@@ -20,7 +20,7 @@ bin/        ESM CLI installer
 
 | I want to... | Primary file(s) | Also update |
 |---------------|-----------------|-------------|
-| Add a new slash command | `commands/{name}.md` | README.md (table), `spec/{name}_spec.sh` if hooks involved |
+| Add a new slash command | `commands/{name}.md` | `npm run lint` validates: README.md, init.md, CLAUDE.md. Add `spec/{name}_spec.sh` if hooks involved |
 | Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | README.md (table), `spec/{name}_spec.sh` |
 | Modify config template | `templates/afc.config.template.md` | |
 | Add a new agent | `agents/{name}.md` | |
@@ -104,8 +104,13 @@ Follow this structure:
 
 ### Step 6: Update references
 
+Run `npm run lint` — the consistency check automatically detects missing references in:
+- **README.md**: All commands must appear in the command table (`/afc:{name}`)
+- **commands/init.md**: User-invocable commands must appear in the skill routing table (`afc:{name}`)
+- **CLAUDE.md**: Commands with `context: fork` must appear in the fork list
+
+Additionally:
 - **commands/auto.md**: If the new command is a pipeline phase, add it to the auto pipeline
-- **Global CLAUDE.md all-for-claudecode block** (in `commands/init.md` template): Add to skill routing table if user-invocable
 - **Tests**: Add test cases if the command involves hooks or scripts
 
 ### Naming conventions
