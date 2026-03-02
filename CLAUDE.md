@@ -52,7 +52,7 @@ Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claud
 ### Command Frontmatter Controls
 
 - `user-invocable: false` — hidden from `/` menu, only model-callable (validate, clarify, tasks)
-- `context: fork` — runs in isolated subagent, result returned to main context (validate, analyze, architect, security). architect and security use custom agents with `memory: project` for persistent learning
+- `context: fork` — runs in isolated subagent, result returned to main context (validate, analyze, qa, architect, security). architect and security use custom agents with `memory: project` for persistent learning
 - `model: haiku|sonnet` — model routing per command complexity (haiku for mechanical tasks, sonnet for design/analysis, omit for orchestrator inheritance)
 
 ## Shell Script Conventions

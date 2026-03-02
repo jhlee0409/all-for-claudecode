@@ -122,6 +122,7 @@ Performance: ✓ no N+1 queries
 | `/afc:launch` | Generate release artifacts (changelog, tag, publish) |
 | `/afc:validate` | Verify artifact consistency |
 | `/afc:analyze` | General-purpose code and component analysis |
+| `/afc:qa` | Project quality audit — test confidence, error resilience, code health |
 | `/afc:consult` | Expert consultation (backend, infra, PM, design, marketing) |
 | `/afc:triage` | Analyze open PRs and issues in parallel |
 | `/afc:pr-comment` | Generate structured PR review comments |
