@@ -239,6 +239,7 @@ Classify the user's intent and route to the matching skill. Use semantic underst
 | Test | `afc:test` | User wants to write tests, improve coverage, or verify behavior |
 | Validate | `afc:validate` | User wants to check consistency or validate existing pipeline artifacts |
 | Analyze | `afc:analyze` | User wants to understand, explore, or audit existing code without modifying it |
+| QA Audit | `afc:qa` | User wants project quality audit, test confidence check, or runtime quality gaps |
 | Research | `afc:research` | User wants deep investigation of external tools, libraries, APIs, or technical concepts |
 | Ideate | `afc:ideate` | User wants to brainstorm ideas, explore possibilities, or draft a product brief |
 | Consult | `afc:consult` | User wants expert advice on a decision: library choice, architecture direction, legal/security/infra guidance |
