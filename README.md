@@ -172,7 +172,7 @@ Every hook fires automatically — no configuration needed after install.
 | `Notification` | Desktop alerts (macOS/Linux) |
 | `TaskCompleted` | CI gate (shell) + acceptance criteria verification (LLM) |
 | `SubagentStop` | Tracks subagent completion in pipeline log |
-| `UserPromptSubmit` | Injects Phase/Feature context + drift checkpoint during active pipeline |
+| `UserPromptSubmit` | **Inactive**: detects intent keywords and suggests matching afc skill. **Active**: injects Phase/Feature context + drift checkpoint at threshold prompts |
 | `PermissionRequest` | Auto-allows CI commands during implement/review |
 | `ConfigChange` | Audits/blocks settings changes during active pipeline |
 | `TeammateIdle` | Prevents Agent Teams idle during implement/review |

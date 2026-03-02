@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-03-03
+
+### Added
+- **`/afc:clean` command**: Pipeline artifact cleanup, dead code scan, and pipeline flag release — closes the spec → plan → implement → review → **clean** lifecycle
+- **Intent-based skill routing**: When pipeline is inactive, the UserPromptSubmit hook now detects keywords in the user's prompt and suggests the matching afc skill (e.g., "there's a bug" → `/afc:debug`, "write tests" → `/afc:test`, "security audit" → `/afc:security`). Priority-ordered to minimize false positives
+- **`description` field in `hooks/hooks.json`**: Human-readable manifest description for tooling and IDE integration
+- **`agents` and `hooks` path arrays in `plugin.json`**: Explicit path declarations for better plugin manager and IDE support
+- **`paths:` frontmatter in `.claude/rules/` files**: Scoped rule activation so rules only apply to their matching file patterns
+
+### Changed
+- **27 command descriptions enhanced with trigger phrases**: Every skill now has explicit "use when the user [phrase]" guidance, improving LLM-based routing accuracy significantly
+- **Agent tool references updated**: `afc-architect.md` and `afc-security.md` use `Agent` instead of `Task` in tool lists, aligning with the Claude Code Agent spec
+- **Checkpoint auto-cleanup on session start**: Stale auto-memory checkpoints (auto-loaded by Claude Code) are now deleted when pipeline is inactive and a project-local copy exists — prevents stale context from a previous session from polluting unrelated commands
+- **`afc_state_is_active` call cached**: `session-start-context.sh` caches the result to a `PIPELINE_ACTIVE` variable, avoiding duplicate state reads per session start
+
+### Fixed
+- **Routing conflicts resolved**: `review.md` and `pr-comment.md` now use non-overlapping trigger phrases; same for `launch.md` and `release-notes.md`
+- **Stop gate silent on inactive pipeline**: Removed misleading TASK HYGIENE reminder from stop-gate stderr — it was user-visible internal API jargon shown on every `/stop`
+- **Intent detection patterns hardened**: Word-boundary guards on `spec` and `plan` patterns, tightened `release` to require compound phrases, `security audit` added to security pattern, early exit for empty prompt text
+
+### Tests
+- 333 examples (up from 311) — +22 new cases covering all routing branches, priority ordering, checkpoint dual-write behavior, and active-pipeline isolation
+
 ## [2.6.0] - 2026-03-02
 
 ### Added
