@@ -100,7 +100,7 @@ dfs_check() {
     if [ "$color" = "0" ]; then
       printf '1' > "$color_file"
 
-      neighbors="$(grep -E "^${current}\t" "$EDGES_FILE" | cut -f2 || true)"
+      neighbors="$(grep -E "^${current}	" "$EDGES_FILE" | cut -f2 || true)"
       if [ -n "$neighbors" ]; then
         while IFS= read -r neighbor; do
           [ -z "$neighbor" ] && continue
