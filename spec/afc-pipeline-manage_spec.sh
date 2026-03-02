@@ -142,4 +142,66 @@ Describe "afc-pipeline-manage.sh"
       End
     End
   End
+
+  Context "start when already active"
+    setup() {
+      setup_tmpdir_with_git TEST_DIR
+      setup_state_fixture "$TEST_DIR" "existing-feature"
+    }
+
+    It "exits 1 with warning"
+      When run script scripts/afc-pipeline-manage.sh start new-feature
+      The status should eq 1
+      The stderr should include "already active"
+    End
+  End
+
+  Context "end --force when no active pipeline"
+    setup() {
+      setup_tmpdir_with_git TEST_DIR
+    }
+
+    It "exits 0 and cleans up"
+      When run script scripts/afc-pipeline-manage.sh end --force
+      The status should eq 0
+      The output should include "Pipeline ended"
+    End
+  End
+
+  Context "phase-tag subcommand"
+    setup() {
+      setup_tmpdir_with_git TEST_DIR
+    }
+
+    It "creates a git tag"
+      When run script scripts/afc-pipeline-manage.sh phase-tag 1
+      The status should eq 0
+      The output should include "afc/phase-1"
+    End
+  End
+
+  Context "phase-tag-clean subcommand"
+    setup() {
+      setup_tmpdir_with_git TEST_DIR
+      (cd "$TEST_DIR" && git tag "afc/phase-1" && git tag "afc/phase-2")
+    }
+
+    It "removes all phase tags"
+      When run script scripts/afc-pipeline-manage.sh phase-tag-clean
+      The status should eq 0
+      The output should include "Removed 2 phase tags"
+    End
+  End
+
+  Context "unknown subcommand"
+    setup() {
+      setup_tmpdir_with_git TEST_DIR
+    }
+
+    It "exits 1 with usage"
+      When run script scripts/afc-pipeline-manage.sh nonexistent
+      The status should eq 1
+      The stderr should include "Usage"
+    End
+  End
 End

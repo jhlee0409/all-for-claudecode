@@ -28,7 +28,7 @@ Describe "afc-sync-cache.sh"
       else
         ver=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$SHELLSPEC_PROJECT_ROOT/package.json" | head -1 | sed 's/.*: *"//;s/"//')
       fi
-      # Create fake cache dir
+      # Create fake cache dir with minimal structure
       mkdir -p "$TEST_DIR/.claude/plugins/cache/all-for-claudecode/afc/$ver/commands"
       mkdir -p "$TEST_DIR/.claude/plugins/cache/all-for-claudecode/afc/$ver/scripts"
     }
@@ -37,6 +37,25 @@ Describe "afc-sync-cache.sh"
       When run script scripts/afc-sync-cache.sh
       The status should eq 0
       The output should include "Synced source to cache"
+    End
+
+    It "copies commands files to cache directory"
+      When run script scripts/afc-sync-cache.sh
+      The status should eq 0
+      The output should include "Synced"
+      # Verify at least one known file was synced
+      local ver
+      ver=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$SHELLSPEC_PROJECT_ROOT/package.json" | head -1 | sed 's/.*: *"//;s/"//')
+      The path "$TEST_DIR/.claude/plugins/cache/all-for-claudecode/afc/$ver/commands/auto.md" should be exist
+    End
+
+    It "copies scripts files to cache directory"
+      When run script scripts/afc-sync-cache.sh
+      The status should eq 0
+      The output should include "Synced"
+      local ver
+      ver=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$SHELLSPEC_PROJECT_ROOT/package.json" | head -1 | sed 's/.*: *"//;s/"//')
+      The path "$TEST_DIR/.claude/plugins/cache/all-for-claudecode/afc/$ver/scripts/afc-state.sh" should be exist
     End
   End
 End

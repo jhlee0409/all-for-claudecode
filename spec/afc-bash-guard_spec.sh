@@ -76,5 +76,33 @@ Describe "afc-bash-guard.sh"
       The output should include '"updatedInput"'
       The output should include 'git clean -n'
     End
+
+    It "denies git checkout ."
+      Data '{"tool_input":{"command":"git checkout ."}}'
+      When run script scripts/afc-bash-guard.sh
+      The status should eq 0
+      The output should include '"permissionDecision":"deny"'
+    End
+
+    It "denies git checkout -- ."
+      Data '{"tool_input":{"command":"git checkout -- ."}}'
+      When run script scripts/afc-bash-guard.sh
+      The status should eq 0
+      The output should include '"permissionDecision":"deny"'
+    End
+
+    It "denies git restore ."
+      Data '{"tool_input":{"command":"git restore ."}}'
+      When run script scripts/afc-bash-guard.sh
+      The status should eq 0
+      The output should include '"permissionDecision":"deny"'
+    End
+
+    It "denies git push -f (short flag)"
+      Data '{"tool_input":{"command":"git push -f origin main"}}'
+      When run script scripts/afc-bash-guard.sh
+      The status should eq 0
+      The output should include '"permissionDecision":"deny"'
+    End
   End
 End

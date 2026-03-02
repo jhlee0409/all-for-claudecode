@@ -73,4 +73,53 @@ EOF
       The output should include "CYCLE"
     End
   End
+
+  Context "bash fallback (node unavailable)"
+    mock_no_node() {
+      mkdir -p "$TEST_DIR/limited_bin"
+      for cmd in bash grep sed cat head wc tr cut sort mktemp rm mv mkdir dirname tail; do
+        local p
+        p=$(command -v "$cmd" 2>/dev/null || true)
+        [ -n "$p" ] && ln -sf "$p" "$TEST_DIR/limited_bin/$cmd"
+      done
+      PATH="$TEST_DIR/limited_bin"
+      export PATH
+    }
+
+    Context "with valid DAG"
+      setup() {
+        setup_tmpdir TEST_DIR
+        cat > "$TEST_DIR/tasks.md" << 'EOF'
+## Phase 1: Setup
+- [ ] T001 Create base `src/base.js`
+- [ ] T002 Create service `src/service.js` depends: [T001]
+EOF
+      }
+
+      It "validates without node"
+        BeforeRun "mock_no_node"
+        When run script scripts/afc-dag-validate.sh "$TEST_DIR/tasks.md"
+        The status should eq 0
+        The output should include "Valid"
+      End
+    End
+
+    Context "with circular dependency"
+      setup() {
+        setup_tmpdir TEST_DIR
+        cat > "$TEST_DIR/tasks.md" << 'EOF'
+## Phase 1: Setup
+- [ ] T001 Create A `src/a.js` depends: [T002]
+- [ ] T002 Create B `src/b.js` depends: [T001]
+EOF
+      }
+
+      It "detects cycle without node"
+        BeforeRun "mock_no_node"
+        When run script scripts/afc-dag-validate.sh "$TEST_DIR/tasks.md"
+        The status should eq 1
+        The output should include "CYCLE"
+      End
+    End
+  End
 End

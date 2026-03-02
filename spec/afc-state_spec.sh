@@ -244,9 +244,103 @@ Describe "afc-state.sh"
         setup_state_with_ci "$TEST_DIR" "test-feature" "implement"
       }
 
-      It "removes ciPassedAt field"
+      It "removes ciPassedAt field from state file"
         When call afc_state_invalidate_ci
         The status should eq 0
+        The contents of file "$TEST_DIR/.claude/.afc-state.json" should not include "ciPassedAt"
+      End
+    End
+  End
+
+  Describe "afc_state_remove"
+    Context "when field exists"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+      }
+
+      It "removes the specified field"
+        When call afc_state_remove "phase"
+        The status should eq 0
+        The contents of file "$TEST_DIR/.claude/.afc-state.json" should not include '"phase"'
+        The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "test-feature"
+      End
+    End
+
+    Context "when field does not exist"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+      }
+
+      It "succeeds silently"
+        When call afc_state_remove "nonexistent"
+        The status should eq 0
+        The contents of file "$TEST_DIR/.claude/.afc-state.json" should include "test-feature"
+      End
+    End
+
+    Context "when state file does not exist"
+      It "succeeds silently"
+        When call afc_state_remove "anything"
+        The status should eq 0
+      End
+    End
+  End
+
+  Describe "afc_state_read_changes"
+    Context "when changes exist"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+        afc_state_append_change "src/foo.ts"
+        afc_state_append_change "src/bar.ts"
+      }
+
+      It "returns all change entries"
+        When call afc_state_read_changes
+        The status should eq 0
+        The output should include "src/foo.ts"
+        The output should include "src/bar.ts"
+      End
+    End
+
+    Context "when no changes exist"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+      }
+
+      It "returns empty"
+        When call afc_state_read_changes
+        The output should eq ""
+      End
+    End
+
+    Context "when state file does not exist"
+      It "returns 1"
+        When call afc_state_read_changes
+        The status should eq 1
+      End
+    End
+  End
+
+  Describe "afc_state_append_change deduplication"
+    Context "when same file appended twice"
+      setup() {
+        setup_tmpdir TEST_DIR
+        reinit_state_paths
+        setup_state_fixture "$TEST_DIR" "test-feature" "implement"
+      }
+
+      It "stores only one entry"
+        When call eval 'afc_state_append_change "src/dup.ts"; afc_state_append_change "src/dup.ts"; afc_state_read_changes | grep -c "src/dup.ts"'
+        The status should eq 0
+        The output should eq "1"
       End
     End
   End
