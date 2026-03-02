@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-03-02
+
+### Added
+- **`/afc:qa` command**: Project quality audit — detects gaps between structural correctness and actual runtime behavior. Analyzes 5 categories: test confidence, error resilience, build & CI integrity, API & contract safety, and code health signals. Runs as isolated fork (read-only) with Critic Loop (capped at 3 rounds)
+- **Internal QA audit script** (`afc-qa-audit.sh`): Plugin self-testing via `npm run qa` — checks hook I/O safety, test assertion strength, UX completeness, and build/deploy integrity
+- **Failure hint patterns**: 4 new error recognitions — test failures, syntax errors, timeout/network, disk full
+- **Doctor validation categories**: Command/agent/doc validation for comprehensive health checks
+
+### Fixed
+- SIGPIPE in `track-afc-changes.sh` and PreToolUse hooks by consuming stdin before early exit
+- 6 plugin issues: zombie state cleanup, version warning accuracy, doctor script, legacy tag handling, cache sync
+- Doc path references, triage fallback behavior, log rotation, and convention alignment
+- Cross-platform grep tab handling in DAG validator bash fallback (GNU grep `-E` does not interpret `\t` as tab)
+
+### Tests
+- 308 examples, 0 failures (+46 new test cases across 12 spec files)
+- New: afc-qa-audit_spec.sh, afc-sync-cache_spec.sh, afc-doctor_spec.sh, afc-failure-hint_spec.sh
+- Strengthened assertion density in previously weak specs
+
+## [2.5.0] - 2026-03-01
+
+### Added
+- **Intent-based skill routing**: Replaced keyword-based grep matching with semantic intent routing via CLAUDE.md routing table. Hook script reduced by 52% (134 → 64 lines)
+- **`/afc:triage` command**: Analyze open PRs and issues in parallel — supports `--pr`, `--issue`, `--deep`, and specific item numbers
+- **PR analyst subagent** (`afc-pr-analyst`): Runs in isolated worktree with diff access for deep PR analysis
+- **`/afc:release-notes` command**: Generate release notes from git history
+- **`/afc:pr-comment` command**: Generate structured PR review comments
+- **Agent capability controls**: `maxTurns`, `permissionMode: acceptEdits`, `disallowedTools`, `resume: lastAgentId` frontmatter parameters
+- **GitHub Actions CI**: ShellSpec + shellcheck workflow
+
+### Fixed
+- Cross-platform CI: shellcheck severity + portable `sed -i`
+- Cross-platform test: PATH mock for hiding `gh` CLI on Ubuntu
+
+### Tests
+- 205 examples, 0 failures
+- New: 7 files (1 agent, 3 commands, 1 script, 1 spec, 1 CI workflow)
+
 ## [2.4.0] - 2026-02-28
 
 ### Added
