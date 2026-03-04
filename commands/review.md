@@ -51,6 +51,23 @@ If config file is missing:
 
 Choose review orchestration based on the number of changed files:
 
+**Pre-scan: Call Chain Context** (for Parallel Batch and Review Swarm modes only):
+
+Before distributing files to review agents, collect cross-boundary context:
+
+1. For each changed file, identify **outbound calls** to other changed files (imports + function calls)
+2. For each outbound call target, extract: function signature + 1-line side-effect summary (e.g., "mutates playlist state", "triggers async cascade")
+3. Include this context in each review agent's prompt:
+   ```
+   ## Cross-File Context
+   This file calls:
+   - `deleteVideo()` in api/videos.ts → internally auto-advances to next video if current is deleted
+   - `getNextVideo()` in api/playlist.ts → pops pending keyword queue first, falls back to normal next
+   Review findings should account for these behaviors.
+   ```
+
+For Direct review mode (≤5 files): skip pre-scan — orchestrator already has full context.
+
 #### 5 or fewer files: Direct review
 Review all files directly in the current context (no delegation).
 
@@ -152,6 +169,31 @@ For each changed file, examine from the following perspectives:
 - Open/Closed principle adherence where applicable
 - Future modification cost — would a reasonable feature request require rewriting or only extending?
 
+### 3.5. Cross-Boundary Verification
+
+After individual/parallel reviews complete, the **orchestrator** performs a cross-boundary check on behavioral findings:
+
+1. **Filter**: From all collected findings, select those involving:
+   - Call order changes (function A now calls B before C)
+   - Error handling modifications (try/catch scope changes, error propagation changes)
+   - State mutation changes (new writes to shared state, removed cleanup)
+
+2. **Verify**: For each behavioral finding rated Critical or Warning:
+   - Read the **callee's implementation** (the function/method being called)
+   - Check: does the callee's internal behavior (side effects, state changes, return values) actually conflict with the change?
+   - If no conflict → downgrade: Critical → Info, Warning → Info (append "verified: no cross-boundary impact")
+   - If confirmed conflict → keep severity, enrich description with callee behavior details
+
+3. **Output**: Append verification summary before Review Output:
+   ```
+   Cross-Boundary Check: {N} behavioral findings verified
+   ├─ Confirmed: {M} (severity kept)
+   ├─ Downgraded: {K} (false positive — callee compatible)
+   └─ Skipped: {J} (no behavioral change)
+   ```
+
+This step runs in the orchestrator context (not delegated), as it requires reading code across file boundaries that individual review agents cannot see.
+
 ### 4. Review Output
 
 ```markdown
@@ -197,6 +239,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 |-----------|------------|
 | **COMPLETENESS** | Were all changed files reviewed? Are there any missed perspectives (A through H)? |
 | **SPEC_ALIGNMENT** | Cross-check implementation against spec.md: (1) every SC (success criterion) is satisfied — provide `{M}/{N} SC verified` count, (2) every acceptance scenario (GWT) has corresponding code path, (3) no spec constraint is violated by the implementation |
+| **SIDE_EFFECT_AWARENESS** | For findings involving call order changes, error handling modifications, or state mutation changes: did the reviewer verify the callee's internal behavior? If a Critical finding assumes a side effect without reading the target implementation → auto-downgrade to Info with note "cross-boundary unverified". Provide "{M} of {N} behavioral findings verified" count. |
 | **PRECISION** | Are the findings actual issues, not false positives? |
 
 **On FAIL**: auto-fix and continue to next pass.

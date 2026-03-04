@@ -1,6 +1,6 @@
-# Phase Completion Gate (3 Steps)
+# Phase Completion Gate (3–4 Steps)
 
-After each Phase completes, perform **3-step verification** sequentially:
+After each Phase completes, perform **3–4 step verification** sequentially (Step 2.5 is conditional):
 
 ## Step 1. CI Gate
 
@@ -28,6 +28,17 @@ Quantitatively inspect changed files within the Phase against `{config.code_styl
   ```
 - If issues found → fix immediately, then re-run CI Gate (Step 1)
 - If no issues → `✓ Phase {N} Mini-Review passed`
+
+## Step 2.5. Integration/E2E Gate (conditional)
+
+When the phase contains **behavioral changes** (call order modifications, error handling changes, state mutation changes — not pure additions or style fixes):
+
+1. Check if `{config.test}` includes integration or E2E tests
+2. If yes → run `{config.test}` and verify pass
+3. If fail → debug-based RCA (same protocol as Step 1)
+4. If `{config.test}` is empty or has no E2E coverage → skip with note: `⚠ No E2E test configured — behavioral changes not integration-tested`
+
+This gate is skipped for phases with only additive changes (new files, new functions with no existing callers).
 
 ## Step 3. Auto-Checkpoint
 
