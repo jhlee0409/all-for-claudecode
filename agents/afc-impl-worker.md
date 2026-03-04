@@ -32,6 +32,14 @@ The orchestrator pre-assigns tasks to you via the prompt. Do NOT self-claim task
    - Gate command result
 5. Do NOT call TaskList or TaskUpdate — the orchestrator handles task state management
 
+## Cross-Phase Awareness
+
+When implementing tasks that call functions modified in a previous phase:
+- Read the callee's current implementation (it may have changed in the previous phase)
+- Verify that your call pattern is compatible with the callee's actual behavior (side effects, return values, error handling)
+- If `{config.test}` is available, run it after completing tasks that depend on cross-phase changes
+- If no E2E/integration tests are configured, note in your output: "⚠ Cross-phase dependency on {function} — no E2E verification available"
+
 ## Rules
 
 - Always read existing files before modifying them

@@ -59,6 +59,17 @@ Task("analyze features/timeline", subagent_type: Explore)
 Task("analyze widgets/timeline", subagent_type: Explore)
 ```
 
+**Cross-Module Import Chain Verification** (after Explore agents return):
+
+When parallel Explore agents are used, the orchestrator must verify cross-module boundaries that no single agent can see:
+
+1. From each agent's dependency map, extract **outbound imports** that cross module boundaries
+2. For each cross-module import chain (e.g., widget → feature → shared), read the actual import statements at the boundary files
+3. Verify against {config.architecture} rules: does the full chain respect layer direction, not just each module's internal imports?
+4. Report any cross-module violations not surfaced by individual agents
+
+Do not trust agent-summarized import relationships for cross-boundary chains — re-read the boundary files directly.
+
 ### 3. Write Analysis
 
 Structure analysis results and **print to console**:

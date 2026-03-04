@@ -51,6 +51,16 @@ Source priority:
 2. **Codebase** (existing patterns in the current project)
 3. **Community** (GitHub Issues, blogs)
 
+### 3.5. Reconcile Findings
+
+After parallel agents return, the orchestrator checks for conflicts between sources:
+
+1. Compare codebase agent findings (current usage patterns) against web agent findings (official docs, latest versions)
+2. If a codebase pattern conflicts with official documentation (e.g., deprecated API, changed behavior in newer version):
+   - Flag the conflict explicitly in Findings rather than silently adopting one source
+   - Note: "Current codebase uses {pattern} but official docs recommend {alternative} since {version/date}"
+3. If no conflicts → proceed to Summarize
+
 ### 4. Summarize Conclusions
 
 ```markdown

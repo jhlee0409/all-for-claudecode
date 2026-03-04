@@ -46,10 +46,51 @@ For dependency audit command: infer from `packageManager` field in `package.json
 ### 2. Agent Teams (if more than 10 files)
 
 Use parallel agents for wide-scope scans:
+
+**Pre-scan: Data Flow Context** (before distributing to agents):
+
+1. For each changed file, identify **input entry points** (user input, API params, URL params, form data) and **sanitization calls** (validation, escaping, encoding)
+2. Trace input flow across changed files: where does user input enter? Where is it sanitized? Where is it consumed?
+3. Include this context in each agent's prompt:
+   ```
+   ## Data Flow Context
+   Input flows relevant to your scan scope:
+   - User input enters via `req.body` in api/routes.ts → sanitized by `validateInput()` in shared/validation.ts → consumed in features/user.ts
+   - URL params enter via `req.params` in api/routes.ts → NO sanitization found → used in features/search.ts
+   Account for these flows when assessing injection/XSS severity.
+   ```
+
 ```
-Task("Security scan: src/features/", subagent_type: general-purpose)
-Task("Security scan: src/shared/api/", subagent_type: general-purpose)
+Task("Security scan: src/features/", subagent_type: general-purpose,
+  prompt: "... {include Data Flow Context} ...")
+Task("Security scan: src/shared/api/", subagent_type: general-purpose,
+  prompt: "... {include Data Flow Context} ...")
 ```
+
+For scans with ≤10 files: skip pre-scan — orchestrator has full context.
+
+### 2.5. Cross-Boundary Verification
+
+After parallel agent results are collected, the **orchestrator** performs cross-boundary verification on injection/vulnerability findings:
+
+1. **Filter**: From all findings, select those involving:
+   - Injection vulnerabilities (SQL, command, XSS) where input origin is in another agent's scan scope
+   - Authentication/authorization checks where the guard is in a different directory slice
+   - Sensitive data exposure where the data source and the exposure point are in different slices
+
+2. **Verify**: For each Critical or High finding:
+   - Read the **upstream code** (where input enters or is sanitized)
+   - Check: is the input actually sanitized before reaching the flagged consumption point?
+   - If sanitized → downgrade: Critical → Low, High → Low (append "verified: input sanitized at {location}")
+   - If NOT sanitized → keep severity, enrich with full data flow path
+
+3. **Output**: Append verification summary before Output Results:
+   ```
+   Cross-Boundary Check: {N} injection/vulnerability findings verified
+   ├─ Confirmed: {M} (severity kept — no upstream sanitization)
+   ├─ Downgraded: {K} (false positive — sanitized upstream)
+   └─ Skipped: {J} (single-file scope, no cross-boundary flow)
+   ```
 
 ### 3. Security Check Items
 

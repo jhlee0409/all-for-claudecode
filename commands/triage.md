@@ -145,6 +145,20 @@ Task("Deep triage PR #{number}", subagent_type: "afc:afc-pr-analyst",
 
 If `--deep` flag was specified, run Phase 2 for **all** PRs regardless of Phase 1 classification.
 
+### 3.5. Cross-PR Coupling Detection
+
+After Phase 1 (and Phase 2 if applicable) results are collected, detect file-level coupling between PRs:
+
+1. Extract changed file lists from each PR's diff (already available from Phase 1 agent outputs)
+2. For each file, check if it appears in multiple PRs' changed file lists
+3. If shared files are found, annotate affected PRs with a coupling flag:
+   ```
+   COUPLING: PR #{A} and PR #{B} both modify src/shared/utils.ts
+   ```
+4. Include coupling information in the consolidated report's Priority Actions table and per-PR details
+
+This helps identify merge-order dependencies and potential conflict risks that no single-PR agent can detect.
+
 ### 4. Consolidate Triage Report
 
 Merge Phase 1 and Phase 2 results into a single report:
