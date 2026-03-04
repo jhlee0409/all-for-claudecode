@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] - 2026-03-04
+
+### Added
+- **Cross-boundary verification for review**: Pre-scan call chain context injection for parallel review agents, Step 3.5 cross-boundary verification pass, and SIDE_EFFECT_AWARENESS critic criterion — reduces false Critical findings from file-isolated reviewers
+- **Cross-boundary verification for security scan**: Data flow pre-scan traces input sanitization across directory slices, Step 2.5 verifies injection findings against upstream sanitization — prevents false positive injection alerts
+- **Cross-module import chain verification for architect**: After parallel Explore agents return, orchestrator re-reads boundary files to verify full import chains against architecture rules
+- **Cross-PR coupling detection for triage**: Detects shared files across multiple open PRs and flags merge-order dependencies in the consolidated report
+- **Source conflict reconciliation for research**: Explicit check when codebase patterns conflict with official documentation findings
+- **Cross-phase awareness for impl-worker**: Workers verify callee behavior compatibility when calling functions modified in a previous phase
+
+### Changed
+- **Phase gate protocol expanded to 3–4 steps**: Conditional Step 2.5 (Integration/E2E Gate) runs `{config.test}` when a phase contains behavioral changes (call order, error handling, state mutation)
+- **Implement critic loop**: Added SIDE_EFFECT_SAFETY criterion for verifying callee compatibility after behavioral changes
+
+### Fixed
+- **Plugin loading failure**: Removed unsupported `agents` field from `plugin.json` that prevented commands from appearing in the slash menu
+
 ## [2.7.0] - 2026-03-03
 
 ### Added
