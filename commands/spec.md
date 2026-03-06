@@ -67,7 +67,8 @@ Detect whether `$ARGUMENTS` references external libraries, APIs, or technologies
 4. **If external references detected**:
    - For each unknown reference, run a focused WebSearch query: `"{library/API name} latest stable version usage guide {current year}"`
    - Optionally use Context7 (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) for library-specific documentation
-   - Record findings inline as context for spec writing (not persisted — research.md is Plan phase responsibility)
+   - Record findings to `.claude/afc/specs/{feature-name}/research-notes.md` (lightweight spec-scoped notes; distinct from plan phase's `research.md` which covers deep technical research)
+   - Also use findings inline as context for spec writing
    - Tag each researched item in spec with `[RESEARCHED]` for traceability
 
 > Research here is **lightweight and spec-scoped** — just enough to write accurate requirements. Deep technical research (alternatives comparison, migration paths) belongs in `/afc:plan` Phase 0.

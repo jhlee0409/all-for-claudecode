@@ -8,7 +8,7 @@ allowed-tools:
   - Read
   - Grep
   - Glob
-model: haiku
+model: sonnet
 ---
 
 # /afc:validate — Artifact Consistency Validation

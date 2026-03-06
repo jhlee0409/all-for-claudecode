@@ -169,9 +169,11 @@ For each changed file, examine from the following perspectives:
 - Open/Closed principle adherence where applicable
 - Future modification cost — would a reasonable feature request require rewriting or only extending?
 
-### 3.5. Cross-Boundary Verification
+### 3.5. Cross-Boundary Verification (MANDATORY)
 
-After individual/parallel reviews complete, the **orchestrator** performs a cross-boundary check on behavioral findings:
+After individual/parallel reviews complete, the **orchestrator** MUST perform a cross-boundary check. This is a required step, not optional — skipping it is a review defect.
+
+**For 11+ file reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
 
 1. **Filter**: From all collected findings, select those involving:
    - Call order changes (function A now calls B before C)
@@ -179,12 +181,14 @@ After individual/parallel reviews complete, the **orchestrator** performs a cros
    - State mutation changes (new writes to shared state, removed cleanup)
 
 2. **Verify**: For each behavioral finding rated Critical or Warning:
-   - Read the **callee's implementation** (the function/method being called)
+   - **Read the callee's implementation** (the function/method being called) — this read is mandatory, not optional
    - Check: does the callee's internal behavior (side effects, state changes, return values) actually conflict with the change?
    - If no conflict → downgrade: Critical → Info, Warning → Info (append "verified: no cross-boundary impact")
    - If confirmed conflict → keep severity, enrich description with callee behavior details
 
-3. **Output**: Append verification summary before Review Output:
+3. **False positive reference** (security-related findings only): For behavioral findings involving security concerns (injection, auth bypass, data exposure), check `afc-security` agent's MEMORY.md (at `.claude/agent-memory/afc-security/MEMORY.md`) `## False Positives` section if the file exists. Known false positive patterns should be noted in findings to avoid recurring false alarms.
+
+4. **Output**: Append verification summary before Review Output:
    ```
    Cross-Boundary Check: {N} behavioral findings verified
    ├─ Confirmed: {M} (severity kept)

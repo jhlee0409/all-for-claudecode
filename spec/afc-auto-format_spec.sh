@@ -37,11 +37,11 @@ Describe "afc-auto-format.sh"
   Context "when file exists but no formatter is available"
     setup() {
       setup_tmpdir TEST_DIR
-      printf 'fn main() {}\n' > "$TEST_DIR/test.rs"
+      printf 'some content\n' > "$TEST_DIR/test.rb"
     }
 
     It "exits 0 without error"
-      Data "$(printf '{"tool_input":{"file_path":"%s/test.rs"}}' "$TEST_DIR")"
+      Data "$(printf '{"tool_input":{"file_path":"%s/test.rb"}}' "$TEST_DIR")"
       When run script scripts/afc-auto-format.sh
       The status should eq 0
     End

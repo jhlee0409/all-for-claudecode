@@ -8,7 +8,10 @@ tools:
   - Bash
   - WebSearch
   - Write
+disallowedTools:
   - Edit
+  - MultiEdit
+  - NotebookEdit
 model: sonnet
 memory: project
 ---

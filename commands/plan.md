@@ -193,6 +193,19 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 {error handling, performance optimization, tests}
 ```
 
+### 4.5. File Path Verification
+
+After writing plan.md, verify all paths in the File Change Map:
+
+1. For each **existing file** (Action: modify/delete): confirm the path exists using Glob
+2. For each **new file** (Action: create): confirm the parent directory exists using Glob
+3. **On mismatch**:
+   - If the same directory contains a file with a similar name (same extension, ≤2 character difference) → auto-correct to the real path
+   - If a sibling directory contains the expected file (e.g., `src/utils/` vs `src/lib/`) → auto-correct with the real directory
+   - If no plausible match exists in the codebase → flag as potentially hallucinated, remove or replace with a verified path
+   - Update plan.md with corrected paths before proceeding to Critic Loop
+4. Report: `Path verification: {M}/{N} paths confirmed ({K} corrected)`
+
 ### 5. Critic Loop
 
 > **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.

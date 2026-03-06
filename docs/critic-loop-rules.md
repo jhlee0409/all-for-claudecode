@@ -4,14 +4,22 @@
 
 ## Required Principles
 
-1. **Minimum findings**: In each Critic round, **at least 1 concern, improvement point, or verification rationale per criterion** must be stated. If there are no issues, explain specifically "why there are no issues."
-2. **Checklist responses**: For each criterion, output takes the form of answering specific questions. Single-word "PASS" is prohibited.
-3. **Adversarial Pass**: At the end of every round, apply **3 progressive critic perspectives**:
+1. **GROUND_IN_TOOLS**: Critic findings must cite external tool evidence when available. LLM-only judgment is the fallback, not the default.
+   - **Correctness**: CI/test results over LLM judgment (`{config.ci}` output, test pass/fail counts)
+   - **Style/Lint**: Static analysis output over LLM pattern matching (`{config.gate}` results)
+   - **Type safety**: Type checker errors over LLM inference (compiler output)
+   - **Security**: SAST/linter output over LLM vulnerability guessing
+   - Findings based solely on LLM judgment (no tool evidence) must be tagged `[LLM-JUDGMENT]` and weighted lower in severity decisions
+   - When tool evidence contradicts LLM judgment, tool evidence wins
+   - **Scope**: This principle applies most strongly to implement and review critics where CI/lint/test tools produce concrete evidence. For spec and plan critics (COMPLETENESS, MEASURABILITY, FEASIBILITY etc.), tool evidence is rarely available — LLM judgment is expected and the `[LLM-JUDGMENT]` tag is not required for these criteria.
+2. **Minimum findings**: In each Critic round, **at least 1 concern, improvement point, or verification rationale per criterion** must be stated. If there are no issues, explain specifically "why there are no issues."
+3. **Checklist responses**: For each criterion, output takes the form of answering specific questions. Single-word "PASS" is prohibited.
+4. **Adversarial Pass**: At the end of every round, apply **3 progressive critic perspectives**:
    - **Skeptic**: "Which assumption here is most likely wrong?"
    - **Devil's Advocate**: "How could this design be misused or fail unexpectedly?"
    - **Edge-case Hunter**: "What input would cause this to fail silently?"
    State one failure scenario per perspective. If any scenario is realistic → convert to FAIL and fix. If all are unrealistic → state quantitative rationale for each.
-4. **Quantitative rationale**: Instead of qualitative judgments like "none" or "compliant," present quantitative data such as "M of N confirmed," "Y of X lines applicable."
+5. **Quantitative rationale**: Instead of qualitative judgments like "none" or "compliant," present quantitative data such as "M of N confirmed," "Y of X lines applicable."
 
 ## Verdict System (4 types)
 

@@ -152,7 +152,7 @@ Follow-up options:
 
 ## Notes
 
-- **Limited write scope**: Expert agents can create/update project profiles and their own memory files, but should not modify your application code.
+- **Limited write scope**: Expert agents MUST only write to `.claude/afc/` paths (project profiles, memory files). Writing to application source code is prohibited. If an expert recommends code changes, they return the recommendation as text — the user or orchestrator applies it.
 - **Persistent memory**: Each expert remembers your project's decisions across sessions (stored in `.claude/agent-memory/afc-{domain}-expert/MEMORY.md`).
 - **Project profile**: Shared context at `.claude/afc/project-profile.md` — auto-created on first consultation, review and adjust as needed.
 - **Domain adapters**: Industry-specific guardrails (fintech, ecommerce, healthcare) auto-loaded based on project profile.

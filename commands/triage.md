@@ -71,7 +71,8 @@ Task("Triage PR #{number}: {title}", subagent_type: "general-purpose",
   2. Run: gh pr view {number} --comments
   3. Analyze the diff for:
      - What the PR does (1-2 sentence summary)
-     - Risk level: Critical (core logic, auth, data) / Medium (features, UI) / Low (docs, config, tests)
+     - Risk level: Critical (core logic, auth, data, security-related config) / Medium (features, UI) / Low (docs, non-security config, tests)
+       NOTE: Config files that touch auth, security, permissions, secrets, or access control keywords are Critical, not Low
      - Complexity: High (>10 files or cross-cutting) / Medium (3-10 files) / Low (<3 files)
      - Whether build/test verification is needed (yes/no + reason)
      - Potential issues or concerns (max 3)

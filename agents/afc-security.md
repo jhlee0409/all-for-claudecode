@@ -5,7 +5,6 @@ tools:
   - Read
   - Grep
   - Glob
-  - Bash
   - Agent
   - WebSearch
 disallowedTools:
@@ -13,6 +12,7 @@ disallowedTools:
   - Edit
   - MultiEdit
   - NotebookEdit
+  - Bash
 model: sonnet
 memory: project
 isolation: worktree
@@ -33,6 +33,7 @@ This agent is invoked automatically during the auto pipeline:
 - **Output**: Findings as `severity (Critical/Warning/Info), file:line, issue, suggested fix`
 - Findings are merged into the consolidated review report
 - Check for: command injection, path traversal, unvalidated input, sensitive data exposure, shell escaping issues
+- **No Bash access**: Use Glob/Grep/Read for file analysis (prevents `cat > file` write bypass)
 
 ## Reference Documents
 

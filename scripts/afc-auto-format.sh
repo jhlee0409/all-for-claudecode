@@ -39,26 +39,32 @@ format_file() {
     *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.scss|*.md|*.html|*.yaml|*.yml)
       # Check prettier (project-local npx or global)
       if [ -f "$PROJECT_DIR/node_modules/.bin/prettier" ]; then
-        "$PROJECT_DIR/node_modules/.bin/prettier" --write "$file" 2>/dev/null || true
+        "$PROJECT_DIR/node_modules/.bin/prettier" --write "$file" 2>/dev/null \
+          || { printf '%s\n' "[afc-auto-format] Warning: prettier failed for $file" >&2 || true; }
       elif command -v npx &> /dev/null && [ -f "$PROJECT_DIR/package.json" ]; then
-        npx --no-install prettier --write "$file" 2>/dev/null || true
+        npx --no-install prettier --write "$file" 2>/dev/null \
+          || { printf '%s\n' "[afc-auto-format] Warning: npx prettier failed for $file" >&2 || true; }
       fi
       ;;
     *.py)
       if command -v black &> /dev/null; then
-        black --quiet "$file" 2>/dev/null || true
+        black --quiet "$file" 2>/dev/null \
+          || { printf '%s\n' "[afc-auto-format] Warning: black failed for $file" >&2 || true; }
       elif command -v autopep8 &> /dev/null; then
-        autopep8 --in-place "$file" 2>/dev/null || true
+        autopep8 --in-place "$file" 2>/dev/null \
+          || { printf '%s\n' "[afc-auto-format] Warning: autopep8 failed for $file" >&2 || true; }
       fi
       ;;
     *.go)
       if command -v gofmt &> /dev/null; then
-        gofmt -w "$file" 2>/dev/null || true
+        gofmt -w "$file" 2>/dev/null \
+          || { printf '%s\n' "[afc-auto-format] Warning: gofmt failed for $file" >&2 || true; }
       fi
       ;;
     *.rs)
       if command -v rustfmt &> /dev/null; then
-        rustfmt "$file" 2>/dev/null || true
+        rustfmt "$file" 2>/dev/null \
+          || { printf '%s\n' "[afc-auto-format] Warning: rustfmt failed for $file" >&2 || true; }
       fi
       ;;
   esac

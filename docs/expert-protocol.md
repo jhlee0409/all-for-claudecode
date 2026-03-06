@@ -30,6 +30,20 @@ When `.claude/afc/project-profile.md` does not exist:
 4. Generate `.claude/afc/project-profile.md` using the template at `${CLAUDE_PLUGIN_ROOT}/templates/project-profile.template.md`
 5. Inform the user: "Created project profile at `.claude/afc/project-profile.md`. Review and adjust if needed."
 
+**Domain bias warning**: The first expert to create the profile inherently frames it through their domain lens (e.g., a marketing expert may underweight technical architecture). To mitigate:
+- Focus profile generation on **objective facts** (tech stack, file counts, dependency list) — not domain-specific interpretations
+- Mark any domain-specific assessments with `[EXPERT-ASSESSED: {domain}]` (e.g., `[EXPERT-ASSESSED: marketing]`) — the fixed prefix enables grep/search while the suffix identifies the source
+- Subsequent experts SHOULD verify and correct `[EXPERT-ASSESSED]` entries from their own perspective
+
+## Write Scope Restriction
+
+Expert agents may only use the Write tool for paths under `.claude/afc/` (project profiles, memory files). **Writing to application source code is prohibited.** If a recommendation involves code changes, return the recommendation as text — the orchestrator or user applies it.
+
+Allowed write targets:
+- `.claude/afc/project-profile.md` (project profile)
+- `.claude/agent-memory/afc-{name}/MEMORY.md` (agent memory, managed by `memory: project`)
+- `.claude/afc/memory/` subdirectories (pipeline memory)
+
 ## Communication Rules
 
 ### Progressive Disclosure

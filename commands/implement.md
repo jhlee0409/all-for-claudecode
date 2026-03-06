@@ -120,11 +120,22 @@ Execute each phase in order. Choose the orchestration mode based on the number o
 
 #### Mode Selection
 
-| [P] tasks in phase | Mode | Strategy |
-|---------------------|------|----------|
-| 0 | Sequential | Execute tasks one by one |
-| 1–5 | Parallel Batch | Launch Task() calls in parallel (current batch approach) |
-| 6+ | Swarm | Create task pool → orchestrator pre-assigns tasks to worker agents |
+**Default: Main agent executes directly.** Delegation to impl-workers is the exception, not the rule.
+
+| Condition | Mode | Strategy |
+|-----------|------|----------|
+| No [P] markers | Sequential | Main agent executes tasks one by one |
+| [P] tasks but delegation criteria NOT met | Sequential | Main agent executes directly (preserves full context) |
+| [P] tasks, delegation criteria ALL met, 1–5 [P] | Parallel Batch | Launch Task() calls in parallel |
+| [P] tasks, delegation criteria ALL met, 6+ [P] | Swarm | Create task pool → orchestrator pre-assigns tasks to worker agents |
+
+**Parallel delegation criteria** (ALL must be satisfied):
+1. Tasks have **no `depends:` edges** between them in the DAG (no ordering constraint)
+2. **≥ 3 parallelizable tasks** in the phase (2 tasks → sequential is cheaper)
+3. Each task is **self-contained** (does not require runtime results from other tasks in the same batch)
+4. Each task's **target files do not overlap** with any other task in the batch (no shared file writes)
+
+If ANY criterion fails → main agent sequential execution (context preservation outweighs parallelism speed).
 
 #### Sequential Mode (no P marker)
 
@@ -155,6 +166,10 @@ Task("T003: Create UserService", subagent_type: "afc:afc-impl-worker",
   ## Implementation Context
   {paste full ## Implementation Context section from plan.md}
 
+  ## Relevant Acceptance Criteria
+  {extract FR/AC items from spec.md that relate to this task — NOT the full spec, only matching items}
+  {e.g., FR-001, FR-003, SC-002 — with their full text from spec.md}
+
   ## Plan Context
   {relevant Phase section from plan.md for this task}
 
@@ -171,12 +186,17 @@ Task("T003: Create UserService", subagent_type: "afc:afc-impl-worker",
 Task("T004: Create AuthService", subagent_type: "afc:afc-impl-worker", isolation: "worktree", ...)
 ```
 
-**Step 3 — Collect results and advance**: After all parallel agents return:
+**Step 3 — Collect results and verify**: After all parallel agents return:
 1. Read each agent's returned output and verify completion
-2. Mark `TaskUpdate(status: "completed")` for each finished task
-3. **Manually check for newly-unblocked tasks**: Call `TaskList`, inspect `blockedBy` lists — if all blockers are now completed, the task is unblockable. (Note: auto-unblocking is only guaranteed in Agent Teams mode; in sub-agent mode, the orchestrator must poll and check manually.)
-4. If newly-unblockable tasks exist → launch next batch (repeat Step 2)
-5. If no more pending tasks remain → phase complete
+2. **Post-task individual verification** (per worker, before marking complete):
+   a. Run `{config.gate}` against the worker's changed files only
+   b. Check `git diff` to confirm changes stay within the task's declared file scope (no unplanned file modifications)
+   c. If verification fails → main agent fixes directly (do NOT re-delegate — context loss on re-delegation causes compound failures)
+   d. If verification passes → proceed to step 3
+3. Mark `TaskUpdate(status: "completed")` for each verified task
+4. **Manually check for newly-unblocked tasks**: Call `TaskList`, inspect `blockedBy` lists — if all blockers are now completed, the task is unblockable. (Note: auto-unblocking is only guaranteed in Agent Teams mode; in sub-agent mode, the orchestrator must poll and check manually.)
+5. If newly-unblockable tasks exist → launch next batch (repeat Step 2)
+6. If no more pending tasks remain → phase complete
 
 **Failure Recovery** (per-task, not per-batch):
 1. Identify the failed task from the agent's error return
@@ -217,6 +237,10 @@ Task("Worker 1: T007, T009, T011", subagent_type: "afc:afc-impl-worker",
   ## Implementation Context
   {paste full ## Implementation Context section from plan.md}
 
+  ## Relevant Acceptance Criteria
+  {extract FR/AC items from spec.md that relate to these tasks — NOT the full spec, only matching items}
+  {e.g., FR-001, FR-003, SC-002 — with their full text from spec.md}
+
   For each task:
   - Read the target file before modifying
   - Implement following plan.md design
@@ -233,12 +257,16 @@ Task("Worker 1: T007, T009, T011", subagent_type: "afc:afc-impl-worker",
 Task("Worker 2: T008, T010, T012", subagent_type: "afc:afc-impl-worker", isolation: "worktree", ...)
 ```
 
-**Step 3 — Collect and reconcile**:
+**Step 3 — Collect and verify**:
 1. Wait for all workers to return (foreground execution)
-2. Read results, mark `TaskUpdate(status: "completed")` for each finished task
-3. Call `TaskList` to check for remaining pending/blocked tasks
-4. If unblocked tasks remain → assign to new worker batch (repeat Step 2)
-5. If all tasks complete → phase done
+2. **Post-task individual verification** (per worker):
+   a. Run `{config.gate}` against each worker's changed files
+   b. Check `git diff` to confirm changes stay within declared file scope
+   c. If verification fails → main agent fixes directly (no re-delegation)
+3. Read results, mark `TaskUpdate(status: "completed")` for each verified task
+4. Call `TaskList` to check for remaining pending/blocked tasks
+5. If unblocked tasks remain → assign to new worker batch (repeat Step 2)
+6. If all tasks complete → phase done
 
 **Worker count**: N = min(5, unblocked task count). Max 5 concurrent sub-agents per phase.
 
@@ -353,7 +381,8 @@ Implementation complete
 - **Swarm workers**: max 5 concurrent. File overlap is strictly prohibited between parallel tasks.
 - **On error**: prevent infinite loops. Report to user after 3 attempts.
 - **Real-time tasks.md updates**: mark checkbox on each task completion.
-- **Mode selection is automatic**: do not manually override. Sequential for non-[P], batch for ≤5, swarm for 6+.
+- **Default is direct execution**: main agent executes tasks directly unless all 4 parallel delegation criteria are met. This preserves full context and avoids multi-agent context loss.
+- **Mode selection is automatic**: do not manually override. Sequential (default), batch for ≤5 qualifying [P], swarm for 6+ qualifying [P].
 - **NEVER use `run_in_background: true` on Task calls**: agents must run in foreground so results are returned before the next step.
 - **No worker self-claiming**: In swarm mode, the orchestrator pre-assigns tasks to workers. Workers do NOT call TaskList/TaskUpdate to claim tasks — this avoids last-write-wins race conditions on TaskUpdate.
 - **Phase-locked registration**: Only register (TaskCreate) the current phase's tasks. Never pre-register future phases. This is the primary mechanism for phase boundary enforcement.

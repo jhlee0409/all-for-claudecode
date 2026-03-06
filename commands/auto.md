@@ -111,8 +111,8 @@ If all checks pass, proceed to Phase 0.8.
 **Fast-Path Execution** (implement → review → clean):
 1. Implement the change directly (no tasks.md, no plan.md)
 2. Run `{config.ci}` verification
-   - On fail: **abort fast-path**, restart with full pipeline: `⚠ Fast-path aborted — change is more complex than expected. Running full pipeline.`
-3. If change touches > 2 files OR modifies any `.sh` script: **abort fast-path**, restart with full pipeline
+   - On fail: **rollback fast-path changes** (`git reset --hard afc/pre-auto`), then restart with full pipeline: `⚠ Fast-path aborted — change is more complex than expected. Rolling back and running full pipeline.`
+3. If change touches > 2 files OR modifies any `.sh` script: **rollback fast-path changes** (`git reset --hard afc/pre-auto`), then restart with full pipeline
 4. **Checkpoint**:
    ```bash
    "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase fast-path
@@ -237,12 +237,14 @@ Execute `/afc:plan` logic inline:
    ## Goal
    - Original request: $ARGUMENTS
    - Current objective: Implement {feature}
+   ## Acceptance Criteria (from spec.md)
+   {copy ALL FR-*, NFR-*, SC-* items and GWT acceptance scenarios from spec.md verbatim}
    ## Key Decisions
    - {what}: {rationale}
    ## Discoveries
    - {file path}: {finding}
    ```
-   This file is read at Implement start to restore context after compaction.
+   This file is read at Implement start to restore context after compaction. The full AC section ensures Review phase (Phase 4) can verify spec compliance even after spec.md is compacted.
 9. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase plan` at phase start
 10. Progress: `✓ 2/5 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N}, ADR: {N} recorded, Implementation Context: {W} words)`
 
@@ -311,7 +313,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 0. **Baseline test** (follows implement.md Step 1, item 5): if `{config.test}` is non-empty, run `{config.test}` before starting task execution. On failure, report pre-existing test failures to user and ask: "(1) Proceed anyway (2) Fix first (3) Abort". On pass or empty config, continue.
 1. Execute tasks phase by phase using implement.md orchestration rules (sequential/batch/swarm based on [P] count)
-2. **Implementation Context injection**: Every sub-agent prompt includes the `## Implementation Context` section from plan.md (ensures spec intent propagates to workers)
+2. **Implementation Context injection**: Every sub-agent prompt includes the `## Implementation Context` section from plan.md **and relevant FR/AC items from spec.md** (ensures spec intent propagates to workers)
 3. Perform **3-step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
    - On gate pass: create phase rollback point `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase-tag {phase_number}`
 4. Real-time `[x]` updates in tasks.md
@@ -369,6 +371,8 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase review`
 
 Execute `/afc:review` logic inline — **follow all review perspectives defined in `commands/review.md`** (A through H). The review command is the single source of truth for review criteria.
+
+**Context reload**: Re-read `.claude/afc/specs/{feature}/context.md` (contains full AC) and `.claude/afc/specs/{feature}/spec.md` to ensure spec context is available for SPEC_ALIGNMENT validation (these may have been compacted since Phase 1).
 
 1. Review implemented changed files (`git diff HEAD`)
 2. **Specialist agent delegation** (parallel, perspectives B and C):
@@ -440,8 +444,10 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - **Delete only the `.claude/afc/specs/{feature}/` directory created by the current pipeline**
    - If other `.claude/afc/specs/` subdirectories exist, **do not delete them** (only inform the user of their existence)
    - Do not leave pipeline intermediate artifacts in the codebase
-2. **Dead code scan**:
-   - Detect unused imports from the implementation process (check with `{config.ci}`)
+2. **Dead code scan** (prefer external tooling over LLM judgment):
+   - Run `{config.gate}` / `{config.ci}` — most linters detect unused imports/variables automatically
+   - If the project has dedicated dead code tools (e.g., `eslint --rule 'no-unused-vars'`, `ts-prune`, `knip`), use them first
+   - Only fall back to LLM-based scan for detection that static tools cannot cover
    - Remove empty directories from moved/deleted files
    - Detect unused exports (re-exports of moved code from original locations etc.)
 3. **Final CI gate**:

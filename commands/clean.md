@@ -41,7 +41,10 @@ Set `PIPELINE_ARTIFACT_DIR` = `.claude/afc/specs/{feature}/`
 
 ### 3. Dead Code Scan
 
-- Detect unused imports from the implementation process (check with `{config.ci}`)
+**Prefer external tooling over LLM judgment** for dead code detection:
+- Run `{config.gate}` / `{config.ci}` — most linters detect unused imports/variables automatically
+- If the project has dedicated dead code tools (e.g., `eslint --rule 'no-unused-vars'`, `ts-prune`, `knip`), use them first
+- Only fall back to LLM-based scan for detection that static tools cannot cover (e.g., unused exports across module boundaries)
 - Remove empty directories from moved/deleted files
 - Detect unused exports (re-exports of moved code from original locations etc.)
 
