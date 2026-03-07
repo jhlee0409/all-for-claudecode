@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # afc-doctor.sh — Automated health check for all-for-claudecode plugin
-# Runs categories 1-9 deterministically. Categories 10-12 require LLM analysis.
+# Runs ALL categories deterministically. No LLM judgment required.
 # Output: human-readable text (no JSON), directly printable.
 # Read-only: never modifies files.
 
@@ -459,6 +459,224 @@ if [ "$IS_DEV" = true ]; then
   else
     warn "Plugin cache directory not found" "install plugin first, then npm run sync:cache"
   fi
+
+  # --- Category 10: Command Definitions (dev only) ---
+  section "Command Definitions (dev)"
+
+  CMD_DIR="$PROJECT_DIR/commands"
+  if [ -d "$CMD_DIR" ]; then
+    CMD_COUNT=0
+    CMD_FM_MISSING=""
+    CMD_FIELD_MISSING=""
+    CMD_NAME_MISMATCH=""
+    CMD_AGENT_MISSING=""
+
+    for cmd_file in "$CMD_DIR"/*.md; do
+      [ -f "$cmd_file" ] || continue
+      CMD_COUNT=$((CMD_COUNT + 1))
+      BASENAME=$(basename "$cmd_file" .md)
+
+      # Check frontmatter exists (--- ... ---)
+      if ! head -1 "$cmd_file" | grep -q '^---' 2>/dev/null; then
+        CMD_FM_MISSING="${CMD_FM_MISSING:+$CMD_FM_MISSING, }$BASENAME"
+        continue
+      fi
+
+      # Extract frontmatter (between first and second ---)
+      FM=$(sed -n '2,/^---$/p' "$cmd_file" 2>/dev/null | sed '$d')
+
+      # Check required fields: name and description
+      if ! printf '%s\n' "$FM" | grep -q '^name:' 2>/dev/null || ! printf '%s\n' "$FM" | grep -q '^description:' 2>/dev/null; then
+        CMD_FIELD_MISSING="${CMD_FIELD_MISSING:+$CMD_FIELD_MISSING, }$BASENAME"
+      fi
+
+      # Check name-filename match (afc:{basename})
+      FM_NAME=$(printf '%s\n' "$FM" | grep '^name:' | head -1 | sed 's/name:[[:space:]]*//' | tr -d '"' | tr -d "'" | tr -d ' ')
+      EXPECTED_NAME="afc:$BASENAME"
+      if [ -n "$FM_NAME" ] && [ "$FM_NAME" != "$EXPECTED_NAME" ]; then
+        CMD_NAME_MISMATCH="${CMD_NAME_MISMATCH:+$CMD_NAME_MISMATCH, }$BASENAME (got $FM_NAME)"
+      fi
+
+      # Check fork-agent reference
+      if printf '%s\n' "$FM" | grep -q 'context:.*fork' 2>/dev/null; then
+        AGENT_NAME=$(printf '%s\n' "$FM" | grep '^agent:' | head -1 | sed 's/agent:[[:space:]]*//' | tr -d '"' | tr -d "'" | tr -d ' ' || true)
+        if [ -n "$AGENT_NAME" ] && [ ! -f "$PROJECT_DIR/agents/$AGENT_NAME.md" ]; then
+          CMD_AGENT_MISSING="${CMD_AGENT_MISSING:+$CMD_AGENT_MISSING, }$BASENAME → $AGENT_NAME"
+        fi
+      fi
+    done
+
+    if [ -z "$CMD_FM_MISSING" ]; then
+      pass "Frontmatter exists ($CMD_COUNT files)"
+    else
+      fail "Missing frontmatter: $CMD_FM_MISSING" "add YAML frontmatter block"
+    fi
+
+    if [ -z "$CMD_FIELD_MISSING" ]; then
+      pass "Required fields present"
+    else
+      fail "Missing name/description: $CMD_FIELD_MISSING" "add missing fields"
+    fi
+
+    if [ -z "$CMD_NAME_MISMATCH" ]; then
+      pass "Name-filename match"
+    else
+      fail "Name mismatch: $CMD_NAME_MISMATCH" "rename name: field to afc:{filename}"
+    fi
+
+    if [ -z "$CMD_AGENT_MISSING" ]; then
+      pass "Fork-agent references valid"
+    else
+      fail "Missing agent: $CMD_AGENT_MISSING" "create missing agent file or fix agent: field"
+    fi
+  fi
+
+  # --- Category 11: Agent Definitions (dev only) ---
+  section "Agent Definitions (dev)"
+
+  AGENT_DIR="$PROJECT_DIR/agents"
+  if [ -d "$AGENT_DIR" ]; then
+    AGENT_COUNT=0
+    AGENT_FM_MISSING=""
+    AGENT_FIELD_MISSING=""
+    AGENT_NAME_MISMATCH=""
+    EXPERT_MEMORY_MISSING=""
+    WORKER_TURNS_MISSING=""
+
+    EXPERT_AGENTS="afc-backend-expert afc-infra-expert afc-pm-expert afc-design-expert afc-marketing-expert afc-legal-expert afc-appsec-expert afc-tech-advisor"
+    WORKER_AGENTS="afc-impl-worker afc-pr-analyst"
+
+    for agent_file in "$AGENT_DIR"/*.md; do
+      [ -f "$agent_file" ] || continue
+      AGENT_COUNT=$((AGENT_COUNT + 1))
+      BASENAME=$(basename "$agent_file" .md)
+
+      # Check frontmatter exists
+      if ! head -1 "$agent_file" | grep -q '^---' 2>/dev/null; then
+        AGENT_FM_MISSING="${AGENT_FM_MISSING:+$AGENT_FM_MISSING, }$BASENAME"
+        continue
+      fi
+
+      FM=$(sed -n '2,/^---$/p' "$agent_file" 2>/dev/null | sed '$d')
+
+      # Check required fields: name, description, model
+      if ! printf '%s\n' "$FM" | grep -q '^name:' 2>/dev/null || ! printf '%s\n' "$FM" | grep -q '^description:' 2>/dev/null || ! printf '%s\n' "$FM" | grep -q '^model:' 2>/dev/null; then
+        AGENT_FIELD_MISSING="${AGENT_FIELD_MISSING:+$AGENT_FIELD_MISSING, }$BASENAME"
+      fi
+
+      # Check name-filename match
+      FM_NAME=$(printf '%s\n' "$FM" | grep '^name:' | head -1 | sed 's/name:[[:space:]]*//' | tr -d '"' | tr -d "'" | tr -d ' ')
+      if [ -n "$FM_NAME" ] && [ "$FM_NAME" != "$BASENAME" ]; then
+        AGENT_NAME_MISMATCH="${AGENT_NAME_MISMATCH:+$AGENT_NAME_MISMATCH, }$BASENAME (got $FM_NAME)"
+      fi
+
+      # Expert memory check
+      for expert in $EXPERT_AGENTS; do
+        if [ "$BASENAME" = "$expert" ]; then
+          if ! printf '%s\n' "$FM" | grep -q '^memory:' 2>/dev/null; then
+            EXPERT_MEMORY_MISSING="${EXPERT_MEMORY_MISSING:+$EXPERT_MEMORY_MISSING, }$BASENAME"
+          fi
+        fi
+      done
+
+      # Worker maxTurns check
+      for worker in $WORKER_AGENTS; do
+        if [ "$BASENAME" = "$worker" ]; then
+          if ! printf '%s\n' "$FM" | grep -q '^maxTurns:' 2>/dev/null; then
+            WORKER_TURNS_MISSING="${WORKER_TURNS_MISSING:+$WORKER_TURNS_MISSING, }$BASENAME"
+          fi
+        fi
+      done
+    done
+
+    if [ -z "$AGENT_FM_MISSING" ]; then
+      pass "Frontmatter exists ($AGENT_COUNT files)"
+    else
+      fail "Missing frontmatter: $AGENT_FM_MISSING" "add YAML frontmatter block"
+    fi
+
+    if [ -z "$AGENT_FIELD_MISSING" ]; then
+      pass "Required fields present"
+    else
+      fail "Missing name/description/model: $AGENT_FIELD_MISSING" "add missing fields"
+    fi
+
+    if [ -z "$AGENT_NAME_MISMATCH" ]; then
+      pass "Name-filename match"
+    else
+      fail "Name mismatch: $AGENT_NAME_MISMATCH" "rename name: field to match filename"
+    fi
+
+    # Count experts found
+    EXPERT_TOTAL=0
+    EXPERT_WITH_MEM=0
+    for expert in $EXPERT_AGENTS; do
+      if [ -f "$AGENT_DIR/$expert.md" ]; then
+        EXPERT_TOTAL=$((EXPERT_TOTAL + 1))
+        FM=$(sed -n '2,/^---$/p' "$AGENT_DIR/$expert.md" 2>/dev/null | sed '$d')
+        if printf '%s\n' "$FM" | grep -q '^memory:' 2>/dev/null; then
+          EXPERT_WITH_MEM=$((EXPERT_WITH_MEM + 1))
+        fi
+      fi
+    done
+    if [ -z "$EXPERT_MEMORY_MISSING" ]; then
+      pass "Expert memory configured ($EXPERT_WITH_MEM/$EXPERT_TOTAL)"
+    else
+      fail "Missing memory: field: $EXPERT_MEMORY_MISSING" "add memory: project to agent frontmatter"
+    fi
+
+    WORKER_TOTAL=0
+    WORKER_WITH_TURNS=0
+    for worker in $WORKER_AGENTS; do
+      if [ -f "$AGENT_DIR/$worker.md" ]; then
+        WORKER_TOTAL=$((WORKER_TOTAL + 1))
+        FM=$(sed -n '2,/^---$/p' "$AGENT_DIR/$worker.md" 2>/dev/null | sed '$d')
+        if printf '%s\n' "$FM" | grep -q '^maxTurns:' 2>/dev/null; then
+          WORKER_WITH_TURNS=$((WORKER_WITH_TURNS + 1))
+        fi
+      fi
+    done
+    if [ -z "$WORKER_TURNS_MISSING" ]; then
+      pass "Worker maxTurns configured ($WORKER_WITH_TURNS/$WORKER_TOTAL)"
+    else
+      fail "Missing maxTurns: $WORKER_TURNS_MISSING" "add maxTurns: to agent frontmatter"
+    fi
+  fi
+
+  # --- Category 12: Doc References (dev only) ---
+  section "Doc References (dev)"
+
+  # Scan commands and agents for docs/ references
+  DOC_REFS_MISSING=""
+  for src_file in "$CMD_DIR"/*.md "$AGENT_DIR"/*.md; do
+    [ -f "$src_file" ] || continue
+    while IFS= read -r ref; do
+      [ -z "$ref" ] && continue
+      DOC_PATH="$PROJECT_DIR/$ref"
+      if [ ! -f "$DOC_PATH" ]; then
+        DOC_REFS_MISSING="${DOC_REFS_MISSING:+$DOC_REFS_MISSING, }$ref (in $(basename "$src_file"))"
+      fi
+    done < <(grep -oE 'docs/[a-zA-Z0-9_/-]+\.md' "$src_file" 2>/dev/null | sort -u)
+  done
+
+  if [ -z "$DOC_REFS_MISSING" ]; then
+    pass "Referenced docs exist"
+  else
+    fail "Missing docs: $DOC_REFS_MISSING" "create missing doc files or fix references"
+  fi
+
+  # Domain adapters
+  ADAPTER_DIR="$PROJECT_DIR/docs/domain-adapters"
+  if [ -d "$ADAPTER_DIR" ]; then
+    ADAPTER_COUNT=$(find "$ADAPTER_DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$ADAPTER_COUNT" -ge 1 ]; then
+      pass "Domain adapters exist ($ADAPTER_COUNT files)"
+    else
+      fail "No domain adapter files" "add .md files to docs/domain-adapters/"
+    fi
+  else
+    fail "docs/domain-adapters/ directory missing" "create docs/domain-adapters/ with at least one .md file"
+  fi
 fi
 
 # --- Summary ---
@@ -474,9 +692,5 @@ else
   printf '%d issues need attention. Run the Fix commands above.\n' "$FAIL"
 fi
 
-# Signal dev-only categories to caller
-if [ "$IS_DEV" = true ]; then
-  printf '\nNote: Categories 10-12 (Command/Agent/Doc validation) require LLM analysis.\n'
-fi
 
 exit 0
