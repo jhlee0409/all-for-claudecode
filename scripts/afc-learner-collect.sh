@@ -19,13 +19,13 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 LEARNER_CONFIG="$PROJECT_DIR/.claude/afc/learner.json"
 QUEUE_FILE="$PROJECT_DIR/.claude/.afc-learner-queue.jsonl"
 
-# Gate: exit immediately if learner is not enabled
+# Read stdin (must consume before any exit to prevent pipe break)
+INPUT=$(cat)
+
+# Gate: exit if learner is not enabled
 if [ ! -f "$LEARNER_CONFIG" ]; then
   exit 0
 fi
-
-# Read stdin (contains user prompt JSON)
-INPUT=$(cat)
 
 # Extract prompt text
 USER_TEXT=""
