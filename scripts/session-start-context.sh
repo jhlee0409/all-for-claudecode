@@ -102,7 +102,38 @@ if [ -f "$LOCAL_CHECKPOINT" ]; then
   fi
 fi
 
-# 4. Check for safety tag
+# 4. Learner queue notification (lowest priority, advisory only)
+LEARNER_CONFIG="$PROJECT_DIR/.claude/afc/learner.json"
+LEARNER_QUEUE="$PROJECT_DIR/.claude/.afc-learner-queue.jsonl"
+if [ -f "$LEARNER_CONFIG" ] && [ -f "$LEARNER_QUEUE" ]; then
+  # Prune stale entries (older than 7 days)
+  if command -v date >/dev/null 2>&1; then
+    CUTOFF=$(date -u -v-7d '+%Y-%m-%dT' 2>/dev/null || date -u -d '7 days ago' '+%Y-%m-%dT' 2>/dev/null || true)
+    if [ -n "$CUTOFF" ]; then
+      TMP_QUEUE="${LEARNER_QUEUE}.tmp"
+      grep -E "\"timestamp\":\"${CUTOFF:0:4}" "$LEARNER_QUEUE" > "$TMP_QUEUE" 2>/dev/null || true
+      # Keep entries whose timestamp >= cutoff (simple lexicographic comparison)
+      while IFS= read -r line; do
+        TS=$(printf '%s' "$line" | sed 's/.*"timestamp":"//;s/".*//' 2>/dev/null || true)
+        if [ -n "$TS" ] && [ "$TS" \> "$CUTOFF" ] 2>/dev/null; then
+          printf '%s\n' "$line"
+        fi
+      done < "$LEARNER_QUEUE" > "$TMP_QUEUE" 2>/dev/null || true
+      if [ -f "$TMP_QUEUE" ]; then
+        mv "$TMP_QUEUE" "$LEARNER_QUEUE"
+      fi
+    fi
+  fi
+  LEARNER_COUNT=0
+  if [ -f "$LEARNER_QUEUE" ]; then
+    LEARNER_COUNT=$(wc -l < "$LEARNER_QUEUE" 2>/dev/null | tr -d ' ')
+  fi
+  if [ "$LEARNER_COUNT" -ge 2 ]; then
+    OUTPUT="${OUTPUT:+$OUTPUT | }[Learner: $LEARNER_COUNT patterns pending — run /afc:learner to review]"
+  fi
+fi
+
+# 5. Check for safety tag
 HAS_SAFETY_TAG=$(cd "$PROJECT_DIR" 2>/dev/null && git tag -l 'afc/pre-*' 2>/dev/null | head -1 || echo "")
 if [ -n "$HAS_SAFETY_TAG" ]; then
   if [ -n "$OUTPUT" ]; then

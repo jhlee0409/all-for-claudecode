@@ -182,6 +182,16 @@
             "statusMessage": "Loading pipeline status..."
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-learner-collect.sh\"",
+            "async": true,
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PermissionRequest": [

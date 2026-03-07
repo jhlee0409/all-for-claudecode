@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # afc-doctor.sh — Automated health check for all-for-claudecode plugin
-# Runs categories 1-8 deterministically. Categories 9-11 require LLM analysis.
+# Runs categories 1-9 deterministically. Categories 10-12 require LLM analysis.
 # Output: human-readable text (no JSON), directly printable.
 # Read-only: never modifies files.
 
@@ -370,7 +370,44 @@ else
   fail "hooks.json not found" "reinstall plugin: claude plugin install afc@all-for-claudecode"
 fi
 
-# --- Category 8: Version Sync (dev only) ---
+# --- Category 8: Learner Health ---
+section "Learner Health"
+
+LEARNER_CONFIG="$PROJECT_DIR/.claude/afc/learner.json"
+LEARNER_QUEUE="$PROJECT_DIR/.claude/.afc-learner-queue.jsonl"
+LEARNER_RULES="$PROJECT_DIR/.claude/rules/afc-learned.md"
+
+if [ -f "$LEARNER_CONFIG" ]; then
+  pass "Learner enabled"
+
+  # Queue size
+  if [ -f "$LEARNER_QUEUE" ]; then
+    LQ_COUNT=$(wc -l < "$LEARNER_QUEUE" | tr -d ' ')
+    if [ "$LQ_COUNT" -le 30 ]; then
+      pass "Signal queue: $LQ_COUNT entries"
+    else
+      warn "Signal queue large: $LQ_COUNT entries" "run /afc:learner to review pending patterns"
+    fi
+  else
+    pass "Signal queue: empty"
+  fi
+
+  # Rule count
+  if [ -f "$LEARNER_RULES" ]; then
+    LR_COUNT=$(grep -c '<!-- afc:learned' "$LEARNER_RULES" 2>/dev/null || echo 0)
+    if [ "$LR_COUNT" -le 30 ]; then
+      pass "Learned rules: $LR_COUNT"
+    else
+      warn "Many learned rules: $LR_COUNT" "review and consolidate .claude/rules/afc-learned.md"
+    fi
+  else
+    pass "No learned rules yet"
+  fi
+else
+  pass "Learner not enabled (opt-in via /afc:learner enable)"
+fi
+
+# --- Category 9: Version Sync (dev only) ---
 IS_DEV=false
 if [ -f "$PROJECT_DIR/package.json" ]; then
   if command -v jq >/dev/null 2>&1; then
@@ -439,7 +476,7 @@ fi
 
 # Signal dev-only categories to caller
 if [ "$IS_DEV" = true ]; then
-  printf '\nNote: Categories 9-11 (Command/Agent/Doc validation) require LLM analysis.\n'
+  printf '\nNote: Categories 10-12 (Command/Agent/Doc validation) require LLM analysis.\n'
 fi
 
 exit 0

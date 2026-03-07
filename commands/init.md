@@ -262,6 +262,7 @@ User-only (not auto-triggered — inform user on request):
 - `afc:principles` — inform user when project principles management is requested
 - `afc:clean` — inform user when pipeline cleanup is requested (artifact cleanup, dead code scan, pipeline flag release)
 - `afc:triage` — inform user when parallel PR/issue triage is requested
+- `afc:learner` — inform user when pattern learning or rule promotion is requested
 - `afc:pr-comment` — inform user when posting PR review comments to GitHub is requested
 - `afc:release-notes` — inform user when generating release notes from git history is requested
 

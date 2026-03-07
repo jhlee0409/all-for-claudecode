@@ -128,6 +128,7 @@ Performance: ✓ no N+1 queries
 | `/afc:triage` | Analyze open PRs and issues in parallel |
 | `/afc:pr-comment` | Generate structured PR review comments |
 | `/afc:release-notes` | Generate release notes from git history |
+| `/afc:learner` | Review and promote learned patterns to project rules |
 | `/afc:clarify` | Resolve spec ambiguities |
 
 ### Individual Command Examples
