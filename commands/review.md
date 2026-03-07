@@ -46,6 +46,7 @@ If config file is missing:
    - Not specified → `git diff HEAD` (all uncommitted changes)
 2. Extract **list of changed files**
 3. Read **full content** of each changed file (not just the diff — full context)
+4. **Load spec context** (if available): Check for `.claude/afc/specs/{feature}/context.md` and `.claude/afc/specs/{feature}/spec.md`. If found, load them for SPEC_ALIGNMENT validation in the Critic Loop. If neither exists, SPEC_ALIGNMENT criterion is skipped with note "no spec artifacts available"
 
 ### 2. Parallel Review (scaled by file count)
 
@@ -182,6 +183,7 @@ After individual/parallel reviews complete, the **orchestrator** MUST perform a 
 
 2. **Verify**: For each behavioral finding rated Critical or Warning:
    - **Read the callee's implementation** (the function/method being called) — this read is mandatory, not optional
+   - **Skip external dependencies**: If the callee is in `node_modules/`, `vendor/`, or other third-party directories, do NOT read the source (it may be minified/compiled). Instead, verify against the dependency's type definitions or documented API contract. Note: "verified against types/docs, not source"
    - Check: does the callee's internal behavior (side effects, state changes, return values) actually conflict with the change?
    - If no conflict → downgrade: Critical → Info, Warning → Info (append "verified: no cross-boundary impact")
    - If confirmed conflict → keep severity, enrich description with callee behavior details

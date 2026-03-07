@@ -37,12 +37,12 @@ When `.claude/afc/project-profile.md` does not exist:
 
 ## Write Scope Restriction
 
-Expert agents may only use the Write tool for paths under `.claude/afc/` (project profiles, memory files). **Writing to application source code is prohibited.** If a recommendation involves code changes, return the recommendation as text — the orchestrator or user applies it.
+Expert agents may only use the Write tool for pipeline and memory paths (`.claude/afc/` and `.claude/agent-memory/`). **Writing to application source code is prohibited.** If a recommendation involves code changes, return the recommendation as text — the orchestrator or user applies it.
 
 Allowed write targets:
 - `.claude/afc/project-profile.md` (project profile)
-- `.claude/agent-memory/afc-{name}/MEMORY.md` (agent memory, managed by `memory: project`)
 - `.claude/afc/memory/` subdirectories (pipeline memory)
+- `.claude/agent-memory/afc-{name}/MEMORY.md` (agent memory, managed by `memory: project`)
 
 ## Communication Rules
 

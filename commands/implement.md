@@ -126,7 +126,7 @@ Execute each phase in order. Choose the orchestration mode based on the number o
 |-----------|------|----------|
 | No [P] markers | Sequential | Main agent executes tasks one by one |
 | [P] tasks but delegation criteria NOT met | Sequential | Main agent executes directly (preserves full context) |
-| [P] tasks, delegation criteria ALL met, 1–5 [P] | Parallel Batch | Launch Task() calls in parallel |
+| [P] tasks, delegation criteria ALL met, 3–5 [P] | Parallel Batch | Launch Task() calls in parallel |
 | [P] tasks, delegation criteria ALL met, 6+ [P] | Swarm | Create task pool → orchestrator pre-assigns tasks to worker agents |
 
 **Parallel delegation criteria** (ALL must be satisfied):
@@ -143,7 +143,7 @@ If ANY criterion fails → main agent sequential execution (context preservation
 - On task start: `▶ {ID}: {description}`
 - On completion: `✓ {ID} complete`
 
-#### Parallel Batch Mode (1–5 [P] tasks)
+#### Parallel Batch Mode (3–5 [P] tasks)
 
 **Pre-validation**: Verify no file overlap (downgrade to sequential if overlapping).
 
@@ -189,7 +189,7 @@ Task("T004: Create AuthService", subagent_type: "afc:afc-impl-worker", isolation
 **Step 3 — Collect results and verify**: After all parallel agents return:
 1. Read each agent's returned output and verify completion
 2. **Post-task individual verification** (per worker, before marking complete):
-   a. Run `{config.gate}` against the worker's changed files only
+   a. If `{config.gate}` is non-empty: run it against the worker's changed files only. If empty: skip gate check (log "no gate configured, skipping")
    b. Check `git diff` to confirm changes stay within the task's declared file scope (no unplanned file modifications)
    c. If verification fails → main agent fixes directly (do NOT re-delegate — context loss on re-delegation causes compound failures)
    d. If verification passes → proceed to step 3
@@ -260,7 +260,7 @@ Task("Worker 2: T008, T010, T012", subagent_type: "afc:afc-impl-worker", isolati
 **Step 3 — Collect and verify**:
 1. Wait for all workers to return (foreground execution)
 2. **Post-task individual verification** (per worker):
-   a. Run `{config.gate}` against each worker's changed files
+   a. If `{config.gate}` is non-empty: run it against each worker's changed files. If empty: skip gate check (log "no gate configured, skipping")
    b. Check `git diff` to confirm changes stay within declared file scope
    c. If verification fails → main agent fixes directly (no re-delegation)
 3. Read results, mark `TaskUpdate(status: "completed")` for each verified task
@@ -382,7 +382,7 @@ Implementation complete
 - **On error**: prevent infinite loops. Report to user after 3 attempts.
 - **Real-time tasks.md updates**: mark checkbox on each task completion.
 - **Default is direct execution**: main agent executes tasks directly unless all 4 parallel delegation criteria are met. This preserves full context and avoids multi-agent context loss.
-- **Mode selection is automatic**: do not manually override. Sequential (default), batch for ≤5 qualifying [P], swarm for 6+ qualifying [P].
+- **Mode selection is automatic**: do not manually override. Sequential (default), batch for 3–5 qualifying [P], swarm for 6+ qualifying [P].
 - **NEVER use `run_in_background: true` on Task calls**: agents must run in foreground so results are returned before the next step.
 - **No worker self-claiming**: In swarm mode, the orchestrator pre-assigns tasks to workers. Workers do NOT call TaskList/TaskUpdate to claim tasks — this avoids last-write-wins race conditions on TaskUpdate.
 - **Phase-locked registration**: Only register (TaskCreate) the current phase's tasks. Never pre-register future phases. This is the primary mechanism for phase boundary enforcement.

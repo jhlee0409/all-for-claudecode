@@ -38,6 +38,7 @@ From `.claude/afc/specs/{feature}/`:
 - **plan.md** (required)
 - **tasks.md** (if present)
 - **research.md** (if present)
+- **context.md** (if present — written by auto pipeline Phase 2)
 
 Warn about missing files but proceed with what is available.
 
@@ -58,6 +59,7 @@ Validate across 6 categories:
 - spec → plan: Are all FR-*/NFR-* reflected in the plan?
 - plan → tasks: Are all items in the plan's File Change Map present in tasks?
 - spec → tasks: Are all requirements mapped to tasks?
+- spec → context.md (if present): Are all FR-*/NFR-*/SC-* items from spec.md copied into context.md's Acceptance Criteria section? (AC completeness check)
 
 #### D. Inconsistencies (INCONSISTENCY)
 - Terminology drift (different names for the same concept)

@@ -10,7 +10,7 @@
    - **Type safety**: Type checker errors over LLM inference (compiler output)
    - **Security**: SAST/linter output over LLM vulnerability guessing
    - Findings based solely on LLM judgment (no tool evidence) must be tagged `[LLM-JUDGMENT]` and weighted lower in severity decisions
-   - When tool evidence contradicts LLM judgment, tool evidence wins
+   - When tool evidence contradicts LLM judgment, tool evidence wins — but only evidence from the **current critic pass**. If code was modified after the last tool run, re-run the tool before citing its output as evidence
    - **Scope**: This principle applies most strongly to implement and review critics where CI/lint/test tools produce concrete evidence. For spec and plan critics (COMPLETENESS, MEASURABILITY, FEASIBILITY etc.), tool evidence is rarely available — LLM judgment is expected and the `[LLM-JUDGMENT]` tag is not required for these criteria.
 2. **Minimum findings**: In each Critic round, **at least 1 concern, improvement point, or verification rationale per criterion** must be stated. If there are no issues, explain specifically "why there are no issues."
 3. **Checklist responses**: For each criterion, output takes the form of answering specific questions. Single-word "PASS" is prohibited.

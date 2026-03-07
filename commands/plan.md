@@ -200,8 +200,9 @@ After writing plan.md, verify all paths in the File Change Map:
 1. For each **existing file** (Action: modify/delete): confirm the path exists using Glob
 2. For each **new file** (Action: create): confirm the parent directory exists using Glob
 3. **On mismatch**:
-   - If the same directory contains a file with a similar name (same extension, ≤2 character difference) → auto-correct to the real path
-   - If a sibling directory contains the expected file (e.g., `src/utils/` vs `src/lib/`) → auto-correct with the real directory
+   - If the same directory contains a file with a similar name (same extension, ≤2 character difference, **and filename is ≥5 characters** — short names are too ambiguous for auto-correction) → auto-correct to the real path
+   - If **multiple** similar-named files match → flag as ambiguous (do NOT auto-correct; list candidates and let the critic loop resolve)
+   - If a **direct** sibling directory (same parent) contains the expected file (e.g., `src/utils/` vs `src/lib/`) → auto-correct with the real directory. Do not search across architectural boundaries (e.g., `frontend/` vs `backend/`)
    - If no plausible match exists in the codebase → flag as potentially hallucinated, remove or replace with a verified path
    - Update plan.md with corrected paths before proceeding to Critic Loop
 4. Report: `Path verification: {M}/{N} paths confirmed ({K} corrected)`
