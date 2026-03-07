@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.2] - 2026-03-08
+
+### Changed
+- **Doctor fully script-driven**: All 12 check categories now run in `afc-doctor.sh` — LLM only executes the script and prints output. Prevents model drift (auto-executing Fix commands, analyzing project code after health check)
+
+### Fixed
+- **Doctor `grep -c` with pipefail**: `grep -c` on multiline input produced `0\n0` under `set -euo pipefail`, breaking integer comparisons. Replaced with `grep -q`
+- **Doctor fork-agent check crash**: Commands with `context: fork` but no `agent:` field caused script exit under `set -e`
+
 ## [2.8.1] - 2026-03-08
 
 ### Fixed
