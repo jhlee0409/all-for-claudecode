@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-03-07
+
+### Added
+- **`/afc:learner` command**: Pattern learning and rule promotion system — collects recurring user preferences/corrections during sessions and promotes them to project rules in `.claude/rules/afc-learned.md`. Supports review, status, reset, enable, and disable actions
+- **Learner signal collection hook**: Background UserPromptSubmit hook that detects correction patterns (explicit preferences, universal preferences, permanent corrections, convention preferences) with Korean language support, secret redaction, and queue cap enforcement
+- **Learner queue notifications**: Session start now reports pending patterns in the learner queue (`[Learner: N patterns pending — run /afc:learner to review]`)
+- **Learner health check in `afc:doctor`**: Reports enabled status, queue size, and rule count with warnings at thresholds
+
+### Changed
+- **Implement mode selection threshold**: Parallel batch mode now requires ≥3 parallel tasks (raised from ≥1); added config.gate empty-string guard to prevent errors when gate command is not configured
+- **Plan path validation**: File Change Map paths are auto-corrected when a close match (≥5 chars) exists in the actual codebase; ambiguous multi-match cases ask for user confirmation; sibling directory boundary check prevents drift into wrong modules
+- **Review cross-boundary verification**: External dependency and test file imports are now skipped during callee re-reads; standalone review loads spec context in Step 1.4 if available
+- **Expert write scope clarified**: Consultation agents are explicitly scoped to write only within `.claude/afc/` and `.claude/agent-memory/` paths
+- **Critic loop stale evidence rule**: Critic findings must reference evidence from the current pass; prior-pass evidence is invalid unless re-verified
+- **Validate context awareness**: Validate now loads `context.md` and verifies AC completeness against spec before cross-checking artifacts
+- **Auto fast-path side-effect safety**: Step 3.6 SIDE_EFFECT_SAFETY criterion added — verifies callee compatibility when behavioral changes are introduced
+- **Spec research persistence**: Research findings written to `.claude/afc/memory/research/` to survive context compaction
+- **Triage risk classification**: Risk level now considers change content semantics, not just file type (e.g., auth-related config changes escalate to Critical)
+
+### Fixed
+- **afc-auto-format.sh**: Format errors now emit stderr warning instead of failing silently when async timeout occurs
+
 ## [2.7.1] - 2026-03-04
 
 ### Added
