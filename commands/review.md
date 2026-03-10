@@ -9,6 +9,7 @@ allowed-tools:
   - Glob
   - Bash
   - Task
+  - LSP
 model: sonnet
 ---
 
@@ -49,6 +50,33 @@ If config file is missing:
 3. Read **full content** of each changed file (not just the diff — full context)
 4. **Load spec context** (if available): Check for `.claude/afc/specs/{feature}/context.md` and `.claude/afc/specs/{feature}/spec.md`. If found, load them for SPEC_ALIGNMENT validation in the Critic Loop. If neither exists, SPEC_ALIGNMENT criterion is skipped with note "no spec artifacts available"
 
+### 1.5. Reverse Impact Analysis
+
+Before reviewing, identify **files affected by the changes** (not just the changed files themselves):
+
+1. **For each changed file**, find files that depend on it:
+   - **LSP (preferred)**: `LSP(findReferences)` on exported symbols — tracks type references, function calls, re-exports
+   - **Grep (fallback)**: `Grep` for `import.*{filename}`, `require.*{filename}`, `source.*{filename}` patterns across the codebase
+   - LSP and Grep are complementary — use both when LSP is available (LSP catches type-level references Grep misses; Grep catches dynamic patterns LSP misses)
+
+2. **Build impact map**:
+   ```
+   Impact Map:
+   ├─ src/auth/login.ts (changed)
+   │  └─ affected: src/pages/LoginPage.tsx, src/middleware/auth.ts
+   ├─ scripts/afc-state.sh (changed)
+   │  └─ affected: scripts/afc-stop-gate.sh, scripts/afc-drift.sh (grep: source.*afc-state)
+   └─ Total: {N} changed files → {M} affected files
+   ```
+
+3. **Scope decision**:
+   - Affected files are NOT full review targets (that would explode scope)
+   - Instead, include them as **cross-reference context** in Step 2 and Step 3.5
+   - If an affected file has >3 references to a changed symbol → flag for closer inspection
+
+4. **Limitations** (include in review output):
+   > ⚠ Dynamic dependencies not covered: runtime dispatch (`obj[method]()`), reflection, cross-language calls, config/env-driven branching. Manual verification recommended for these patterns.
+
 ### 2. Parallel Review (scaled by file count)
 
 Choose review orchestration based on the number of changed files:
@@ -59,7 +87,8 @@ Before distributing files to review agents, collect cross-boundary context:
 
 1. For each changed file, identify **outbound calls** to other changed files (imports + function calls)
 2. For each outbound call target, extract: function signature + 1-line side-effect summary (e.g., "mutates playlist state", "triggers async cascade")
-3. Include this context in each review agent's prompt:
+3. Include the **Impact Map** from Step 1.5 — each agent receives the list of affected (non-changed) files that depend on its assigned files
+4. Include this context in each review agent's prompt:
    ```
    ## Cross-File Context
    This file calls:
@@ -177,6 +206,8 @@ After individual/parallel reviews complete, the **orchestrator** MUST perform a 
 
 **For 11+ file reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
 
+0. **Impact Map integration**: Use the Impact Map from Step 1.5 to prioritize verification. Affected files with >3 references to changed symbols should be read and checked for breakage — even if no finding was raised against them.
+
 1. **Filter**: From all collected findings, select those involving:
    - Call order changes (function A now calls B before C)
    - Error handling modifications (try/catch scope changes, error propagation changes)
@@ -212,6 +243,13 @@ This step runs in the orchestrator context (not delegated), as it requires readi
 | Critical | {N} | {summary} |
 | Warning | {N} | {summary} |
 | Info | {N} | {summary} |
+
+### Impact Analysis
+| Changed File | Affected Files | Method |
+|---|---|---|
+| {path} | {affected file list} | LSP / Grep |
+
+> ⚠ Dynamic dependencies (runtime dispatch, reflection, cross-language calls) require manual verification.
 
 ### Detailed Findings
 
