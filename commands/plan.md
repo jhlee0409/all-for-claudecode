@@ -132,6 +132,35 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 ### API Design (omit if not applicable)
 {plan for new API endpoints or use of existing APIs}
 
+## Test Strategy
+
+> Written alongside the File Change Map. Classify each implementation file and decide test coverage level.
+> Determines which files need test coverage and at what level.
+
+### Code Classification
+
+| File | Code Type | Test Need | Reason |
+|------|-----------|:---------:|--------|
+| {path} | {business-logic / pure-function / side-effect / framework / config / UI} | {required / optional / unnecessary} | {brief justification} |
+
+> Classification guide:
+> - **business-logic / pure-function**: Required — unit tests (AAA pattern)
+> - **side-effect code** (external API, DB, file I/O): Required — integration tests with mocks
+> - **framework / config / getter-setter / boilerplate**: Unnecessary — no test
+> - **UI rendering** (no state logic): Optional — minimal snapshot or skip
+
+### Test Pyramid
+
+- **Unit tests**: {count} files ({which files})
+- **Integration tests**: {count} files ({which files}, if applicable)
+- **E2E tests**: {count} (if applicable, only for critical user flows)
+
+### Required Test Cases (derived from spec EARS requirements)
+
+{For each spec EARS requirement with `→ TC:` mapping, list the test case here}
+- `should_{behavior}_when_{trigger}` → covers FR-{NNN}
+- `should_{behavior}_while_{state}` → covers FR-{NNN}
+
 ## File Change Map
 
 | File | Action | Description | Depends On | Phase |
@@ -140,6 +169,7 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 
 > - **Depends On**: list file(s) that must be created/modified first (enables dependency-aware task generation in /afc:implement).
 > - **Phase**: implementation phase number. Same-phase + no dependency + different file = parallelizable.
+> - **Test files**: For each implementation file classified as "required" in Code Classification, include a corresponding test file in the same Phase. Test files are first-class citizens in the File Change Map.
 
 ## Implementation Context
 
@@ -216,7 +246,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
-| **COMPLETENESS** | Are all requirements (FR-*) from spec.md reflected in the plan? |
+| **COMPLETENESS** | Are all requirements (FR-*) from spec.md reflected in the plan? For each implementation file classified as "required" in Test Strategy Code Classification, does the File Change Map include a corresponding test file? Report: `{M}/{N} test pairs present`. |
 | **FEASIBILITY** | Is it compatible with the existing codebase? Are dependencies available? |
 | **ARCHITECTURE** | Does it comply with {config.architecture} rules? |
 | **CROSS_CONSISTENCY** | Spec↔Plan cross-artifact validation (see checklist below) |

@@ -45,6 +45,16 @@
             "statusMessage": "Checking spec immutability..."
           }
         ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-tdd-guard.sh\"",
+            "statusMessage": "Checking TDD compliance..."
+          }
+        ]
       }
     ],
     "PostToolUse": [

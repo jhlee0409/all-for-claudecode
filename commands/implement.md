@@ -313,9 +313,14 @@ This enables granular rollback: `git reset --hard afc/phase-{N}` restores state 
 For each task:
 
 1. **Read files**: always read files before modifying them
-2. **Implement**: write code following the design in plan.md
-3. **Type/Lint check**: verify new code passes `{config.gate}`
-4. **Update tasks.md**: mark completed tasks as `[x]`
+2. **TDD cycle** (when plan.md Test Strategy classifies the task's target file as "required"):
+   - **Red**: write the test file first (failing test that defines expected behavior)
+   - **Green**: implement the minimum code to pass the test
+   - **Refactor**: clean up while keeping tests green
+   - If `{config.tdd}` is `strict` or `guide`: always follow this order. If `off` or unset: recommended but not enforced.
+3. **Implement**: write code following the design in plan.md
+4. **Type/Lint check**: verify new code passes `{config.gate}`
+5. **Update tasks.md**: mark completed tasks as `[x]`
    ```markdown
    - [x] T001 {description}  ← complete
    - [ ] T002 {description}  ← incomplete

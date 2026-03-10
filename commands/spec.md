@@ -99,8 +99,19 @@ Create `.claude/afc/specs/{feature-name}/spec.md`:
 - [ ] Given {precondition}, When {action}, Then {result}
 
 #### System Requirements (EARS notation)
-- [ ] WHEN {trigger}, THE System SHALL {behavior}
-- [ ] WHILE {state}, THE System SHALL {behavior}
+
+> Use one of the 5 EARS patterns for each requirement. Each requirement must map to at least one expected test case (TC).
+
+| Pattern | Template | Use When |
+|---------|----------|----------|
+| Ubiquitous | `THE System SHALL {behavior}` | Always-on property (no trigger needed) |
+| Event-driven | `WHEN {trigger}, THE System SHALL {response}` | Specific event triggers a response |
+| State-driven | `WHILE {state}, THE System SHALL {behavior}` | Behavior depends on system state |
+| Unwanted | `IF {condition}, THE System SHALL {handling}` | Error/failure handling |
+| Optional | `WHERE {feature/config active}, THE System SHALL {behavior}` | Feature flag or conditional capability |
+
+- [ ] WHEN {trigger}, THE System SHALL {behavior} → TC: `should_{behavior}_when_{trigger}`
+- [ ] WHILE {state}, THE System SHALL {behavior} → TC: `should_{behavior}_while_{state}`
 
 ### US2: {story title} [P2]
 {same format}
@@ -172,6 +183,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | **MEASURABILITY** | Are the success criteria measurable, not subjective? |
 | **INDEPENDENCE** | Are implementation details (code, library names) absent from the spec? |
 | **EDGE_CASES** | Are at least 2 edge cases identified? Any missing boundary conditions? |
+| **TESTABILITY** | Does every System Requirement follow one of the 5 EARS patterns (WHEN/WHILE/IF/WHERE/SHALL)? Does each EARS requirement have a mapped TC (`→ TC: should_...`)? If not → FAIL and auto-fix: rewrite to EARS + generate TC mapping. |
 
 **On FAIL**: auto-fix and continue to next pass.
 **On ESCALATE**: pause, present options to user, apply choice, resume.

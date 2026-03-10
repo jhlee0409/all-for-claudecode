@@ -11,6 +11,7 @@
 ci: "npm run ci"
 gate: "npm run typecheck && npm run lint"
 test: "npm test"
+tdd: "off"                                # TDD mode: "strict" (block impl without tests), "guide" (warn only), "off" (disabled)
 ```
 
 ## Architecture
