@@ -1,8 +1,8 @@
 # Project Configuration
 
-> afc commands reference this file to determine project-specific behavior.
-> CI Commands are parsed by scripts — keep the YAML format intact.
-> All other sections are free-form markdown — write whatever best describes your project.
+> CI Commands are parsed by hook scripts — keep the YAML format intact.
+> Architecture, Code Style, and Project Context sections below are detailed references.
+> A concise summary is also generated in `.claude/rules/afc-project.md` (auto-loaded by Claude Code).
 
 ## CI Commands
 

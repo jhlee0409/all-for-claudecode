@@ -15,8 +15,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-
 # Consume stdin (required -- pipe breaks if not consumed)
 cat > /dev/null
 
@@ -34,31 +32,8 @@ PHASE=$(afc_state_read phase || echo "unknown")
 # 3. Build context string
 CONTEXT="[AFC PIPELINE] Feature: $FEATURE | Phase: $PHASE | [AFC] When this task matches an AFC skill (analyze, implement, review, debug, test, plan, spec, research, ideate), use the Skill tool to invoke it. Do not substitute with raw Task agents. When analyzing external systems, verify against official documentation."
 
-# 4. Extract config sections from afc.config.md
-CONFIG_FILE="$PROJECT_DIR/.claude/afc.config.md"
-
-if [ -f "$CONFIG_FILE" ]; then
-  # Extract Architecture section (## Architecture to next ##)
-  # shellcheck disable=SC2001
-  ARCH=$(sed -n '/^## Architecture/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -15 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
-  if [ -n "$ARCH" ]; then
-    CONTEXT="$CONTEXT | Architecture: $ARCH"
-  fi
-
-  # Extract Code Style section (## Code Style to next ##)
-  # shellcheck disable=SC2001
-  STYLE=$(sed -n '/^## Code Style/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -15 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
-  if [ -n "$STYLE" ]; then
-    CONTEXT="$CONTEXT | Code Style: $STYLE"
-  fi
-
-  # Extract Project Context section (## Project Context to next ## or EOF)
-  # shellcheck disable=SC2001
-  PROJ_CTX=$(sed -n '/^## Project Context/,/^## /p' "$CONFIG_FILE" 2>/dev/null | sed '1d;/^## /d;/^$/d' | head -15 | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')
-  if [ -n "$PROJ_CTX" ]; then
-    CONTEXT="$CONTEXT | Project Context: $PROJ_CTX"
-  fi
-fi
+# 4. Architecture/Code Style/Project Context are auto-loaded via .claude/rules/afc-project.md
+# No need to extract from afc.config.md — Claude Code loads rules files automatically
 
 # 5. Output as hookSpecificOutput JSON (required for SubagentStart context injection)
 if command -v jq &>/dev/null; then

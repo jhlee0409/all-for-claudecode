@@ -28,11 +28,8 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/afc.config.md` first. This file contains free-form markdown sections:
-- `## Architecture` — architecture pattern, layers, import rules
-- `## Code Style` — language, naming conventions, lint rules
-- `## CI Commands` — test, lint, gate commands (YAML)
-- `## Project Context` — framework, state management, testing strategy
+**Always** read `.claude/afc.config.md` first — needed for CI Commands (YAML: ci, gate, test).
+Architecture, Code Style, and Project Context are auto-loaded via `.claude/rules/afc-project.md`.
 
 If config file is missing: read `CLAUDE.md` for project info. Proceed without config if neither exists.
 

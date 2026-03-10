@@ -112,6 +112,34 @@ Describe "afc-doctor.sh"
     End
   End
 
+  Context "with project rules file (auto-generated)"
+    setup() {
+      setup_tmpdir TEST_DIR
+      setup_config_fixture "$TEST_DIR"
+      mkdir -p "$TEST_DIR/.claude/rules"
+      printf '<!-- afc:auto-generated -->\n# Project Rules\n' > "$TEST_DIR/.claude/rules/afc-project.md"
+    }
+
+    It "reports rules file as auto-generated"
+      When run script scripts/afc-doctor.sh
+      The status should eq 0
+      The output should include "Project rules file exists (auto-generated)"
+    End
+  End
+
+  Context "without project rules file"
+    setup() {
+      setup_tmpdir TEST_DIR
+      setup_config_fixture "$TEST_DIR"
+    }
+
+    It "warns about missing rules file"
+      When run script scripts/afc-doctor.sh
+      The status should eq 0
+      The output should include "No .claude/rules/afc-project.md"
+    End
+  End
+
   Context "hooks health"
     setup() {
       setup_tmpdir TEST_DIR

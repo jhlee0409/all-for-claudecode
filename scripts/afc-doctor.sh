@@ -122,6 +122,18 @@ else
   fail ".claude/afc.config.md not found" "run /afc:init"
 fi
 
+# Project rules file
+RULES_FILE="$PROJECT_DIR/.claude/rules/afc-project.md"
+if [ -f "$RULES_FILE" ]; then
+  if grep -q '<!-- afc:auto-generated' "$RULES_FILE" 2>/dev/null; then
+    pass "Project rules file exists (auto-generated)"
+  else
+    pass "Project rules file exists (user-managed)"
+  fi
+else
+  warn "No .claude/rules/afc-project.md — project rules not auto-loaded" "run /afc:init to generate"
+fi
+
 # --- Category 3: CLAUDE.md Integration ---
 section "CLAUDE.md Integration"
 

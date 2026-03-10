@@ -26,7 +26,8 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above).
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above) — needed for CI Commands (YAML).
+Architecture, Code Style, and Project Context are auto-loaded via `.claude/rules/afc-project.md`.
 
 If config file is missing:
 1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
@@ -109,7 +110,7 @@ Create `.claude/afc/specs/{feature}/plan.md`. **Must** follow the structure belo
 {summary of core requirements from spec + technical approach, 3-5 sentences}
 
 ## Technical Context
-{Summarize key project settings from afc.config.md — Architecture, Code Style, and Project Context sections}
+{Summarize key project settings from .claude/rules/afc-project.md (auto-loaded) and afc.config.md}
 - **Constraints**: {constraints extracted from spec}
 
 ## Principles Check

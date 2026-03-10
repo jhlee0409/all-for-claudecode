@@ -43,7 +43,7 @@ Describe "afc-subagent-context.sh"
     End
   End
 
-  Context "when config has Project Context section"
+  Context "when config exists but sections are auto-loaded via rules"
     setup() {
       setup_tmpdir TEST_DIR
       setup_state_fixture "$TEST_DIR" "ctx-test" "implement"
@@ -61,22 +61,19 @@ test: "npm test"
 
 FSD architecture with strict layer rules.
 
-## Code Style
-
-TypeScript strict mode.
-
 ## Project Context
 
 Next.js 14 App Router. Zustand for state. Tailwind CSS.
 CFGEOF
     }
 
-    It "includes Project Context in output"
+    It "does not extract config sections (delegated to rules auto-load)"
       Data '{}'
       When run script scripts/afc-subagent-context.sh
       The status should eq 0
-      The output should include "Project Context:"
-      The output should include "Next.js"
+      The output should include "Feature: ctx-test"
+      The output should not include "Project Context:"
+      The output should not include "Architecture:"
     End
   End
 End

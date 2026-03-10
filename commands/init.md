@@ -125,7 +125,25 @@ Write sections as natural descriptions — **no YAML code blocks** except for CI
 For items that cannot be inferred: note `TODO: Adjust for your project` inline.
 Save to `.claude/afc.config.md`.
 
-### 4.5. Generate Project Profile
+### 4.5. Generate Project Rules File
+
+Generate `.claude/rules/afc-project.md` — a concise summary of project rules that Claude Code auto-loads for all conversations and sub-agents.
+
+1. Create `.claude/rules/` directory if it does not exist
+2. If `.claude/rules/afc-project.md` already exists:
+   - If it contains `<!-- afc:auto-generated` marker: overwrite silently (auto-generated file, safe to regenerate)
+   - If it does NOT contain the marker: ask user "Project rules file exists (user-managed). Overwrite with auto-generated version?" — skip if declined
+3. Reference `${CLAUDE_PLUGIN_ROOT}/templates/afc-project.template.md` for section structure
+4. Fill in from the analysis performed in Step 3:
+   - **Architecture**: pattern, key layers, import rules, path alias — concise bullet points
+   - **Code Style**: language, naming conventions, lint rules — concise bullet points
+   - **Project Context**: framework, state management, styling, testing, DB/ORM — concise bullet points
+5. Include `<!-- afc:auto-generated — do not edit manually; regenerate with /afc:init -->` as the first line
+6. Keep total length **under 30 lines** (excluding the marker comment) — rules only, no explanations
+7. Save to `.claude/rules/afc-project.md`
+8. Print: `Project rules: .claude/rules/afc-project.md (auto-loaded by Claude Code)`
+
+### 4.6. Generate Project Profile
 
 Generate `.claude/afc/project-profile.md` for expert consultation agents:
 
@@ -302,6 +320,7 @@ The following rules were auto-generated to resolve conflicts:
 ```
 all-for-claudecode initialization complete
 ├─ Config: .claude/afc.config.md
+├─ Rules: .claude/rules/afc-project.md (auto-loaded)
 ├─ Framework: {detected framework}
 ├─ Architecture: {detected style}
 ├─ Package Manager: {detected manager}

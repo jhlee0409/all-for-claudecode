@@ -28,7 +28,8 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above).
+**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above) — needed for CI Commands (YAML).
+Architecture, Code Style, and Project Context are auto-loaded via `.claude/rules/afc-project.md`.
 
 If config file is missing:
 1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"

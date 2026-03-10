@@ -18,7 +18,7 @@ Single spec run: `vendor/shellspec/shellspec spec/afc-bash-guard_spec.sh`
 
 ## Architecture
 
-all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → implement → review → clean) through markdown command prompts and bash hook scripts. Project config (`afc.config.md`) uses free-form markdown with only CI Commands in fixed YAML format; init auto-analyzes the project structure instead of using presets. Tasks are generated automatically at implement start from plan.md's File Change Map (no separate tasks phase). Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or orchestrator-managed swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
+all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → implement → review → clean) through markdown command prompts and bash hook scripts. Project config (`afc.config.md`) holds CI Commands in fixed YAML format (parsed by scripts); Architecture, Code Style, and Project Context are also stored there as detailed references but are primarily delivered via `.claude/rules/afc-project.md` (auto-loaded by Claude Code for all conversations and sub-agents). Init auto-analyzes the project structure and generates both files. Tasks are generated automatically at implement start from plan.md's File Change Map (no separate tasks phase). Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or orchestrator-managed swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
 
 ### Core Layers
 
@@ -28,7 +28,7 @@ all-for-claudecode is a Claude Code plugin that automates the full development c
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
 - **scripts/** — Bash hook/utility scripts (afc-*.sh + non-afc utilities) + Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation and command-documentation gap detection. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
 - **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md, expert-protocol.md) referenced by commands. Includes `domain-adapters/` subdirectory with industry-specific guardrails (fintech, ecommerce, healthcare)
-- **templates/** — config template (`afc.config.template.md`) defining free-form markdown structure with fixed CI Commands YAML section
+- **templates/** — config template (`afc.config.template.md`) for CI Commands YAML + free-form sections, and project rules template (`afc-project.template.md`) for `.claude/rules/afc-project.md` (auto-loaded by Claude Code)
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
 - **.claude-plugin/** — Plugin manifest (`plugin.json`) and marketplace registration (`marketplace.json`)
 

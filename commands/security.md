@@ -26,12 +26,10 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/afc.config.md` first. This file contains free-form markdown sections:
-- `## Project Context` — framework, state management, testing, etc. (primary source for framework info)
-- `## Architecture` — architecture pattern, layers, import rules
-- `## Code Style` — language, naming conventions, lint rules
+Architecture, Code Style, and Project Context are auto-loaded via `.claude/rules/afc-project.md`.
+Read `.claude/afc.config.md` if CI commands are needed.
 
-If config file is missing: read `CLAUDE.md` for framework info. Assume "unknown" if neither source has it.
+If neither rules file nor config exists: read `CLAUDE.md` for framework info. Assume "unknown" if no source has it.
 
 For dependency audit command: infer from `packageManager` field in `package.json` or the lockfile (e.g., `npm audit`, `yarn audit`, `pnpm audit`).
 
