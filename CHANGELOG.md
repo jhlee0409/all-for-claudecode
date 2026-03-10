@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-03-10
+
+### Added
+- **SDD+TDD methodology integration**: EARS notation for spec requirements, Test Strategy section in plan, TDD Guard hook (`afc-tdd-guard.sh`) that blocks implementation files when test files are missing — enforces test-first development
+- **Peer mode for `/afc:consult`**: Interactive thinking-together dialogue mode for brainstorming and collaborative problem-solving with domain experts
+- **Reverse impact analysis in review**: Traces callee changes backward to all callers for better coverage of side-effect risks
+- **Auto-run `/afc:spec` from plan**: When `spec.md` is missing, plan command automatically triggers spec generation first
+- **Project rules auto-generation**: `/afc:init` now generates `.claude/rules/afc-project.md` from project analysis (auto-loaded by Claude Code for all conversations)
+- **Korean language intent detection**: Native Korean patterns for skill routing (e.g., "버그", "테스트", "보안 점검")
+- **Skill catalog fallback**: When no keyword match, routes to intent detection via full skill catalog
+
+### Changed
+- **Intent detection hardened**: Skill catalog-based fallback replaces silent no-match, improving routing accuracy for non-English prompts
+- **Fork commands context injection**: analyze, architect, qa, security commands now receive streamlined subagent context
+
+### Tests
+- 396 examples, 0 failures (+63 new cases: TDD guard, intent detection Korean patterns, doctor TDD check, subagent context)
+
 ## [2.8.2] - 2026-03-08
 
 ### Changed
