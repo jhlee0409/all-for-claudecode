@@ -41,13 +41,17 @@ if ! afc_state_is_active; then
   # Normalize: lowercase + truncate for matching
   LOWER=$(printf '%s' "$USER_TEXT" | tr '[:upper:]' '[:lower:]' | cut -c1-500)
 
+  # Compact skill catalog: injected when regex misses, so the model classifies semantically
+  FALLBACK_HINT="[afc] Route via Skill tool if applicable — debug(bug/에러/수정/fix) | review(코드검토/리뷰/PR) | test(테스트/coverage) | spec(요구사항/스펙) | plan(설계/계획) | implement(구현/리팩터) | auto(새기능/feature) | consult(조언/상의/discuss) | analyze(분석/trace) | research(조사/리서치) | security(보안/취약점) | architect(아키텍처/설계) | qa(품질감사) | launch(릴리스/배포) | triage(PR정리/이슈분류) | clean(정리/cleanup) | ideate(아이디어/brainstorm) | doctor(진단/health) | release-notes(변경이력)"
+
   # Early exit for empty prompts (context-only messages, malformed JSON)
   if [ -z "$LOWER" ]; then
     if command -v jq >/dev/null 2>&1; then
-      jq -n --arg c "[afc] If this request matches an afc skill, invoke it via Skill tool. See CLAUDE.md routing table." \
-        '{"hookSpecificOutput":{"additionalContext":$c}}'
+      jq -n --arg c "$FALLBACK_HINT" '{"hookSpecificOutput":{"additionalContext":$c}}'
     else
-      printf '{"hookSpecificOutput":{"additionalContext":"[afc] If this request matches an afc skill, invoke it via Skill tool. See CLAUDE.md routing table."}}\n'
+      SAFE_FALLBACK="${FALLBACK_HINT//\\/\\\\}"
+      SAFE_FALLBACK="${SAFE_FALLBACK//\"/\\\"}"
+      printf '{"hookSpecificOutput":{"additionalContext":"%s"}}\n' "$SAFE_FALLBACK"
     fi
     exit 0
   fi
@@ -55,43 +59,55 @@ if ! afc_state_is_active; then
   # Intent detection: priority-ordered if/elif chain.
   # Each pattern targets strong-signal phrases to minimize false positives.
   # The model retains final authority — this is a hint, not enforcement.
+  # Patterns include Korean (한국어) variants for natural language coverage.
   SKILL=""
   # High confidence: distinctive multi-word or rare keywords
-  if printf '%s' "$LOWER" | grep -qE '(bug|broken|debug|not working|crash|exception)' 2>/dev/null; then
+  if printf '%s' "$LOWER" | grep -qE '(bug|broken|debug|not working|crash|exception|에러|버그|오류|안.?됨|안.?돼|안.?되|고장)' 2>/dev/null; then
     SKILL="afc:debug"
-  elif printf '%s' "$LOWER" | grep -qE '(code review|pr review)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(code review|pr review|코드.?리뷰|pr.?리뷰|코드.?검토)' 2>/dev/null; then
     SKILL="afc:review"
-  elif printf '%s' "$LOWER" | grep -qE '(write test|add test|test coverage|improve coverage)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(write test|add test|test coverage|improve coverage|unit test|integration test|e2e test|테스트.?작성|테스트.?추가|커버리지)' 2>/dev/null; then
     SKILL="afc:test"
-  elif printf '%s' "$LOWER" | grep -qE '(security scan|security review|security audit|vulnerabilit)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(security scan|security review|security audit|vulnerabilit|보안.?검사|보안.?스캔|보안.?리뷰|취약점)' 2>/dev/null; then
     SKILL="afc:security"
-  elif printf '%s' "$LOWER" | grep -qE '(architecture|architect|system design)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(architecture|architect|system design|아키텍처|시스템.?설계|구조.?설계)' 2>/dev/null; then
     SKILL="afc:architect"
-  elif printf '%s' "$LOWER" | grep -qE '(doctor|health check|diagnose.*project)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(doctor|health check|diagnose.*project|진단|상태.?확인|헬스.?체크)' 2>/dev/null; then
     SKILL="afc:doctor"
-  elif printf '%s' "$LOWER" | grep -qE '(quality audit|qa audit|project quality)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(quality audit|qa audit|project quality|품질.?감사|품질.?점검|qa.?점검)' 2>/dev/null; then
     SKILL="afc:qa"
-  elif printf '%s' "$LOWER" | grep -qE '(new release|version bump|changelog|publish.*package)' 2>/dev/null; then
+  # NOTE: release-notes MUST come before launch — 릴리스.?노트 vs 릴리스 순서 의존
+  elif printf '%s' "$LOWER" | grep -qE '(release note|릴리스.?노트|변경.?이력|release.?note)' 2>/dev/null; then
+    SKILL="afc:release-notes"
+  elif printf '%s' "$LOWER" | grep -qE '(new release|version bump|changelog|publish.*package|릴리스|버전.?업|배포.?준비)' 2>/dev/null; then
     SKILL="afc:launch"
+  elif printf '%s' "$LOWER" | grep -qE '(triage|pr.?정리|이슈.?정리|백로그.?정리|pr.?분류|이슈.?분류)' 2>/dev/null; then
+    SKILL="afc:triage"
   # Medium confidence: still distinctive but broader
-  elif printf '%s' "$LOWER" | grep -qE '(specification|requirements|acceptance criteria)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(specification|requirements|acceptance criteria|요구.?사항|기능.?정의|인수.?조건)' 2>/dev/null; then
     SKILL="afc:spec"
-  elif printf '%s' "$LOWER" | grep -qE '(brainstorm|ideate|what to build|product brief)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(brainstorm|ideate|what to build|product brief|아이디어|브레인스토밍|뭘.*만들)' 2>/dev/null; then
     SKILL="afc:ideate"
-  elif printf '%s' "$LOWER" | grep -qE '(expert advice)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(expert advice|discuss|advice|think together|같이.*생각|함께.*생각|상의|조언|의견.*구|자문|상담)' 2>/dev/null; then
     SKILL="afc:consult"
-  elif printf '%s' "$LOWER" | grep -qE '(analyz|trace.*flow|how does.*work)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(analyz|trace.*flow|how does.*work|분석|추적|어떻게.*동작|흐름.*파악)' 2>/dev/null; then
     SKILL="afc:analyze"
-  elif printf '%s' "$LOWER" | grep -qE '(research|investigat|compare.*lib)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(research|investigat|compare.*lib|조사|리서치|비교.*라이브러리|탐색)' 2>/dev/null; then
     SKILL="afc:research"
-  # Lower confidence: common verbs
-  elif printf '%s' "$LOWER" | grep -qE '(implement|add feature|refactor|modify.*code)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(clean.*up|cleanup|아티팩트.?정리|파이프라인.?정리|산출물.?정리)' 2>/dev/null; then
+    SKILL="afc:clean"
+  # Lower confidence: common verbs — auto for non-trivial feature scopes
+  elif printf '%s' "$LOWER" | grep -qE '(새.*기능|신규.*기능|기능.*개발|기능.*만들|feature.*develop|build.*feature|develop.*feature|create.*feature)' 2>/dev/null; then
+    SKILL="afc:auto"
+  elif printf '%s' "$LOWER" | grep -qE '(implement|add feature|refactor|modify.*code|리팩터|리팩토링|코드.?수정)' 2>/dev/null; then
     SKILL="afc:implement"
-  elif printf '%s' "$LOWER" | grep -qE '(review)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(fix|error|issue|problem|failing|수정|고쳐|문제)' 2>/dev/null; then
+    SKILL="afc:debug"
+  elif printf '%s' "$LOWER" | grep -qE '(review|검토|리뷰)' 2>/dev/null; then
     SKILL="afc:review"
-  elif printf '%s' "$LOWER" | grep -qE '(spec[^a-z]|spec$)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(spec[^a-z]|spec$|스펙)' 2>/dev/null; then
     SKILL="afc:spec"
-  elif printf '%s' "$LOWER" | grep -qE '(plan[^a-z]|plan$)' 2>/dev/null; then
+  elif printf '%s' "$LOWER" | grep -qE '(plan[^a-z]|plan$|계획|설계)' 2>/dev/null; then
     SKILL="afc:plan"
   fi
 
@@ -99,13 +115,15 @@ if ! afc_state_is_active; then
   if [ -n "$SKILL" ]; then
     HINT="[afc:route -> ${SKILL}] Detected intent from user prompt. Invoke /${SKILL} via Skill tool."
   else
-    HINT="[afc] If this request matches an afc skill, invoke it via Skill tool. See CLAUDE.md routing table."
+    HINT="$FALLBACK_HINT"
   fi
 
   if command -v jq >/dev/null 2>&1; then
     jq -n --arg c "$HINT" '{"hookSpecificOutput":{"additionalContext":$c}}'
   else
-    printf '{"hookSpecificOutput":{"additionalContext":"%s"}}\n' "$HINT"
+    SAFE_HINT="${HINT//\\/\\\\}"
+    SAFE_HINT="${SAFE_HINT//\"/\\\"}"
+    printf '{"hookSpecificOutput":{"additionalContext":"%s"}}\n' "$SAFE_HINT"
   fi
   exit 0
 fi

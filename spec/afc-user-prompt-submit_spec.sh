@@ -131,6 +131,226 @@ Describe "afc-user-prompt-submit.sh"
         The output should include "afc:route"
         The output should include "afc:consult"
       End
+
+      It "routes consult intent from discuss keyword"
+        Data '{"prompt":"let us discuss the API design approach"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:consult"
+      End
+
+      It "routes consult intent from think together keyword"
+        Data '{"prompt":"think together about the best approach"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:consult"
+      End
+
+      It "routes triage intent"
+        Data '{"prompt":"triage the open PRs and issues"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:triage"
+      End
+
+      It "routes release-notes intent"
+        Data '{"prompt":"generate release notes for this version"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:release-notes"
+      End
+
+      It "routes clean intent"
+        Data '{"prompt":"clean up the pipeline artifacts"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:clean"
+      End
+
+      It "routes auto intent for new feature request"
+        Data '{"prompt":"build a feature for user notifications"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:auto"
+      End
+    End
+
+    Context "Korean language intent detection"
+      It "routes debug intent from Korean keyword"
+        Data '{"prompt":"로그인에서 버그가 발생합니다"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:debug"
+      End
+
+      It "routes debug intent from Korean error keyword"
+        Data '{"prompt":"API에서 에러가 납니다"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:debug"
+      End
+
+      It "routes review intent from Korean keyword"
+        Data '{"prompt":"이 PR 코드리뷰 해주세요"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:review"
+      End
+
+      It "routes test intent from Korean keyword"
+        Data '{"prompt":"인증 모듈 테스트 작성해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:test"
+      End
+
+      It "routes security intent from Korean keyword"
+        Data '{"prompt":"보안 검사 실행해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:security"
+      End
+
+      It "routes architect intent from Korean keyword"
+        Data '{"prompt":"시스템 설계 검토해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:architect"
+      End
+
+      It "routes spec intent from Korean keyword"
+        Data '{"prompt":"요구사항 정의해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:spec"
+      End
+
+      It "routes consult intent from Korean keyword"
+        Data '{"prompt":"데이터베이스 설계에 대해 조언 구합니다"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:consult"
+      End
+
+      It "routes analyze intent from Korean keyword"
+        Data '{"prompt":"훅 시스템 코드 분석해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:analyze"
+      End
+
+      It "routes research intent from Korean keyword"
+        Data '{"prompt":"테스팅 프레임워크 리서치해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:research"
+      End
+
+      It "routes auto intent from Korean new feature request"
+        Data '{"prompt":"새 기능 만들어줘 사용자 알림"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:auto"
+      End
+
+      It "routes implement intent from Korean refactor keyword"
+        Data '{"prompt":"인증 모듈 리팩터링 해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:implement"
+      End
+
+      It "routes launch intent from Korean release keyword"
+        Data '{"prompt":"릴리스 준비해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:launch"
+      End
+
+      It "routes plan intent from Korean keyword"
+        Data '{"prompt":"구현 계획 세워줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:plan"
+      End
+    End
+
+    Context "natural language variants (English)"
+      It "routes debug from fix keyword"
+        Data '{"prompt":"fix the OAuth token expiry issue"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:debug"
+      End
+
+      It "routes debug from error keyword"
+        Data '{"prompt":"getting an error when submitting the form"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:debug"
+      End
+
+      It "routes test from unit test keyword"
+        Data '{"prompt":"add unit tests for the payment service"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:test"
+      End
+
+      It "routes auto from create feature keyword"
+        Data '{"prompt":"create a feature for user onboarding flow"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:auto"
+      End
+
+      It "routes consult from advice keyword"
+        Data '{"prompt":"I need advice on the caching strategy"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:consult"
+      End
+    End
+
+    Context "false positive guards"
+      It "does not route to debug for 안전 keyword (operational safety)"
+        Data '{"prompt":"동작 안전 모드 설명해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should not include "afc:debug"
+      End
+
+      It "does not route to debug for generic Korean greeting"
+        Data '{"prompt":"안녕하세요 도움이 필요합니다"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should not include "afc:debug"
+      End
     End
 
     Context "priority ordering"
@@ -148,7 +368,7 @@ Describe "afc-user-prompt-submit.sh"
         Data '{"prompt":"hello how are you"}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
-        The output should include "[afc] If this request"
+        The output should include "[afc] Route via Skill tool"
         The output should include "Skill tool"
         The output should not include "afc:route"
       End
@@ -185,7 +405,7 @@ Describe "afc-user-prompt-submit.sh"
         Data '{}'
         When run script scripts/afc-user-prompt-submit.sh
         The status should eq 0
-        The output should include "[afc] If this request"
+        The output should include "[afc] Route via Skill tool"
       End
     End
   End
