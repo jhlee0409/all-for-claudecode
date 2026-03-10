@@ -41,7 +41,7 @@ If config file is missing:
 1. Check **current branch** → `BRANCH_NAME`
 2. Find **.claude/afc/specs/{feature}/spec.md**:
    - Search under `.claude/afc/specs/` for a directory matching the current branch name or `$ARGUMENTS`
-   - If not found: print "spec.md not found. Run `/afc:spec` first." then **abort**
+   - If not found: print "spec.md not found. Running `/afc:spec` to create it first." then **execute `/afc:spec`** with `$ARGUMENTS`. After spec completes, **restart this command** from the beginning with the original `$ARGUMENTS`
 3. Read full **spec.md**
 4. Read **.claude/afc/memory/principles.md** (if present)
 5. Read **CLAUDE.md** project context
