@@ -3,7 +3,7 @@ paths:
   - "CONTRIBUTING.md"
   - ".claude/**"
   - ".claude-plugin/**"
-  - "commands/**"
+  - "skills/**"
   - "scripts/**"
   - "hooks/**"
   - "agents/**"
@@ -19,10 +19,10 @@ When adding or modifying features in all-for-claudecode, follow these rules.
 
 Before making changes, identify the blast radius:
 
-- **Command change** → also update: auto.md (if pipeline phase), CLAUDE.md (architecture description), init.md all-for-claudecode block (if routing changed)
-- **Pipeline structure change** → also update: auto.md (phase numbering), CLAUDE.md (pipeline description), init.md (CLAUDE.md block template), implement.md (task generation)
+- **Skill change** → also update: auto/SKILL.md (if pipeline phase), CLAUDE.md (architecture description), init/SKILL.md all-for-claudecode block (if routing changed)
+- **Pipeline structure change** → also update: auto/SKILL.md (phase numbering), CLAUDE.md (pipeline description), init/SKILL.md (CLAUDE.md block template), implement/SKILL.md (task generation)
 - **Hook script change** → also update: spec/{script}_spec.sh (mandatory), hooks.json (if new event)
-- **Shared doc change** (critic-loop-rules.md, phase-gate-protocol.md) → affects ALL commands that reference it
+- **Shared doc change** (critic-loop-rules.md, phase-gate-protocol.md) → affects ALL skills that reference it
 - **Version change** → must sync: package.json + plugin.json + marketplace.json (all 3)
 
 ## Mandatory Before Commit
@@ -36,16 +36,16 @@ Before making changes, identify the blast radius:
 
 Source changes don't take effect until synced to cache during development:
 ```bash
-cp commands/{file}.md ~/.claude/plugins/cache/all-for-claudecode/afc/$(jq -r .version package.json)/commands/{file}.md
+cp skills/{name}/SKILL.md ~/.claude/plugins/cache/all-for-claudecode/afc/$(jq -r .version package.json)/skills/{name}/SKILL.md
 ```
 
-## Command Design Rules
+## Skill Design Rules
 
-- model: sonnet (all commands) | omit (orchestrators inherit parent model)
+- model: sonnet (all skills) | omit (orchestrators inherit parent model)
 - Never duplicate docs/critic-loop-rules.md or docs/phase-gate-protocol.md inline — always reference
 - Orchestration modes (sequential/batch/swarm) are selected automatically by task count — do not hardcode
 - All output text must be in English (global open-source project)
 
 ## Full Guidelines
 
-Read `CONTRIBUTING.md` for comprehensive development guidelines including: new command checklist, hook script template, testing patterns, version sync, and release process.
+Read `CONTRIBUTING.md` for comprehensive development guidelines including: new skill checklist, hook script template, testing patterns, version sync, and release process.

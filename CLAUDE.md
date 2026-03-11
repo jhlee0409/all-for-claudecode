@@ -18,16 +18,16 @@ Single spec run: `vendor/shellspec/shellspec spec/afc-bash-guard_spec.sh`
 
 ## Architecture
 
-all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → implement → review → clean) through markdown command prompts and bash hook scripts. Project config (`afc.config.md`) holds CI Commands in fixed YAML format (parsed by scripts); Architecture, Code Style, and Project Context are also stored there as detailed references but are primarily delivered via `.claude/rules/afc-project.md` (auto-loaded by Claude Code for all conversations and sub-agents). Init auto-analyzes the project structure and generates both files. Tasks are generated automatically at implement start from plan.md's File Change Map (no separate tasks phase). Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or orchestrator-managed swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
+all-for-claudecode is a Claude Code plugin that automates the full development cycle (spec → plan → implement → review → clean) through markdown skill prompts and bash hook scripts. Project config (`afc.config.md`) holds CI Commands in fixed YAML format (parsed by scripts); Architecture, Code Style, and Project Context are also stored there as detailed references but are primarily delivered via `.claude/rules/afc-project.md` (auto-loaded by Claude Code for all conversations and sub-agents). Init auto-analyzes the project structure and generates both files. Tasks are generated automatically at implement start from plan.md's File Change Map (no separate tasks phase). Implementation uses dependency-aware orchestration: sequential for simple tasks, parallel batch (≤5 tasks), or orchestrator-managed swarm (6+ tasks) with native TaskCreate/TaskUpdate primitives.
 
 ### Core Layers
 
-- **commands/** — Markdown command prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`). Pipeline phases (spec, plan, implement, review, clean) each have standalone commands. Additional standalone utilities include consult, debug, doctor, learner, qa, research, test, analyze, architect, security, triage, etc. Deployment tools include ideate, launch, pr-comment, release-notes.
-- **agents/** — Subagents: afc-architect, afc-security (persistent memory with `memory: project`, security uses `isolation: worktree`), afc-impl-worker (ephemeral parallel worker, orchestrator-managed worktree isolation), afc-pr-analyst (PR deep analysis worker, orchestrator-managed worktree isolation for triage), 8 expert consultation agents (afc-backend-expert, afc-infra-expert, afc-pm-expert, afc-design-expert, afc-marketing-expert, afc-legal-expert, afc-appsec-expert, afc-tech-advisor — persistent memory, routed via `consult` command)
+- **skills/** — Skill prompts with YAML frontmatter (`name`, `description`, `argument-hint`, `allowed-tools`, `model`, `user-invocable`, `context`). Each skill lives in `skills/<name>/SKILL.md`. Pipeline phases (spec, plan, implement, review, clean) each have standalone skills. Additional standalone utilities include consult, debug, doctor, learner, qa, research, test, analyze, architect, security, triage, etc. Deployment tools include ideate, launch, pr-comment, release-notes.
+- **agents/** — Subagents: afc-architect, afc-security (persistent memory with `memory: project`, security uses `isolation: worktree`), afc-impl-worker (ephemeral parallel worker, orchestrator-managed worktree isolation), afc-pr-analyst (PR deep analysis worker, orchestrator-managed worktree isolation for triage), 8 expert consultation agents (afc-backend-expert, afc-infra-expert, afc-pm-expert, afc-design-expert, afc-marketing-expert, afc-legal-expert, afc-appsec-expert, afc-tech-advisor — persistent memory, routed via `consult` skill)
 - **hooks/hooks.json** — Hook event declarations with handler types: `command` (shell scripts), `prompt` (LLM single-turn). Some hooks use `async: true`. Includes ConfigChange (settings audit), TeammateIdle (Agent Teams gate), and WorktreeCreate/WorktreeRemove (worktree lifecycle)
 - **schemas/** — JSON Schema definitions (hooks.schema.json, plugin.schema.json, marketplace.schema.json) validated during `npm run lint`
-- **scripts/** — Bash hook/utility scripts (afc-*.sh + non-afc utilities) + Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation and command-documentation gap detection. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
-- **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, nfr-templates.md, expert-protocol.md) referenced by commands. Includes `domain-adapters/` subdirectory with industry-specific guardrails (fintech, ecommerce, healthcare)
+- **scripts/** — Bash hook/utility scripts (afc-*.sh + non-afc utilities) + Node.js ESM validators (.mjs) + shared state library (afc-state.sh). Includes `afc-consistency-check.sh` for cross-reference validation and skill-documentation gap detection. Bash scripts follow: `set -euo pipefail` + `trap cleanup EXIT` + jq-first with grep/sed fallback
+- **docs/** — Shared reference documents (critic-loop-rules.md, phase-gate-protocol.md, expert-protocol.md) referenced by skills and agents. Includes `domain-adapters/` subdirectory with industry-specific guardrails (fintech, ecommerce, healthcare). Single-consumer docs live inside their skill directory (e.g., `skills/spec/nfr-templates.md`)
 - **templates/** — config template (`afc.config.template.md`) for CI Commands YAML + free-form sections, and project rules template (`afc-project.template.md`) for `.claude/rules/afc-project.md` (auto-loaded by Claude Code)
 - **bin/cli.mjs** — ESM CLI entry point (install helper)
 - **.claude-plugin/** — Plugin manifest (`plugin.json`) and marketplace registration (`marketplace.json`)
@@ -49,11 +49,11 @@ Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claud
 - When inactive: file does not exist
 - jq-first with grep/sed fallback for jq-less environments
 
-### Command Frontmatter Controls
+### Skill Frontmatter Controls
 
 - `user-invocable: false` — hidden from `/` menu, only model-callable (validate, clarify, tasks)
 - `context: fork` — runs in isolated subagent, result returned to main context (validate, analyze, qa, architect, security, learner). architect and security use custom agents with `memory: project` for persistent learning
-- `model: sonnet` — model routing per command (sonnet for all commands, omit for orchestrators to inherit parent model)
+- `model: sonnet` — model routing per skill (sonnet for all skills, omit for orchestrators to inherit parent model)
 
 ## Shell Script Conventions
 

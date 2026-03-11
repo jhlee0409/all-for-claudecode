@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-03-11
+
+### Changed
+- **Migrate from commands/ to skills/ directory structure**: Each skill now lives in `skills/<name>/SKILL.md` instead of `commands/<name>.md`, following the modern Claude Code plugin convention. Skills gain the ability to bundle supporting files (templates, reference docs) alongside SKILL.md.
+- **Extract spec and plan templates**: Large inline templates extracted to `skills/spec/spec-template.md` (72 lines) and `skills/plan/plan-template.md` (118 lines), making SKILL.md files more concise and templates independently maintainable.
+- **Relocate nfr-templates.md**: Moved from shared `docs/` to `skills/spec/nfr-templates.md` — the only consumer. Single-consumer docs now co-locate with their skill.
+- **Rename rules file**: `.claude/rules/commands.md` → `.claude/rules/skills.md` to match new terminology.
+- **Terminology alignment**: All documentation (CLAUDE.md, CONTRIBUTING.md, MIGRATION.md, rules) updated from "command" to "skill" terminology.
+- **Updated scripts**: afc-consistency-check.sh, afc-doctor.sh, afc-sync-cache.sh, afc-qa-audit.sh updated to scan `skills/*/SKILL.md` instead of `commands/*.md`.
+- **Updated tests**: All test fixtures in afc-consistency-check_spec.sh, afc-sync-cache_spec.sh, afc-tdd-guard_spec.sh updated for skills directory structure.
+- **Schema updated**: plugin.schema.json `commands` field replaced with `skills` field.
+
+### Migration Notes
+- **Non-breaking for end users**: Slash commands (`/afc:spec`, `/afc:plan`, etc.) work identically. The change is internal to the plugin structure.
+- **Plugin cache**: Users upgrading will get fresh cache on install — no manual action needed.
+
 ## [2.9.1] - 2026-03-11
 
 ### Fixed

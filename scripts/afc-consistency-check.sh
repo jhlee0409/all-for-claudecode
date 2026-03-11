@@ -42,7 +42,7 @@ get_cmd_field() {
 }
 
 # --- Check 1: Config Placeholder Validation ---
-# Verify all {config.*} references in commands/ and docs/ map to known config keys
+# Verify all {config.*} references in skills/ and docs/ map to known config keys
 
 check_config_placeholders() {
   local template="$PROJECT_DIR/templates/afc.config.template.md"
@@ -66,9 +66,9 @@ check_config_placeholders() {
   local valid_keys
   valid_keys=$(printf '%s\n%s\n' "$yaml_keys" "$section_keys" | sort -u)
 
-  # Extract all {config.*} references from commands and docs
+  # Extract all {config.*} references from skills and docs
   local refs
-  refs=$(grep -rohE '\{config\.[a-z_]+\}' "$PROJECT_DIR/commands/" "$PROJECT_DIR/docs/" 2>/dev/null \
+  refs=$(grep -rohE '\{config\.[a-z_]+\}' "$PROJECT_DIR/skills/" "$PROJECT_DIR/docs/" 2>/dev/null \
     | sed 's/{config\.//;s/}//' \
     | sort -u || true)
 
@@ -104,9 +104,9 @@ check_agent_names() {
     | tr -d '"' \
     | sort -u || true)
 
-  # Extract subagent_type references from commands (afc:agent-name pattern)
+  # Extract subagent_type references from skills (afc:agent-name pattern)
   local referenced_agents
-  referenced_agents=$(grep -rohE 'subagent_type:[[:space:]]*"afc:[^"]*"' "$PROJECT_DIR/commands/" 2>/dev/null \
+  referenced_agents=$(grep -rohE 'subagent_type:[[:space:]]*"afc:[^"]*"' "$PROJECT_DIR/skills/" 2>/dev/null \
     | sed 's/.*"afc://;s/"//' \
     | sort -u || true)
 
@@ -122,7 +122,7 @@ check_agent_names() {
 
   # Check for unprefixed subagent_type that should have afc: prefix
   local unprefixed
-  unprefixed=$(grep -rohE 'subagent_type:[[:space:]]*"afc-[^"]*"' "$PROJECT_DIR/commands/" 2>/dev/null \
+  unprefixed=$(grep -rohE 'subagent_type:[[:space:]]*"afc-[^"]*"' "$PROJECT_DIR/skills/" 2>/dev/null \
     | sed 's/.*subagent_type:[[:space:]]*"//;s/".*//' \
     | sort -u || true)
   for ref in $unprefixed; do
@@ -254,22 +254,22 @@ check_phase_ssot() {
   fi
 }
 
-# --- Check 7: Command Documentation Cross-Reference ---
-# Verify commands are documented in README.md, init.md, and CLAUDE.md
+# --- Check 7: Skill Documentation Cross-Reference ---
+# Verify skills are documented in README.md, init/SKILL.md, and CLAUDE.md
 
 check_command_docs() {
-  local commands_dir="$PROJECT_DIR/commands"
-  [ -d "$commands_dir" ] || return
+  local skills_dir="$PROJECT_DIR/skills"
+  [ -d "$skills_dir" ] || return
 
   local readme="$PROJECT_DIR/README.md"
-  local init_cmd="$commands_dir/init.md"
+  local init_skill="$skills_dir/init/SKILL.md"
   local claude_md="$PROJECT_DIR/CLAUDE.md"
   local issues=0
 
-  for cmd_file in "$commands_dir"/*.md; do
-    [ -f "$cmd_file" ] || continue
+  for skill_file in "$skills_dir"/*/SKILL.md; do
+    [ -f "$skill_file" ] || continue
     local cmd_name
-    cmd_name=$(basename "$cmd_file" .md)
+    cmd_name=$(basename "$(dirname "$skill_file")")
 
     # Sub-check A: README.md should mention /afc:{name}
     if [ -f "$readme" ]; then
@@ -279,29 +279,29 @@ check_command_docs() {
       fi
     fi
 
-    # Sub-check B: init.md should mention afc:{name} for user-invocable commands
+    # Sub-check B: init/SKILL.md should mention afc:{name} for user-invocable skills
     local invocable
-    invocable=$(get_cmd_field "$cmd_file" "user-invocable")
-    if [ "$invocable" != "false" ] && [ -f "$init_cmd" ]; then
-      if ! grep -qE "afc:${cmd_name}([^a-z0-9-]|$)" "$init_cmd" 2>/dev/null; then
-        warn "Command '$cmd_name' missing from init.md skill routing"
+    invocable=$(get_cmd_field "$skill_file" "user-invocable")
+    if [ "$invocable" != "false" ] && [ -f "$init_skill" ]; then
+      if ! grep -qE "afc:${cmd_name}([^a-z0-9-]|$)" "$init_skill" 2>/dev/null; then
+        warn "Skill '$cmd_name' missing from init/SKILL.md skill routing"
         issues=$((issues + 1))
       fi
     fi
 
-    # Sub-check C: CLAUDE.md fork list for context:fork commands
+    # Sub-check C: CLAUDE.md fork list for context:fork skills
     local ctx
-    ctx=$(get_cmd_field "$cmd_file" "context")
+    ctx=$(get_cmd_field "$skill_file" "context")
     if [ "$ctx" = "fork" ] && [ -f "$claude_md" ]; then
       if ! grep "context: fork" "$claude_md" 2>/dev/null | grep -qE "([(, ])${cmd_name}([,) ]|$)"; then
-        warn "Command '$cmd_name' (context:fork) missing from CLAUDE.md fork list"
+        warn "Skill '$cmd_name' (context:fork) missing from CLAUDE.md fork list"
         issues=$((issues + 1))
       fi
     fi
   done
 
   if [ "$issues" -eq 0 ]; then
-    ok "Command docs: all commands referenced in README.md, init.md, CLAUDE.md"
+    ok "Skill docs: all skills referenced in README.md, init/SKILL.md, CLAUDE.md"
   fi
 }
 

@@ -5,7 +5,7 @@ Development guidelines for adding features, modifying behavior, upgrading, and m
 ## Project Map
 
 ```
-commands/   markdown slash commands (the product surface)
+skills/     skill prompts in skills/<name>/SKILL.md (the product surface)
 scripts/    bash hook handlers (enforcement layer)
 hooks/      hooks.json (event → handler binding)
 agents/     subagent definitions (persistent memory + ephemeral workers)
@@ -20,29 +20,29 @@ bin/        ESM CLI installer
 
 | I want to... | Primary file(s) | Also update |
 |---------------|-----------------|-------------|
-| Add a new slash command | `commands/{name}.md` | `npm run lint` validates: README.md, init.md, CLAUDE.md. Add `spec/{name}_spec.sh` if hooks involved |
+| Add a new skill | `skills/{name}/SKILL.md` | `npm run lint` validates: README.md, init/SKILL.md, CLAUDE.md. Add `spec/{name}_spec.sh` if hooks involved |
 | Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | README.md (table), `spec/{name}_spec.sh` |
 | Modify config template | `templates/afc.config.template.md` | |
 | Add a new agent | `agents/{name}.md` | |
-| Modify pipeline flow | `commands/auto.md` | Related phase commands, `docs/phase-gate-protocol.md` |
-| Change critic loop behavior | `docs/critic-loop-rules.md` | All commands that reference it |
+| Modify pipeline flow | `skills/auto/SKILL.md` | Related phase skills, `docs/phase-gate-protocol.md` |
+| Change critic loop behavior | `docs/critic-loop-rules.md` | All skills that reference it |
 | Update version | `package.json` + `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` |
 | Change CLI installer | `bin/cli.mjs` | |
 
 ---
 
-## 1. Adding a New Command
+## 1. Adding a New Skill
 
-### Step 1: Create the command file
+### Step 1: Create the skill file
 
-Create `commands/{name}.md` with required YAML frontmatter:
+Create `skills/{name}/SKILL.md` with required YAML frontmatter:
 
 ```yaml
 ---
 name: afc:{name}
 description: "Short description in English"
 argument-hint: "[hint for arguments]"
-model: sonnet                # sonnet for all commands, omit for orchestrators (inherit parent model)
+model: sonnet                # sonnet for all skills, omit for orchestrators (inherit parent model)
 ---
 ```
 
@@ -50,12 +50,12 @@ model: sonnet                # sonnet for all commands, omit for orchestrators (
 
 | Control | Value | When to use |
 |---------|-------|-------------|
-| `user-invocable: false` | Hidden from `/` menu | Commands that should only be called by other commands (validate, clarify, tasks) |
-| `context: fork` | Isolated subagent | Read-only analysis commands that should not affect main context (validate, analyze, qa, architect, security) |
+| `user-invocable: false` | Hidden from `/` menu | Skills that should only be called by other skills (validate, clarify, tasks) |
+| `context: fork` | Isolated subagent | Read-only analysis skills that should not affect main context (validate, analyze, qa, architect, security) |
 
 ### Step 3: Choose allowed-tools (optional)
 
-Only specify `allowed-tools` if the command should be restricted. Omit to allow all tools.
+Only specify `allowed-tools` if the skill should be restricted. Omit to allow all tools.
 
 ```yaml
 allowed-tools:
@@ -68,7 +68,7 @@ allowed-tools:
 
 ### Step 4: Add hooks (optional)
 
-Only if the command needs its own hooks (beyond the global hooks in hooks.json):
+Only if the skill needs its own hooks (beyond the global hooks in hooks.json):
 
 ```yaml
 hooks:
@@ -83,15 +83,15 @@ hooks:
           command: "${CLAUDE_PLUGIN_ROOT}/scripts/afc-stop-gate.sh"
 ```
 
-Note: Global hooks in `hooks/hooks.json` are always active. Command-level hooks in frontmatter should only be used when a command needs behavior that differs from the global hooks. Avoid duplicating global hooks in frontmatter (causes double execution).
+Note: Global hooks in `hooks/hooks.json` are always active. Skill-level hooks in frontmatter should only be used when a skill needs behavior that differs from the global hooks. Avoid duplicating global hooks in frontmatter (causes double execution).
 
-### Step 5: Write the command body
+### Step 5: Write the skill body
 
 Follow this structure:
 ```markdown
 # /afc:{name} — {Title}
 
-> One-line description of what this command does.
+> One-line description of what this skill does.
 
 ## Arguments
 ## Config Load (if needs project config)
@@ -105,18 +105,18 @@ Follow this structure:
 ### Step 6: Update references
 
 Run `npm run lint` — the consistency check automatically detects missing references in:
-- **README.md**: All commands must appear in the command table (`/afc:{name}`)
-- **commands/init.md**: User-invocable commands must appear in the skill routing table (`afc:{name}`)
-- **CLAUDE.md**: Commands with `context: fork` must appear in the fork list
+- **README.md**: All skills must appear in the skill table (`/afc:{name}`)
+- **skills/init/SKILL.md**: User-invocable skills must appear in the skill routing table (`afc:{name}`)
+- **CLAUDE.md**: Skills with `context: fork` must appear in the fork list
 
 Additionally:
-- **commands/auto.md**: If the new command is a pipeline phase, add it to the auto pipeline
-- **Tests**: Add test cases if the command involves hooks or scripts
+- **skills/auto/SKILL.md**: If the new skill is a pipeline phase, add it to the auto pipeline
+- **Tests**: Add test cases if the skill involves hooks or scripts
 
 ### Naming conventions
 
-- Command name: `afc:{kebab-case}` (e.g., `afc:code-gen`)
-- File name: `commands/{kebab-case}.md` (e.g., `commands/code-gen.md`)
+- Skill name: `afc:{kebab-case}` (e.g., `afc:code-gen`)
+- Directory: `skills/{kebab-case}/SKILL.md` (e.g., `skills/code-gen/SKILL.md`)
 - Description: English, imperative or noun phrase
 
 ---
@@ -255,7 +255,7 @@ Key testing patterns:
 
 ## 3. Config Template
 
-The config template at `templates/afc.config.template.md` uses free-form markdown with only CI Commands in fixed YAML format. The `/afc:init` command auto-analyzes the project structure and fills in sections dynamically — there is no preset/template selection system.
+The config template at `templates/afc.config.template.md` uses free-form markdown with only CI Commands in fixed YAML format. The `/afc:init` skill auto-analyzes the project structure and fills in sections dynamically — there is no preset/template selection system.
 
 ### Template structure
 
@@ -318,13 +318,13 @@ Key properties:
 - `isolation: worktree` — optional, runs in isolated worktree
 - `skills` — reference shared docs that the agent should follow
 
-### Step 2: Reference from a command
+### Step 2: Reference from a skill
 
-If the agent is used by a specific command:
+If the agent is used by a specific skill:
 
 ```yaml
 ---
-name: afc:{command}
+name: afc:{skill}
 context: fork
 agent: afc-{name}
 ---
@@ -338,22 +338,22 @@ The pipeline is `spec → plan → implement → review → clean` (tasks are au
 
 ### Modifying a phase
 
-1. Edit the standalone command in `commands/{phase}.md`
-2. Mirror the changes in `commands/auto.md` (Phase N section)
+1. Edit the standalone skill in `skills/{phase}/SKILL.md`
+2. Mirror the changes in `skills/auto/SKILL.md` (Phase N section)
 3. If the phase gate behavior changed, update `docs/phase-gate-protocol.md`
 4. If critic loop criteria changed, update `docs/critic-loop-rules.md`
 
 ### Adding a new phase
 
-1. Create `commands/{phase}.md`
-2. Update `commands/auto.md`:
+1. Create `skills/{phase}/SKILL.md`
+2. Update `skills/auto/SKILL.md`:
    - Add the new phase section
    - Update phase numbering (e.g., `Phase N/7`)
    - Update the progress notification format
    - Add `afc-pipeline-manage.sh phase {name}` call
 3. Update `scripts/afc-pipeline-manage.sh` to handle the new phase name
 4. Update `CLAUDE.md` pipeline description
-5. Update the all-for-claudecode block template in `commands/init.md`
+5. Update the all-for-claudecode block template in `skills/init/SKILL.md`
 
 ### Modifying orchestration (implement phase)
 
@@ -366,9 +366,9 @@ The implement phase uses 3-tier orchestration:
 | Swarm | 6+ [P] tasks | Orchestrator pre-assigns tasks to worker agents (no self-claiming) |
 
 To modify:
-- Batch/swarm thresholds: edit `commands/implement.md` Mode Selection table
-- Worker behavior: edit the swarm worker prompt in `commands/implement.md`
-- Auto pipeline integration: mirror changes in `commands/auto.md` Phase 3 (Implement)
+- Batch/swarm thresholds: edit `skills/implement/SKILL.md` Mode Selection table
+- Worker behavior: edit the swarm worker prompt in `skills/implement/SKILL.md`
+- Auto pipeline integration: mirror changes in `skills/auto/SKILL.md` Phase 3 (Implement)
 
 ---
 
@@ -385,8 +385,8 @@ package.json                          → "version": "X.Y.Z"
 
 Bump strategy:
 - **Patch** (1.1.0 → 1.1.1): bug fixes, typo corrections, minor adjustments
-- **Minor** (1.1.0 → 1.2.0): new commands, new hooks, new templates, behavior changes
-- **Major** (1.1.0 → 2.0.0): breaking changes to command format, hook protocol, or config schema
+- **Minor** (1.1.0 → 1.2.0): new skills, new hooks, new templates, behavior changes
+- **Major** (1.1.0 → 2.0.0): breaking changes to skill format, hook protocol, or config schema
 
 After bumping, update `CHANGELOG.md`.
 
@@ -401,10 +401,10 @@ CACHE="$HOME/.claude/plugins/cache/all-for-claudecode/afc/$(jq -r .version packa
 SRC="$(pwd)"
 
 # Sync specific files
-cp "$SRC/commands/{file}.md" "$CACHE/commands/{file}.md"
+cp "$SRC/skills/{name}/SKILL.md" "$CACHE/skills/{name}/SKILL.md"
 
 # Or sync entire directories
-cp -R "$SRC/commands/" "$CACHE/commands/"
+cp -R "$SRC/skills/" "$CACHE/skills/"
 cp -R "$SRC/scripts/" "$CACHE/scripts/"
 cp -R "$SRC/hooks/" "$CACHE/hooks/"
 cp "$SRC/CLAUDE.md" "$CACHE/CLAUDE.md"
@@ -477,10 +477,10 @@ Every new script in `scripts/` must have a corresponding `spec/{name}_spec.sh` w
 
 ### Shared docs (`docs/`)
 
-- `critic-loop-rules.md` — Referenced by all commands that run critic loops. Changes affect the entire pipeline.
+- `critic-loop-rules.md` — Referenced by all skills that run critic loops. Changes affect the entire pipeline.
 - `phase-gate-protocol.md` — Referenced by `implement` and `auto`. Changes affect phase completion behavior.
 
-**Rule**: Never duplicate these docs inline in commands. Always reference them with:
+**Rule**: Never duplicate these docs inline in skills. Always reference them with:
 ```markdown
 > **Always** read `docs/critic-loop-rules.md` first and follow it.
 ```
@@ -493,7 +493,7 @@ Every new script in `scripts/` must have a corresponding `spec/{name}_spec.sh` w
 
 ### .claude/rules/
 
-- `commands.md` — Rules for writing command files (frontmatter requirements)
+- `skills.md` — Rules for writing skill files (frontmatter requirements)
 - `shell-scripts.md` — Rules for writing shell scripts (conventions)
 - `development.md` — General development rules (testing, version sync, etc.)
 - These are auto-loaded by Claude Code and enforced during development
@@ -503,11 +503,11 @@ Every new script in `scripts/` must have a corresponding `spec/{name}_spec.sh` w
 ## 10. Common Pitfalls
 
 ### Forgetting cache sync
-Source changes don't affect the running session until synced to `~/.claude/plugins/cache/`. Always sync after modifying commands, hooks, or scripts during development.
+Source changes don't affect the running session until synced to `~/.claude/plugins/cache/`. Always sync after modifying skills, hooks, or scripts during development.
 
-### hooks.json vs command-level hooks
+### hooks.json vs skill-level hooks
 - `hooks/hooks.json` — Global hooks, always active
-- Command frontmatter `hooks:` — Only active when that specific command is running
+- Skill frontmatter `hooks:` — Only active when that specific skill is running
 - Don't duplicate the same hook in both places (causes double execution)
 
 ### Exit codes in hook scripts
@@ -539,7 +539,7 @@ The `afc-bash-guard.sh` hook blocks dangerous git commands (`push --force`, `res
 2. Version bumped in all 3 files (package.json, plugin.json, marketplace.json)
 3. CHANGELOG.md updated
 4. No Korean text in any tracked file
-5. All command frontmatter follows conventions (model, description, controls)
+5. All skill frontmatter follows conventions (model, description, controls)
 6. New scripts have shellcheck passing
 7. New scripts have ShellSpec coverage in spec/{name}_spec.sh
 8. CLAUDE.md reflects current architecture

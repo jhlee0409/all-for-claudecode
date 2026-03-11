@@ -41,9 +41,9 @@
       "type": "array",
       "items": { "type": "string" }
     },
-    "commands": {
+    "skills": {
       "type": "string",
-      "description": "Path to commands directory"
+      "description": "Path to skills directory"
     },
     "agents": {
       "type": "string",

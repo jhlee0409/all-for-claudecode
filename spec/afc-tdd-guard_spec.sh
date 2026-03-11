@@ -147,7 +147,7 @@ CONF
     End
 
     It "allows markdown file"
-      Data '{"tool_input":{"file_path":"commands/spec.md"}}'
+      Data '{"tool_input":{"file_path":"skills/spec/SKILL.md"}}'
       When run bash "$TDD_GUARD"
       The status should eq 0
       The stdout should include "allow"

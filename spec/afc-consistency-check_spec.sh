@@ -3,7 +3,7 @@ Describe "afc-consistency-check.sh"
 
   setup_project_fixture() {
     local dir="$1"
-    mkdir -p "$dir/commands" "$dir/agents" "$dir/hooks" "$dir/scripts" \
+    mkdir -p "$dir/skills/spec" "$dir/skills/init" "$dir/agents" "$dir/hooks" "$dir/scripts" \
              "$dir/templates" "$dir/docs" "$dir/spec" "$dir/schemas" \
              "$dir/.claude-plugin"
 
@@ -29,8 +29,8 @@ name: afc-test-agent
 Test agent
 AGENT
 
-    # Command referencing config and agent (name matches valid phase 'spec')
-    cat > "$dir/commands/spec.md" << 'CMD'
+    # Skill referencing config and agent (name matches valid phase 'spec')
+    cat > "$dir/skills/spec/SKILL.md" << 'CMD'
 ---
 name: afc:spec
 description: "Test command"
@@ -82,8 +82,8 @@ README
 - `context: fork` — runs in isolated subagent (validate, analyze, qa, architect, security)
 CLAUDEMD
 
-    # init.md with skill routing
-    cat > "$dir/commands/init.md" << 'INIT'
+    # init/SKILL.md with skill routing
+    cat > "$dir/skills/init/SKILL.md" << 'INIT'
 ---
 name: afc:init
 ---
@@ -114,7 +114,7 @@ INIT
     AfterAll "cleanup_tmpdir $DIR2"
 
     It "fails on undefined {config.nonexistent}"
-      printf '{config.nonexistent}\n' >> "$DIR2/commands/spec.md"
+      printf '{config.nonexistent}\n' >> "$DIR2/skills/spec/SKILL.md"
       When run bash "$SCRIPT" "$DIR2"
       The status should eq 1
       The output should include "Done"
@@ -128,7 +128,7 @@ INIT
     AfterAll "cleanup_tmpdir $DIR3"
 
     It "fails on missing agent definition"
-      printf 'subagent_type: "afc:afc-missing-agent"\n' >> "$DIR3/commands/spec.md"
+      printf 'subagent_type: "afc:afc-missing-agent"\n' >> "$DIR3/skills/spec/SKILL.md"
       When run bash "$SCRIPT" "$DIR3"
       The status should eq 1
       The output should include "Done"
@@ -223,8 +223,9 @@ SCRIPT
     BeforeAll "setup_project_fixture $DIR9"
     AfterAll "cleanup_tmpdir $DIR9"
 
-    It "warns on undocumented command"
-      cat > "$DIR9/commands/unknown-phase.md" << 'CMD'
+    It "warns on undocumented skill"
+      mkdir -p "$DIR9/skills/unknown-phase"
+      cat > "$DIR9/skills/unknown-phase/SKILL.md" << 'CMD'
 ---
 name: afc:unknown-phase
 description: "Unknown"
@@ -245,7 +246,8 @@ CMD
     AfterAll "cleanup_tmpdir $DIR8"
 
     It "fails on subagent_type without afc: prefix"
-      cat > "$DIR8/commands/bad-cmd.md" << 'CMD'
+      mkdir -p "$DIR8/skills/bad-cmd"
+      cat > "$DIR8/skills/bad-cmd/SKILL.md" << 'CMD'
 ---
 name: afc:bad-cmd
 description: "Bad"
@@ -264,8 +266,9 @@ CMD
     BeforeAll "setup_project_fixture $DIR10"
     AfterAll "cleanup_tmpdir $DIR10"
 
-    It "warns on missing init.md routing"
-      cat > "$DIR10/commands/newcmd.md" << 'CMD'
+    It "warns on missing init/SKILL.md routing"
+      mkdir -p "$DIR10/skills/newcmd"
+      cat > "$DIR10/skills/newcmd/SKILL.md" << 'CMD'
 ---
 name: afc:newcmd
 description: "New command"
@@ -277,7 +280,7 @@ CMD
       The status should eq 0
       The output should include "Done"
       The stderr should include "newcmd"
-      The stderr should include "missing from init.md"
+      The stderr should include "missing from init/SKILL.md"
     End
   End
 
@@ -287,7 +290,8 @@ CMD
     AfterAll "cleanup_tmpdir $DIR11"
 
     It "warns on missing CLAUDE.md fork list entry"
-      cat > "$DIR11/commands/newfork.md" << 'CMD'
+      mkdir -p "$DIR11/skills/newfork"
+      cat > "$DIR11/skills/newfork/SKILL.md" << 'CMD'
 ---
 name: afc:newfork
 description: "New fork command"
@@ -310,9 +314,10 @@ CMD
     BeforeAll "setup_project_fixture $DIR12"
     AfterAll "cleanup_tmpdir $DIR12"
 
-    It "passes with no warnings for documented commands"
-      # Add a context:fork command properly documented in all places
-      cat > "$DIR12/commands/analyze.md" << 'CMD'
+    It "passes with no warnings for documented skills"
+      # Add a context:fork skill properly documented in all places
+      mkdir -p "$DIR12/skills/analyze" "$DIR12/skills/hidden"
+      cat > "$DIR12/skills/analyze/SKILL.md" << 'CMD'
 ---
 name: afc:analyze
 description: "Analysis command"
@@ -321,11 +326,11 @@ context: fork
 Analysis body
 CMD
       printf '| `/afc:analyze` | Analysis |\n' >> "$DIR12/README.md"
-      printf '| Analyze | `afc:analyze` | analysis |\n' >> "$DIR12/commands/init.md"
+      printf '| Analyze | `afc:analyze` | analysis |\n' >> "$DIR12/skills/init/SKILL.md"
       # Add analyze to CLAUDE.md fork list
       printf '%s\n' '- `context: fork` — runs in subagent (validate, analyze, qa, architect, security)' > "$DIR12/CLAUDE.md"
-      # Add a user-invocable:false command (should NOT require init.md entry)
-      cat > "$DIR12/commands/hidden.md" << 'CMD'
+      # Add a user-invocable:false skill (should NOT require init/SKILL.md entry)
+      cat > "$DIR12/skills/hidden/SKILL.md" << 'CMD'
 ---
 name: afc:hidden
 description: "Hidden command"
@@ -336,7 +341,7 @@ CMD
       printf '| `/afc:hidden` | Hidden |\n' >> "$DIR12/README.md"
       When run bash "$SCRIPT" "$DIR12"
       The status should eq 0
-      The output should include "Command docs: all commands referenced"
+      The output should include "Skill docs: all skills referenced"
       The output should include "0 errors, 0 warnings"
     End
   End

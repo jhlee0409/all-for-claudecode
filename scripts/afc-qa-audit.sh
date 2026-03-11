@@ -452,7 +452,7 @@ check_d1_cache_divergence() {
   local diverged=0
   local checked=0
 
-  for subdir in commands scripts hooks; do
+  for subdir in skills scripts hooks; do
     local src_dir="$PROJECT_DIR/$subdir"
     local cache_subdir="$cache_version_dir/$subdir"
     [ -d "$src_dir" ] && [ -d "$cache_subdir" ] || continue

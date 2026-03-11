@@ -112,7 +112,7 @@ git tag -d selfish/pre-auto 2>/dev/null
 |------|--------|-------|
 | Installation | `git clone` + `./install.sh` | `/plugin install <url>` |
 | Command separator | `.` (`/afc-legacy.spec`) | `:` (`/afc:spec`) |
-| Command location | `~/.claude/commands/afc-legacy.*.md` | `commands/*.md` inside the plugin |
+| Command location | `~/.claude/commands/afc-legacy.*.md` | `skills/*/SKILL.md` inside the plugin |
 | Hook scripts | `<project>/.claude/hooks/*.sh` | `scripts/*.sh` inside the plugin |
 | Hook config | `<project>/.claude/settings.json` | `hooks/hooks.json` inside the plugin |
 | Config file | `.claude/afc.config.md` (unchanged) | `.claude/afc.config.md` (unchanged) |

@@ -31,7 +31,7 @@ if [ ! -d "$CACHE_DIR" ]; then
 fi
 
 # Sync directories and files
-DIRS_TO_SYNC="commands agents scripts hooks docs schemas templates"
+DIRS_TO_SYNC="skills agents scripts hooks docs schemas templates"
 FILES_TO_SYNC="package.json"
 
 for dir in $DIRS_TO_SYNC; do

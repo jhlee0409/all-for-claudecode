@@ -457,8 +457,8 @@ if [ "$IS_DEV" = true ]; then
   # Cache sync check
   CACHE_DIR="$HOME/.claude/plugins/cache/all-for-claudecode/afc/$V_PKG"
   if [ -d "$CACHE_DIR" ]; then
-    CACHE_AUTO="$CACHE_DIR/commands/auto.md"
-    SOURCE_AUTO="$PROJECT_DIR/commands/auto.md"
+    CACHE_AUTO="$CACHE_DIR/skills/auto/SKILL.md"
+    SOURCE_AUTO="$PROJECT_DIR/skills/auto/SKILL.md"
     if [ -f "$CACHE_AUTO" ] && [ -f "$SOURCE_AUTO" ]; then
       if diff -q "$SOURCE_AUTO" "$CACHE_AUTO" >/dev/null 2>&1; then
         pass "Cache in sync"
@@ -472,21 +472,21 @@ if [ "$IS_DEV" = true ]; then
     warn "Plugin cache directory not found" "install plugin first, then npm run sync:cache"
   fi
 
-  # --- Category 10: Command Definitions (dev only) ---
-  section "Command Definitions (dev)"
+  # --- Category 10: Skill Definitions (dev only) ---
+  section "Skill Definitions (dev)"
 
-  CMD_DIR="$PROJECT_DIR/commands"
-  if [ -d "$CMD_DIR" ]; then
+  SKILL_DIR="$PROJECT_DIR/skills"
+  if [ -d "$SKILL_DIR" ]; then
     CMD_COUNT=0
     CMD_FM_MISSING=""
     CMD_FIELD_MISSING=""
     CMD_NAME_MISMATCH=""
     CMD_AGENT_MISSING=""
 
-    for cmd_file in "$CMD_DIR"/*.md; do
+    for cmd_file in "$SKILL_DIR"/*/SKILL.md; do
       [ -f "$cmd_file" ] || continue
       CMD_COUNT=$((CMD_COUNT + 1))
-      BASENAME=$(basename "$cmd_file" .md)
+      BASENAME=$(basename "$(dirname "$cmd_file")")
 
       # Check frontmatter exists (--- ... ---)
       if ! head -1 "$cmd_file" | grep -q '^---' 2>/dev/null; then
@@ -658,9 +658,9 @@ if [ "$IS_DEV" = true ]; then
   # --- Category 12: Doc References (dev only) ---
   section "Doc References (dev)"
 
-  # Scan commands and agents for docs/ references
+  # Scan skills and agents for docs/ references
   DOC_REFS_MISSING=""
-  for src_file in "$CMD_DIR"/*.md "$AGENT_DIR"/*.md; do
+  for src_file in "$SKILL_DIR"/*/SKILL.md "$AGENT_DIR"/*.md; do
     [ -f "$src_file" ] || continue
     while IFS= read -r ref; do
       [ -z "$ref" ] && continue
