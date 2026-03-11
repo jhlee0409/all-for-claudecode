@@ -178,6 +178,7 @@ Execute `/afc:spec` logic inline:
    - MEASURABILITY: are success criteria measurable, not subjective? **Is quantitative evidence provided for numerical targets?**
    - INDEPENDENCE: are implementation details (code, library names) absent from the spec?
    - EDGE_CASES: are at least 2 identified? Any missing boundary conditions?
+   - TESTABILITY: Does every System Requirement follow one of the 5 EARS patterns (WHEN/WHILE/IF/WHERE/SHALL)? Does each EARS requirement have a mapped TC (`→ TC: should_...`)? If not → FAIL and auto-fix: rewrite to EARS + generate TC mapping.
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 7. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase spec` at phase start
 8. Progress: `✓ 1/5 Spec complete (US: {N}, FR: {N}, researched: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
@@ -189,7 +190,12 @@ Execute `/afc:spec` logic inline:
 Execute `/afc:plan` logic inline:
 
 1. Load spec.md
-2. If technical uncertainties exist → auto-resolve via WebSearch/code exploration → create research.md
+2. **Research (ReWOO pattern, if needed)**:
+   Extract technical uncertainties from spec.md (libraries/APIs not yet used, unverified performance requirements, unclear integration approach). If no uncertain items: skip.
+   If there are uncertain items, follow the 3-step ReWOO flow:
+   - **Step 1 — Plan**: List all research topics as a numbered list (NO execution yet): `1. {topic} — {what we need to know}`
+   - **Step 2 — Execute**: If topics are independent → launch parallel Task() calls in a **single message**: `Task("Research: {topic1}", subagent_type: "general-purpose")`. If a topic depends on another's result → execute sequentially. For 1-2 topics → resolve directly via WebSearch/codebase exploration (no delegation).
+   - **Step 3 — Solve**: Collect all results and record in `.claude/afc/specs/{feature}/research.md` with: Decision, Rationale, Alternatives, Source per topic.
 3. **Memory loading** (skip gracefully if directories are empty or absent):
    - **Quality history**: if `.claude/afc/memory/quality-history/*.json` exists, load the **most recent 10 files** (sorted by filename descending) and display trend summary: "Last {N} pipelines: avg critic_fixes {X}, avg ci_failures {Y}, avg escalations {Z}". Use trends to inform plan risk assessment.
    - **Decisions**: if `.claude/afc/memory/decisions/` exists, load the **most recent 30 files** (sorted by filename descending) and check for conflicts with the current feature's design direction. Flag any contradictions.
@@ -254,18 +260,50 @@ Execute `/afc:plan` logic inline:
 
 **Session context reload**: At implement start, read `.claude/afc/specs/{feature}/context.md` if it exists. This restores key decisions and constraints from Plan phase (resilient to context compaction).
 
-Execute `/afc:implement` logic inline — **follow all orchestration rules defined in `commands/implement.md`** (task generation, mode selection, batch/swarm execution, failure recovery, task execution pattern). The implement command is the single source of truth for orchestration details.
+Execute `/afc:implement` logic inline — **follow all orchestration rules defined in `skills/implement/SKILL.md`** (task generation, mode selection, batch/swarm execution, failure recovery, task execution pattern). The implement skill is the single source of truth for orchestration details.
 
 **Auto-specific additions** (beyond implement.md):
 
 #### Step 3.1: Task Generation + Validation
 
-1. Generate tasks.md from plan.md File Change Map (as defined in implement.md Step 1.3)
+1. Generate tasks.md from plan.md File Change Map using the following format and principles:
+
+   **Task Format** (required):
+   ```markdown
+   - [ ] T{NNN} {[P]} {[US*]} {description} `{file path}` {depends: [TXXX, TXXX]}
+   ```
+   | Component | Required | Description |
+   |-----------|----------|-------------|
+   | `T{NNN}` | Yes | 3-digit sequential ID (T001, T002, ...) |
+   | `[P]` | No | **Mandatory parallel execution** — task MUST run in parallel with other [P] tasks in the same phase. Requires no file overlap. |
+   | `[US*]` | No | User Story label from spec.md |
+   | description | Yes | Clear task description (start with a verb) |
+   | file path | Yes | Primary target file (wrapped in backticks) |
+   | `depends:` | No | Explicit dependency list — task cannot start until all listed complete |
+
+   **Decomposition Principles**:
+   - **1 task = 1 file** principle (where possible)
+   - **Same file = sequential**, **different files = [P] candidate**
+   - **Explicit dependencies**: Use `depends: [T001, T002]` for blocking dependencies
+   - **Test tasks**: Include a verification task for each testable unit
+   - **Phase gate**: Add a `{config.gate}` validation task at the end of each Phase
+
+   **Phase Structure**: Group tasks by Phase (Setup → Core → UI → Integration & Polish)
+
+   **Coverage Mapping** (append after tasks):
+   ```markdown
+   ## Coverage Mapping
+   | Requirement | Tasks |
+   |-------------|-------|
+   | FR-001 | T003, T007 |
+   ```
+   Every FR-*/NFR-* must be mapped to at least one task.
+
 2. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
    - Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
    - Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
-3. Script validation (DAG + parallel overlap) — no critic loop, script-based only
-4. Progress: `  ├─ Tasks generated: {N} ({P} parallelizable)`
+3. **Script validation**: Run DAG validation (`afc-dag-validate.sh`) and parallel overlap validation (`afc-parallel-validate.sh`) — no critic loop, script-based only. Fix any conflicts before proceeding.
+4. Progress: `  ├─ Tasks generated: {N} ({P} parallelizable), Coverage: FR {M}%, NFR {K}%`
 
 #### Step 3.2: TDD Pre-Generation (conditional)
 
@@ -371,69 +409,197 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase review`
 
-Execute `/afc:review` logic inline — **follow all review perspectives defined in `commands/review.md`** (A through H). The review command is the single source of truth for review criteria.
+Execute `/afc:review` logic inline — **follow all review perspectives defined in `skills/review/SKILL.md`** (A through H). The review skill is the single source of truth for review criteria.
 
 **Context reload**: Re-read `.claude/afc/specs/{feature}/context.md` (contains full AC) and `.claude/afc/specs/{feature}/spec.md` to ensure spec context is available for SPEC_ALIGNMENT validation (these may have been compacted since Phase 1).
 
-1. Review implemented changed files (`git diff HEAD`)
-2. **Specialist agent delegation** (parallel, perspectives B and C):
-   Launch architect and security agents in a **single message** to leverage their persistent memory:
+#### Step 4.1: Collect Review Targets
+
+1. Collect changed files via `git diff HEAD`
+2. Read **full content** of each changed file (not just the diff — full context needed for review)
+
+#### Step 4.2: Reverse Impact Analysis
+
+Before reviewing, identify **files affected by the changes** (not just the changed files themselves):
+
+1. **For each changed file**, find files that depend on it:
+   - **LSP (preferred)**: `LSP(findReferences)` on exported symbols — tracks type references, function calls, re-exports
+   - **Grep (fallback)**: `Grep` for `import.*{filename}`, `require.*{filename}`, `source.*{filename}` patterns across the codebase
+   - LSP and Grep are complementary — use both when LSP is available
+
+2. **Build impact map**:
    ```
-   Task("Architecture Review: {feature}", subagent_type: "afc:afc-architect",
-     prompt: "Review the following changed files for architecture compliance.
-
-     ## Changed Files
-     {list of changed files from git diff}
-
-     ## Architecture Rules
-     {config.architecture}
-
-     ## Instructions
-     1. Read your MEMORY.md for prior architecture patterns and ADRs
-     2. Check each file against architecture rules (layer boundaries, naming, placement)
-     3. Cross-reference with ADRs recorded during Plan phase — any violations?
-     4. Return findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix
-     5. Update your MEMORY.md with any new architecture patterns discovered")
-
-   Task("Security Review: {feature}", subagent_type: "afc:afc-security",
-     prompt: "Scan the following changed files for security vulnerabilities.
-
-     ## Changed Files
-     {list of changed files from git diff}
-
-     ## Instructions
-     1. Read your MEMORY.md for known vulnerability patterns and false positives
-     2. Check for: command injection, path traversal, unvalidated input, sensitive data exposure
-     3. Skip patterns recorded as false positives in your memory
-     4. Return findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix
-     5. Update your MEMORY.md with new patterns or confirmed false positives")
+   Impact Map:
+   ├─ src/auth/login.ts (changed)
+   │  └─ affected: src/pages/LoginPage.tsx, src/middleware/auth.ts
+   └─ Total: {N} changed files → {M} affected files
    ```
-   - Collect agent outputs and merge into the consolidated review
-   - Agent findings inherit their severity classification directly
-3. Check across **8 perspectives** (A-H as defined in review.md):
-   - A. Code Quality — `{config.code_style}` compliance (direct review)
-   - B. Architecture — **delegated to afc-architect agent** (persistent memory, ADR-aware)
-   - C. Security — **delegated to afc-security agent** (persistent memory, false-positive-aware)
-   - D. Performance — framework-specific patterns from Project Context (direct review)
-   - E. Project Pattern Compliance — conventions and idioms (direct review)
-   - **F. Reusability** — DRY, shared utilities, abstraction level (direct review)
-   - **G. Maintainability** — AI/human comprehension, naming clarity, self-contained files (direct review)
-   - **H. Extensibility** — extension points, OCP, future modification cost (direct review)
-4. **Auto-resolved validation**: Check all `[AUTO-RESOLVED]` items from spec phase — does the implementation match the guess? Flag mismatches as Critical.
-5. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, load the **most recent 15 files** (sorted by filename descending) and scan for recurring finding patterns across past review reports. Prioritize those areas.
-6. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
+
+3. **Scope decision**: Affected files are NOT full review targets. Include them as **cross-reference context** in review and cross-boundary verification. If an affected file has >3 references to a changed symbol → flag for closer inspection.
+
+4. **Limitations** (include in review output):
+   > ⚠ Dynamic dependencies not covered: runtime dispatch, reflection, cross-language calls, config/env-driven branching.
+
+#### Step 4.3: Scaled Review Orchestration
+
+Choose review orchestration based on the number of changed files:
+
+**Pre-scan: Call Chain Context** (for Parallel Batch and Review Swarm modes only):
+Before distributing files to review agents, collect cross-boundary context:
+1. For each changed file, identify **outbound calls** to other changed files (imports + function calls)
+2. For each outbound call target, extract: function signature + 1-line side-effect summary
+3. Include the **Impact Map** from Step 4.2 — each agent receives the list of affected files
+4. Include this context in each review agent's prompt as `## Cross-File Context`
+
+For Direct review mode (≤5 files): skip pre-scan — orchestrator already has full context.
+
+**5 or fewer files**: Direct review — review all files directly in the current context (no delegation).
+
+**6–10 files**: Parallel Batch — distribute to parallel review agents (2–3 files per agent) in a **single message**:
+```
+Task("Review: {file1, file2}", subagent_type: "general-purpose")
+Task("Review: {file3, file4}", subagent_type: "general-purpose")
+```
+
+**11+ files**: Review Swarm — group files into batches (2-3 per worker), spawn N review workers in a **single message** (N = min(5, file count / 2)). Review is read-only — no write race conditions.
+
+#### Step 4.4: Specialist Agent Delegation (parallel, perspectives B and C)
+
+Launch architect and security agents in a **single message** to leverage their persistent memory:
+```
+Task("Architecture Review: {feature}", subagent_type: "afc:afc-architect",
+  prompt: "Review the following changed files for architecture compliance.
+
+  ## Changed Files
+  {list of changed files from git diff}
+
+  ## Architecture Rules
+  {config.architecture}
+
+  ## Instructions
+  1. Read your MEMORY.md for prior architecture patterns and ADRs
+  2. Check each file against architecture rules (layer boundaries, naming, placement)
+  3. Cross-reference with ADRs recorded during Plan phase — any violations?
+  4. Return findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix
+  5. Update your MEMORY.md with any new architecture patterns discovered")
+
+Task("Security Review: {feature}", subagent_type: "afc:afc-security",
+  prompt: "Scan the following changed files for security vulnerabilities.
+
+  ## Changed Files
+  {list of changed files from git diff}
+
+  ## Instructions
+  1. Read your MEMORY.md for known vulnerability patterns and false positives
+  2. Check for: command injection, path traversal, unvalidated input, sensitive data exposure
+  3. Skip patterns recorded as false positives in your memory
+  4. Return findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix
+  5. Update your MEMORY.md with new patterns or confirmed false positives")
+```
+- Collect agent outputs and merge into the consolidated review
+- Agent findings inherit their severity classification directly
+
+#### Step 4.5: Perform Review (8 perspectives)
+
+Check across **8 perspectives** (A-H as defined in `skills/review/SKILL.md`):
+- A. Code Quality — `{config.code_style}` compliance (direct review)
+- B. Architecture — **delegated to afc-architect agent** (persistent memory, ADR-aware)
+- C. Security — **delegated to afc-security agent** (persistent memory, false-positive-aware)
+- D. Performance — framework-specific patterns from Project Context (direct review)
+- E. Project Pattern Compliance — conventions and idioms (direct review)
+- **F. Reusability** — DRY, shared utilities, abstraction level (direct review)
+- **G. Maintainability** — AI/human comprehension, naming clarity, self-contained files (direct review)
+- **H. Extensibility** — extension points, OCP, future modification cost (direct review)
+
+#### Step 4.6: Cross-Boundary Verification (MANDATORY)
+
+After individual/parallel reviews and specialist agents complete, the **orchestrator** MUST perform a cross-boundary check. This is a required step, not optional — skipping it is a review defect.
+
+**For 11+ file reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
+
+0. **Impact Map integration**: Use the Impact Map from Step 4.2 to prioritize verification. Affected files with >3 references to changed symbols should be read and checked for breakage — even if no finding was raised against them.
+
+1. **Filter**: From all collected findings, select those involving:
+   - Call order changes (function A now calls B before C)
+   - Error handling modifications (try/catch scope changes, error propagation changes)
+   - State mutation changes (new writes to shared state, removed cleanup)
+
+2. **Verify**: For each behavioral finding rated Critical or Warning:
+   - **Read the callee's implementation** (the function/method being called) — this read is mandatory, not optional
+   - **Skip external dependencies**: If the callee is in `node_modules/`, `vendor/`, or other third-party directories, verify against type definitions or documented API contract instead. Note: "verified against types/docs, not source"
+   - Check: does the callee's internal behavior (side effects, state changes, return values) actually conflict with the change?
+   - If no conflict → downgrade: Critical → Info, Warning → Info (append "verified: no cross-boundary impact")
+   - If confirmed conflict → keep severity, enrich description with callee behavior details
+
+3. **False positive reference** (security-related findings only): Check `afc-security` agent's MEMORY.md `## False Positives` section if it exists. Known false positive patterns should be noted in findings.
+
+4. **Output**: Append verification summary before Review Output:
+   ```
+   Cross-Boundary Check: {N} behavioral findings verified
+   ├─ Confirmed: {M} (severity kept)
+   ├─ Downgraded: {K} (false positive — callee compatible)
+   └─ Skipped: {J} (no behavioral change)
+   ```
+
+This step runs in the orchestrator context (not delegated), as it requires reading code across file boundaries.
+
+#### Step 4.7: Auto-specific Validations
+
+1. **Auto-resolved validation**: Check all `[AUTO-RESOLVED]` items from spec phase — does the implementation match the guess? Flag mismatches as Critical.
+2. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, load the **most recent 15 files** (sorted by filename descending) and scan for recurring finding patterns across past review reports. Prioritize those areas.
+3. **Retrospective check**: if `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
-7. **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
-   - COMPLETENESS: were all changed files reviewed across all 8 perspectives (A-H)?
-   - SPEC_ALIGNMENT: cross-check implementation against spec.md — (1) every SC verified with `{M}/{N}` count, (2) every acceptance scenario (GWT) has corresponding code path, (3) no spec constraint is violated
-   - PRECISION: are there unnecessary changes? Are there out-of-scope modifications?
-   - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
-8. **Handling SC shortfalls**:
-   - Fixable → attempt auto-fix → re-run `{config.ci}` verification
-   - Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
-9. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase review` at phase start
-10. Progress: `✓ 4/5 Review complete (Critical:{N} Warning:{N} Info:{N}, SC shortfalls: {N})`
+
+#### Step 4.8: Critic Loop
+
+> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+
+**Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
+- COMPLETENESS: were all changed files reviewed across all 8 perspectives (A-H)?
+- SPEC_ALIGNMENT: cross-check implementation against spec.md — (1) every SC verified with `{M}/{N}` count, (2) every acceptance scenario (GWT) has corresponding code path, (3) no spec constraint is violated
+- SIDE_EFFECT_AWARENESS: For findings involving call order changes, error handling modifications, or state mutation changes: did the reviewer verify the callee's internal behavior? If a Critical finding assumes a side effect without reading the target implementation → auto-downgrade to Info with note "cross-boundary unverified". Provide "{M} of {N} behavioral findings verified" count.
+- PRECISION: are there unnecessary changes? Are there out-of-scope modifications? Are findings actual issues, not false positives?
+- FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+
+#### Step 4.9: Handling SC shortfalls
+
+- Fixable → attempt auto-fix → re-run `{config.ci}` verification
+- Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
+
+#### Step 4.10: Retrospective Entry (if new pattern found)
+
+If this review reveals a recurring pattern not previously documented in `.claude/afc/memory/retrospectives/`:
+
+Append to `.claude/afc/memory/retrospectives/{YYYY-MM-DD}.md`:
+```markdown
+## Pattern: {category}
+**What happened**: {concrete description}
+**Root cause**: {why this keeps occurring}
+**Prevention rule**: {actionable rule — usable in future plan/implement phases}
+**Severity**: Critical | Warning
+```
+
+Only write if the pattern is new and actionable. Generic observations are prohibited.
+
+#### Step 4.11: Archive Review Report
+
+Persist the review results for memory:
+
+1. Write full review output (Summary table + Impact Analysis + Detailed Findings + Positives + Cross-Boundary Check) to `.claude/afc/specs/{feature}/review-report.md`
+2. Include metadata header:
+   ```markdown
+   # Review Report: {feature name}
+   > Date: {YYYY-MM-DD}
+   > Files reviewed: {count}
+   > Findings: Critical {N} / Warning {N} / Info {N}
+   ```
+3. This file is copied to `.claude/afc/memory/reviews/{feature}-{date}.md` during Clean phase before .claude/afc/specs/ deletion.
+
+#### Step 4.12: Checkpoint & Progress
+
+- **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase review` at phase start
+- Progress: `✓ 4/5 Review complete (Critical:{N} Warning:{N} Info:{N}, Cross-boundary: {M} verified, SC shortfalls: {N})`
 
 ### Phase 5: Clean (5/5)
 
