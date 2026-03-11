@@ -42,7 +42,7 @@ Create `commands/{name}.md` with required YAML frontmatter:
 name: afc:{name}
 description: "Short description in English"
 argument-hint: "[hint for arguments]"
-model: haiku|sonnet          # haiku for mechanical, sonnet for design/analysis, omit for orchestrators
+model: sonnet                # sonnet for all commands, omit for orchestrators (inherit parent model)
 ---
 ```
 

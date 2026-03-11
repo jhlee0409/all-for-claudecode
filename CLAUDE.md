@@ -53,7 +53,7 @@ Pipeline state is managed through a single JSON file `$CLAUDE_PROJECT_DIR/.claud
 
 - `user-invocable: false` — hidden from `/` menu, only model-callable (validate, clarify, tasks)
 - `context: fork` — runs in isolated subagent, result returned to main context (validate, analyze, qa, architect, security, learner). architect and security use custom agents with `memory: project` for persistent learning
-- `model: haiku|sonnet` — model routing per command complexity (haiku for mechanical tasks, sonnet for design/analysis, omit for orchestrator inheritance)
+- `model: sonnet` — model routing per command (sonnet for all commands, omit for orchestrators to inherit parent model)
 
 ## Shell Script Conventions
 

@@ -7,7 +7,7 @@ allowed-tools:
   - Grep
   - Glob
   - Bash
-model: haiku
+model: sonnet
 ---
 
 # /afc:doctor — Plugin Setup Diagnosis

@@ -2,7 +2,7 @@
 name: afc:checkpoint
 description: "Save session state — use when the user asks to save progress, checkpoint the session, or preserve current work state"
 argument-hint: "[checkpoint message]"
-model: haiku
+model: sonnet
 allowed-tools:
   - Read
   - Write

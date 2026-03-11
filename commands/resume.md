@@ -2,7 +2,7 @@
 name: afc:resume
 description: "Restore session — use when the user asks to resume a previous session, restore saved state, or continue where they left off"
 argument-hint: "[no arguments]"
-model: haiku
+model: sonnet
 allowed-tools:
   - Read
   - Glob

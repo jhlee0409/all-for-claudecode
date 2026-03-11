@@ -7,7 +7,7 @@ allowed-tools:
   - Write
   - Bash
   - Glob
-model: haiku
+model: sonnet
 ---
 
 # /afc:init — Project Initial Setup
@@ -271,18 +271,18 @@ Classify the user's intent and route to the matching skill. Use semantic underst
 2. **Compound intents**: Route to the primary intent. The pipeline handles sequencing internally.
 3. **Design-first**: When scope is non-trivial (multiple files, architectural decisions needed), prefer `afc:auto` or `afc:plan` over direct `afc:implement`.
 
-User-only (not auto-triggered — inform user on request):
-- `afc:doctor` — inform user when health check is requested
-- `afc:architect` — inform user when architecture review is requested
-- `afc:security` — inform user when security scan is requested
-- `afc:checkpoint` — inform user when session save is requested
-- `afc:resume` — inform user when session restore is requested
-- `afc:principles` — inform user when project principles management is requested
-- `afc:clean` — inform user when pipeline cleanup is requested (artifact cleanup, dead code scan, pipeline flag release)
-- `afc:triage` — inform user when parallel PR/issue triage is requested
-- `afc:learner` — inform user when pattern learning or rule promotion is requested
-- `afc:pr-comment` — inform user when posting PR review comments to GitHub is requested
-- `afc:release-notes` — inform user when generating release notes from git history is requested
+User-only (not auto-triggered — when user invokes directly via `/afc:X`, execute the skill immediately):
+- `afc:doctor` — plugin health check
+- `afc:architect` — architecture review
+- `afc:security` — security scan
+- `afc:checkpoint` — session save
+- `afc:resume` — session restore
+- `afc:principles` — project principles management
+- `afc:clean` — pipeline cleanup (artifact cleanup, dead code scan, pipeline flag release)
+- `afc:triage` — parallel PR/issue triage
+- `afc:learner` — pattern learning or rule promotion
+- `afc:pr-comment` — post PR review comments to GitHub
+- `afc:release-notes` — generate release notes from git history
 
 ## Pipeline
 

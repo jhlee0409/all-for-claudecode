@@ -41,7 +41,7 @@ cp commands/{file}.md ~/.claude/plugins/cache/all-for-claudecode/afc/$(jq -r .ve
 
 ## Command Design Rules
 
-- model: haiku (mechanical) | sonnet (analysis/design) | omit (orchestrators inherit parent)
+- model: sonnet (all commands) | omit (orchestrators inherit parent model)
 - Never duplicate docs/critic-loop-rules.md or docs/phase-gate-protocol.md inline — always reference
 - Orchestration modes (sequential/batch/swarm) are selected automatically by task count — do not hardcode
 - All output text must be in English (global open-source project)

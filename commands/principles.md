@@ -7,7 +7,7 @@ allowed-tools:
   - Write
   - Grep
   - Glob
-model: haiku
+model: sonnet
 ---
 
 # /afc:principles — Manage Project Principles
