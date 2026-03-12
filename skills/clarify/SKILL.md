@@ -50,10 +50,11 @@ Scan across 10 categories:
 | 9 | Completion criteria | Success criteria that cannot be measured |
 | 10 | Residual placeholders | TODO/TBD/??? |
 
+These categories serve as a comprehensive checklist, not a rigid classification. Adapt to the project's domain — skip categories irrelevant to the project type (e.g., skip 'UX flow' for CLI tools) and add domain-specific categories if needed (e.g., 'regulatory compliance' for healthcare/fintech projects).
+
 ### 3. Generate and Present Questions
 
-- Generate at most **5** questions
-- Priority: scope > security/privacy > UX > technical
+- Generate questions ranked by their impact on spec quality — how much would the answer change the spec's direction or completeness? Present the most impactful questions first. The number of questions should match the actual ambiguity level: deeply ambiguous specs may need more questions, while mostly-clear specs need fewer. Do not artificially cap at a fixed number, but keep the set focused and avoid overwhelming the user (aim for the minimum needed to resolve critical ambiguities).
 - Present **one at a time** via AskUserQuestion:
   - Use multiple choice when possible (2-4 options)
   - Include the meaning/impact of each option
@@ -79,7 +80,7 @@ Clarification complete
 
 ## Notes
 
-- **5-question limit**: If more than 5 questions arise, select only the most important. Resolve the rest during the plan phase.
+- **Question focus**: Ask only what is needed to resolve critical ambiguities. Defer lower-priority questions to the plan phase rather than overwhelming the user.
 - **Modify spec only**: Do not touch plan.md or tasks.md.
 - **Avoid redundancy**: Do not ask about items already clearly stated in spec.
 - **If `$ARGUMENTS` is provided**: Focus the scan on that area.

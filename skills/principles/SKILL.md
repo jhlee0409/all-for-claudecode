@@ -107,5 +107,5 @@ Collect principles interactively:
 
 - **Persistent storage**: Saved to .claude/afc/memory/principles.md and maintained across sessions.
 - **Auto-referenced**: Automatically loaded and validated by /afc:plan and /afc:architect.
-- **Keep it concise**: Maintain no more than 10 principles. Too many reduces effectiveness.
+- **Keep it concise**: Keep principles concise and actionable. If the list grows long enough that principles start overlapping or becoming too granular, suggest consolidation. The goal is a set of principles that can be held in working memory — typically under 15, but the right number depends on the project's complexity.
 - **Avoid duplication with CLAUDE.md**: Do not re-register rules already present in CLAUDE.md as principles.

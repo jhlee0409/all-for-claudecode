@@ -32,16 +32,18 @@ If neither rules file nor config exists: read `CLAUDE.md` for architecture info.
 
 ### 1. Parse Analysis Intent
 
-Classify `$ARGUMENTS` into one of these analysis modes:
+Read the user's question semantically. What does the user actually want to understand? Select the mode that best serves their learning goal.
 
-| Mode | Trigger Keywords | Focus |
-|------|-----------------|-------|
-| **Root Cause** | "why", "cause", "bug", "error", "broken" | Error trace → data flow → hypothesis |
-| **Structural** | "how", "architecture", "flow", "trace", "structure" | Component relationships, call graphs, data flow |
-| **Exploratory** | "what", "find", "where", "which", "list" | File/function discovery, pattern matching |
-| **Comparative** | "difference", "compare", "vs", "between" | Side-by-side analysis of implementations |
+| Mode | When to select | Focus |
+|------|---------------|-------|
+| **Root Cause** | User wants to understand WHY something is broken, failing, or behaving unexpectedly — the goal is diagnosing a problem | Error trace → data flow → hypothesis |
+| **Structural** | User wants to understand HOW a system is built or how components relate — the goal is comprehension of design or flow | Component relationships, call graphs, data flow |
+| **Exploratory** | User wants to discover WHAT exists in the codebase — the goal is finding, listing, or locating things | File/function discovery, pattern matching |
+| **Comparative** | User wants to understand the DIFFERENCE between two or more things — the goal is contrast and tradeoff evaluation | Side-by-side analysis of implementations |
 
-If the intent doesn't clearly match a mode, default to **Exploratory**.
+If the question spans multiple modes, select the PRIMARY mode that best matches the user's core learning goal, and note secondary aspects to incorporate during analysis.
+
+If the intent doesn't clearly match a single mode, default to **Exploratory**.
 
 ### 2. Codebase Exploration
 

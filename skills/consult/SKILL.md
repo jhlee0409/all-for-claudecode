@@ -33,24 +33,25 @@ If `$ARGUMENTS` is empty → go to Step 2 (domain selection).
 
 **A. Explicit domain provided** → use it directly.
 
-**B. No domain, but question provided** → keyword matching:
+**B. No domain, but question provided** → intent-based evaluation:
 
-| Domain | Keywords |
-|--------|----------|
-| backend | API, database, schema, query, server, auth, JWT, REST, GraphQL, ORM, migration, endpoint, middleware, validation, session, cookie, token |
-| infra | deploy, Docker, CI/CD, cloud, monitoring, k8s, pipeline, Kubernetes, terraform, AWS, GCP, Azure, nginx, SSL, DNS, CDN, container, scaling |
-| pm | feature, user story, priority, roadmap, PRD, MVP, backlog, metric, KPI, retention, churn, persona, requirement, scope |
-| design | UI, UX, accessibility, component, layout, color, animation, responsive, wireframe, prototype, typography, spacing, contrast, WCAG |
-| marketing | SEO, analytics, content, growth, conversion, funnel, GA4, acquisition, retention, landing page, Open Graph, meta tag, social media |
-| legal | GDPR, CCPA, privacy, cookie, consent, license, GPL, MIT, compliance, terms of service, data protection, PII, HIPAA, regulation, policy |
-| security | XSS, CSRF, injection, OWASP, vulnerability, attack, exploit, encryption, secret, credential, CORS, CSP, rate limit, brute force, penetration |
-| advisor | library, framework, stack, tool, package, which to use, alternative, compare, choose, select, recommend, what exists, ecosystem, best option, switch to |
-| peer | think together, brainstorm, discuss, explore idea, talk through, figure out, pros and cons, what if, should I, direction, approach, trade-off, opinion, weigh options |
+Read the user's question and determine which domain's expertise would provide the most value. Consider the actual intent, not keyword presence.
 
-Match rules:
-- Case-insensitive keyword matching against the question
-- If multiple domains match: pick the one with the most keyword hits
-- If tie: pick the first domain in the table order above
+| Domain | When to route |
+|--------|---------------|
+| backend | User needs help with server-side logic, data modeling, API design, authentication flows, database decisions, or how application code processes and stores data |
+| infra | User needs help with how the application is deployed, operated, or monitored — infrastructure topology, CI/CD pipelines, cloud services, scaling, reliability |
+| pm | User needs help with product decisions: what to build, for whom, when, how to measure success, how to prioritize competing features, or how to define scope |
+| design | User needs help with how something looks or feels to a user — visual hierarchy, interaction patterns, accessibility, component design, or user flow |
+| marketing | User needs help reaching or retaining users outside the product: SEO, content strategy, acquisition funnels, analytics tracking, or growth tactics |
+| legal | User needs help understanding regulatory obligations, license compatibility, privacy requirements, or the legal implications of a design or data practice |
+| security | User needs help identifying or mitigating threats, vulnerabilities, or attack surfaces — secure coding, threat modeling, or compliance with security standards |
+| advisor | User is choosing between technologies, frameworks, libraries, or architectural approaches and wants an informed recommendation with trade-off analysis |
+| peer | User wants to think through a problem collaboratively, explore directions, weigh trade-offs, or have a structured dialogue rather than receive an answer |
+
+Evaluation rules:
+- Identify what specialized knowledge the user actually needs, not which domain's jargon appears in the text
+- If multiple domains seem relevant, identify the PRIMARY expertise gap — what specialized knowledge does the user need most?
 
 **C. No domain, no question, or no keyword match** → ask user:
 

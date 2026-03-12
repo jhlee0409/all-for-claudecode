@@ -72,14 +72,14 @@ Before reviewing, identify **files affected by the changes** (not just the chang
 3. **Scope decision**:
    - Affected files are NOT full review targets (that would explode scope)
    - Instead, include them as **cross-reference context** in Step 2 and Step 3.5
-   - If an affected file has >3 references to a changed symbol → flag for closer inspection
+   - Flag affected files for closer inspection when they have significant coupling to the changed code — consider the nature of the references (type-only imports vs behavioral calls), the criticality of the affected file, and whether the references involve the specific symbols that changed.
 
 4. **Limitations** (include in review output):
    > ⚠ Dynamic dependencies not covered: runtime dispatch (`obj[method]()`), reflection, cross-language calls, config/env-driven branching. Manual verification recommended for these patterns.
 
 ### 2. Parallel Review (scaled by file count)
 
-Choose review orchestration based on the number of changed files:
+Assess review complexity holistically — consider total diff size (lines changed), file complexity, diversity of change types, and whether changes are localized to one module or cross-cutting across multiple boundaries.
 
 **Pre-scan: Call Chain Context** (for Parallel Batch and Review Swarm modes only):
 
@@ -97,21 +97,21 @@ Before distributing files to review agents, collect cross-boundary context:
    Review findings should account for these behaviors.
    ```
 
-For Direct review mode (≤5 files): skip pre-scan — orchestrator already has full context.
+For Direct review mode: skip pre-scan — orchestrator already has full context.
 
-#### 5 or fewer files: Direct review
-Review all files directly in the current context (no delegation).
+#### Low complexity: Direct review
+Appropriate when changes are small in total diff size, confined to a single module or area, and the reviewing model can hold all changed files in context without losing coherence. Review all files directly in the current context (no delegation).
 
-#### 6–10 files: Parallel Batch
-Distribute to parallel review agents (2–3 files per agent) in a **single message**:
+#### Moderate complexity: Parallel Batch
+Appropriate when changes span multiple files or modules, the total diff size is substantial, or different change types (e.g., API, UI, config) benefit from focused review segments. Distribute to parallel review agents (2–3 files per agent) in a **single message**:
 ```
 Task("Review: {file1, file2}", subagent_type: "general-purpose")
 Task("Review: {file3, file4}", subagent_type: "general-purpose")
 ```
 Read each agent's returned output, then write consolidated review.
 
-#### 11+ files: Review Swarm
-Create a review task pool and spawn pre-assigned review workers:
+#### High complexity: Review Swarm
+Appropriate when changes are large-scale, cross-cutting across many modules, involve mixed change types (security-sensitive code, architecture layers, business logic), or individual file groups require deep specialist focus. Create a review task pool and spawn pre-assigned review workers:
 
 > **Note**: Unlike implement swarm (which prohibits self-claiming due to write conflicts), review workers use orchestrator pre-assignment by file group. This is safe because review is read-only — no write race conditions.
 
@@ -206,7 +206,7 @@ After individual/parallel reviews complete, the **orchestrator** MUST perform a 
 
 **For 11+ file reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
 
-0. **Impact Map integration**: Use the Impact Map from Step 1.5 to prioritize verification. Affected files with >3 references to changed symbols should be read and checked for breakage — even if no finding was raised against them.
+0. **Impact Map integration**: Use the Impact Map from Step 1.5 to prioritize verification. Affected files with significant coupling to changed symbols (behavioral call references, not just type imports, especially in critical code paths) should be read and checked for breakage — even if no finding was raised against them.
 
 1. **Filter**: From all collected findings, select those involving:
    - Call order changes (function A now calls B before C)

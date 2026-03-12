@@ -72,6 +72,8 @@ Analyze the project and auto-infer configuration. Use `$ARGUMENTS` as additional
 - If no lockfile: check `packageManager` field in `package.json`
 - Non-JS projects: check `pyproject.toml` (Python), `Cargo.toml` (Rust), `go.mod` (Go)
 
+> These detection rules are starting-point heuristics, not definitive. If a project uses a tool not listed here, the model should still detect it from context (e.g., `bun.lockb` for Bun, `deno.lock` for Deno). Always confirm the detected setup with the user before proceeding.
+
 **Step 2. Framework Detection**
 - Determine from `package.json` dependencies/devDependencies:
 
@@ -91,9 +93,11 @@ Analyze the project and auto-infer configuration. Use `$ARGUMENTS` as additional
 - Non-JS: `pyproject.toml` → Django/FastAPI/Flask, `Cargo.toml` → Rust project, `go.mod` → Go project
 - Presence of `tsconfig.json` → TypeScript indicator
 
+> This list covers common frameworks but is not exhaustive. For unlisted frameworks, infer from package.json dependencies, project structure, and configuration files. Present the detection result to the user for confirmation.
+
 **Step 3. Architecture Detection**
 - Analyze directory structure:
-  - FSD: requires **at least 3** of `features/`, `entities/`, `shared/`, `widgets/`, `pages/` under `src/`
+  - FSD: If the project's src/ directory contains a combination of FSD-characteristic directories (`features/`, `entities/`, `shared/`, `widgets/`, `pages/`, `processes/`, `app/`), assess whether the project follows FSD principles. Variant FSD structures (e.g., using `processes/` instead of `pages/`) should also be detected. Confirm with the user if the detection is uncertain.
   - `src/domain/`, `src/application/`, `src/infrastructure/` → Clean Architecture
   - `src/modules/` → Modular
   - Other → Layered

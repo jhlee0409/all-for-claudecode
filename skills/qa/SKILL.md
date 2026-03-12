@@ -82,7 +82,7 @@ Checks:
 Evaluate general code quality indicators.
 
 Checks:
-- **Complexity hotspots**: deeply nested logic, functions exceeding ~50 LOC
+- **Complexity hotspots**: deeply nested logic, functions with high cognitive complexity (many branches, side effects, or state mutations). Line count alone is not a reliable indicator — a 30-line function with nested conditionals and side effects may be more complex than a 60-line function with simple sequential logic.
 - **Duplication**: near-identical code blocks across files
 - **Magic numbers/strings**: unexplained literals in logic
 - **TODO/FIXME accumulation**: stale markers (count, age if git history available)
@@ -128,7 +128,7 @@ For each active category:
 
 ### 5. Critic Loop
 
-Apply `docs/critic-loop-rules.md` with **safety cap: 3 rounds**.
+Apply `docs/critic-loop-rules.md` with **safety cap: 5 rounds**.
 
 Focus the critic on:
 - Are the findings actionable or just noise?

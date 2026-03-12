@@ -75,12 +75,16 @@ Flag any matches for the Breaking Changes section.
 
 Categorize each commit/PR into one of:
 
-| Category | Conventional Commit Prefixes | Fallback Heuristics |
-|----------|------------------------------|---------------------|
+| Category | Conventional Commit Prefixes | Fallback (no prefix) |
+|----------|------------------------------|----------------------|
 | Breaking Changes | `!:` suffix, `BREAKING` | Label: `breaking` |
-| New Features | `feat:` | "add", "new", "implement", "support" |
-| Bug Fixes | `fix:` | "fix", "resolve", "correct", "patch" |
+| New Features | `feat:` | Commit introduces new user-facing functionality |
+| Bug Fixes | `fix:` | Commit fixes broken or incorrect behavior |
 | Other Changes | `chore:`, `docs:`, `ci:`, `refactor:`, `perf:`, `test:`, `style:`, `build:` | Everything else |
+
+**Fallback classification rule** — For commits without conventional prefixes, read the commit message semantically. Classify based on what the commit actually does: did it introduce new user-facing functionality (New Features)? Did it fix broken behavior (Bug Fixes)? Or is it a maintenance/improvement change (Other Changes)? Do not match individual words — understand the commit's purpose.
+
+The word "add" in "add a new API endpoint" indicates a feature. The same word in "add missing test coverage" indicates a test (Other Changes). Context determines classification.
 
 **Rewriting rules** — transform each entry from developer-speak to user-facing language:
 

@@ -116,7 +116,7 @@ If `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files*
 
 ### 3. Phase-by-Phase Execution
 
-Execute each phase in order. Choose the orchestration mode based on the number of [P] tasks in the phase:
+Execute each phase in order. Choose the orchestration mode by evaluating whether multi-agent coordination overhead would be justified given the tasks' characteristics:
 
 #### Mode Selection
 
@@ -126,12 +126,17 @@ Execute each phase in order. Choose the orchestration mode based on the number o
 |-----------|------|----------|
 | No [P] markers | Sequential | Main agent executes tasks one by one |
 | [P] tasks but delegation criteria NOT met | Sequential | Main agent executes directly (preserves full context) |
-| [P] tasks, delegation criteria ALL met, 3–5 [P] | Parallel Batch | Launch Task() calls in parallel |
-| [P] tasks, delegation criteria ALL met, 6+ [P] | Swarm | Create task pool → orchestrator pre-assigns tasks to worker agents |
+| [P] tasks, delegation criteria ALL met, coordination overhead justified, moderate parallelism | Parallel Batch | Launch Task() calls in parallel |
+| [P] tasks, delegation criteria ALL met, coordination overhead clearly justified, high parallelism | Swarm | Create task pool → orchestrator pre-assigns tasks to worker agents |
+
+**Mode judgment**: Ask — "Given these N tasks with their complexity, file scope, and interdependencies, would spawning multiple agents and merging their results be faster and safer than executing sequentially?" If the answer is not clearly yes, default to Sequential.
+
+- **Parallel Batch** is appropriate when there are enough independent tasks that parallel execution provides meaningful speed gain, but the total count is manageable enough that a single orchestrator round-trip suffices.
+- **Swarm** is appropriate when the number of independent tasks is large enough that a single batch of Task() calls would saturate the concurrent agent limit, requiring multiple orchestrator rounds.
 
 **Parallel delegation criteria** (ALL must be satisfied):
 1. Tasks have **no `depends:` edges** between them in the DAG (no ordering constraint)
-2. **≥ 3 parallelizable tasks** in the phase (2 tasks → sequential is cheaper)
+2. **Enough parallelizable tasks** that multi-agent overhead is worth it (a very small number of short tasks → sequential is cheaper)
 3. Each task is **self-contained** (does not require runtime results from other tasks in the same batch)
 4. Each task's **target files do not overlap** with any other task in the batch (no shared file writes)
 
@@ -143,7 +148,7 @@ If ANY criterion fails → main agent sequential execution (context preservation
 - On task start: `▶ {ID}: {description}`
 - On completion: `✓ {ID} complete`
 
-#### Parallel Batch Mode (3–5 [P] tasks)
+#### Parallel Batch Mode (moderate [P] tasks)
 
 **Pre-validation**: Verify no file overlap (downgrade to sequential if overlapping).
 
@@ -203,14 +208,17 @@ Task("T004: Create AuthService", subagent_type: "afc:afc-impl-worker", isolation
 2. Capture the `agentId` from the failed agent's result (returned in Task tool output)
 3. Reset: `TaskUpdate(taskId, status: "pending")`
 4. Track: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
-5. If retryCount < 3 → re-launch with `resume: lastAgentId` in the next batch round. The resumed agent retains full context from the previous attempt (what it tried, what failed, partial progress), enabling more targeted retry instead of starting from scratch.
+5. **Classify the error before deciding to retry**:
+   - Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
+   - If the error **differs** from the previous attempt (transient/flaky — different message, network blip, lock contention) → re-launch with `resume: lastAgentId`. The resumed agent retains full context from the previous attempt (what it tried, what failed, partial progress), enabling more targeted retry.
    - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
-6. If retryCount >= 3 → mark as failed, report: `"T{ID} failed after 3 attempts: {last error}"`
+   - Update `metadata.lastError` with the current error on each attempt.
+6. If retryCount >= 5 (absolute safety cap) → mark as failed, report: `"T{ID} failed after {retryCount} attempts: {last error}"`
 7. Continue with remaining tasks — a single failure does not block the entire phase
 
-#### Swarm Mode (6+ [P] tasks)
+#### Swarm Mode (high [P] task count)
 
-When a phase has more than 5 parallelizable tasks, use the **orchestrator-managed swarm pattern**.
+When a phase has enough parallelizable tasks that a single batch of Task() calls would saturate the concurrent agent limit and require multiple orchestrator rounds, use the **orchestrator-managed swarm pattern**.
 
 > **Key constraint**: Claude Code's TaskUpdate uses **last-write-wins** with local file locking only. Multiple sub-agents calling TaskUpdate on the same task simultaneously can cause lost writes. The orchestrator must mediate task assignment to prevent collisions.
 
@@ -268,7 +276,7 @@ Task("Worker 2: T008, T010, T012", subagent_type: "afc:afc-impl-worker", isolati
 5. If unblocked tasks remain → assign to new worker batch (repeat Step 2)
 6. If all tasks complete → phase done
 
-**Worker count**: N = min(5, unblocked task count). Max 5 concurrent sub-agents per phase.
+**Worker count**: N = min(5, unblocked task count). Max 5 concurrent sub-agents per phase (5 is the Claude Code platform limit for concurrent agents — not a semantic preference).
 
 **Task assignment strategy**: Round-robin by file path — each worker gets tasks targeting different files to maximize isolation. If a worker has multiple tasks, order them by `depends:` topology.
 
@@ -280,9 +288,12 @@ When a worker agent returns an error:
 3. Capture the `agentId` from the failed worker's result
 4. Reset uncompleted tasks: `TaskUpdate(taskId, status: "pending")`
 5. Track retry count: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
-6. If retryCount < 3 → re-launch with `resume: lastAgentId` to preserve context from the previous attempt. The resumed agent retains its full conversation history (files read, changes attempted, errors encountered), enabling targeted retry.
+6. **Classify the error before deciding to retry**:
+   - Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
+   - If the error **differs** from the previous attempt (transient/flaky — different message, network blip, lock contention) → re-launch with `resume: lastAgentId`. The resumed agent retains its full conversation history (files read, changes attempted, errors encountered), enabling targeted retry.
    - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
-7. If retryCount >= 3 → mark as failed, report: `"T{ID} failed after 3 attempts: {last error}"`
+   - Update `metadata.lastError` with the current error on each attempt.
+7. If retryCount >= 5 (absolute safety cap) → mark as failed, report: `"T{ID} failed after {retryCount} attempts: {last error}"`
 8. Continue with remaining tasks
 
 > Single task failure does not block the phase. The orchestrator reassigns failed tasks to subsequent batches.
@@ -384,10 +395,10 @@ Implementation complete
 - **Architecture compliance**: follow {config.architecture} rules.
 - **{config.ci} gate**: must pass on phase completion. Do not bypass.
 - **Swarm workers**: max 5 concurrent. File overlap is strictly prohibited between parallel tasks.
-- **On error**: prevent infinite loops. Report to user after 3 attempts.
+- **On error**: classify errors before retrying. Stop immediately on deterministic (same) errors. Allow additional attempts for transient (different) errors. Hard cap at 5 retries total.
 - **Real-time tasks.md updates**: mark checkbox on each task completion.
 - **Default is direct execution**: main agent executes tasks directly unless all 4 parallel delegation criteria are met. This preserves full context and avoids multi-agent context loss.
-- **Mode selection is automatic**: do not manually override. Sequential (default), batch for 3–5 qualifying [P], swarm for 6+ qualifying [P].
+- **Mode selection is automatic**: do not manually override. Sequential (default), batch when moderate independent parallelism justifies coordination overhead, swarm when high task count requires multiple orchestrator rounds.
 - **NEVER use `run_in_background: true` on Task calls**: agents must run in foreground so results are returned before the next step.
 - **No worker self-claiming**: In swarm mode, the orchestrator pre-assigns tasks to workers. Workers do NOT call TaskList/TaskUpdate to claim tasks — this avoids last-write-wins race conditions on TaskUpdate.
 - **Phase-locked registration**: Only register (TaskCreate) the current phase's tasks. Never pre-register future phases. This is the primary mechanism for phase boundary enforcement.

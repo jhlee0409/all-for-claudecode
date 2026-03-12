@@ -134,10 +134,10 @@ No issues found. Code looks good!
 
 Display the full review comment to the user in the console.
 
-Then determine the review event type:
-- **Critical findings exist** → `REQUEST_CHANGES`
-- **Only Warning/Info findings** → `COMMENT`
-- **No findings** → `APPROVE`
+Then determine the review event based on the actual severity and context of findings:
+- **REQUEST_CHANGES**: Use when findings indicate genuine risk to production code — bugs that would affect users, security vulnerabilities, or architectural violations that would be costly to fix later. A Critical finding in test code or documentation alone does not warrant blocking the PR.
+- **COMMENT**: Use when findings are improvements or concerns that the author should consider but that don't pose immediate risk. Also appropriate when Critical findings are in non-production code (tests, docs, config) or when the author has already acknowledged the concern in PR discussion.
+- **APPROVE**: Use when no findings exist, or when all findings are informational and the code is ready to merge.
 
 Tell the user:
 ```

@@ -71,9 +71,8 @@ Task("Triage PR #{number}: {title}", subagent_type: "general-purpose",
   2. Run: gh pr view {number} --comments
   3. Analyze the diff for:
      - What the PR does (1-2 sentence summary)
-     - Risk level: Critical (core logic, auth, data, security-related config) / Medium (features, UI) / Low (docs, non-security config, tests)
-       NOTE: Config files that touch auth, security, permissions, secrets, or access control keywords are Critical, not Low
-     - Complexity: High (>10 files or cross-cutting) / Medium (3-10 files) / Low (<3 files)
+     - Risk level: Assess the actual impact of this PR on the system. Consider: does it change trust boundaries, data flows, or core business logic? Could a bug here cause data loss, security breach, or service outage? Rate risk based on potential blast radius, not file categories.
+     - Complexity: Assess the cognitive complexity of reviewing this PR. Consider: how many distinct concerns does it touch, does it cross architectural boundaries, does understanding one change require understanding another? Rate complexity based on review difficulty, not file count.
      - Whether build/test verification is needed (yes/no + reason)
      - Potential issues or concerns (max 3)
      - Suggested reviewers or labels if obvious
@@ -98,9 +97,9 @@ Task("Triage Issues #{n1}-#{n5}", subagent_type: "general-purpose",
   For each issue:
   1. Read issue body and comments: gh issue view {number} --comments
   2. Classify:
-     - Type: Bug / Feature / Enhancement / Question / Maintenance
-     - Priority: P0 (blocking) / P1 (important) / P2 (nice-to-have) / P3 (backlog)
-     - Estimated effort: Small (< 1 day) / Medium (1-3 days) / Large (3+ days)
+     - Type: Classify based on the issue's actual nature. The standard categories (Bug, Feature, Enhancement, Question, Maintenance) serve as defaults, but adapt to the project's own labeling conventions if they differ.
+     - Priority: Assess priority based on the issue's relationship to current work, user impact, and project goals — not by forcing into generic P0-P3 buckets. Consider: is this blocking other work? How many users are affected? Does it align with current priorities?
+     - Estimated effort: Estimate based on the actual scope of work required, considering project complexity and available context — not by rigid day-count buckets.
      - Related PRs (if any mentioned)
   3. One-line summary
 
@@ -203,7 +202,7 @@ Merge Phase 1 and Phase 2 results into a single report:
 - **Immediate attention**: {list of Critical PRs and P0 issues}
 - **Ready to merge**: {PRs with no concerns and passing checks}
 - **Needs discussion**: {PRs/issues requiring team input}
-- **Stale items**: {PRs/issues with no activity > 14 days}
+- **Stale items**: {PRs/issues with no meaningful activity for an extended period. Consider the project's typical development cadence — what counts as stale depends on the project's release cycle and activity patterns.}
 ```
 
 ### 5. Save Report

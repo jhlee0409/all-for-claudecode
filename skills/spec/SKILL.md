@@ -53,7 +53,7 @@ Before writing the spec, understand the current project structure:
 3. Identify related type definitions, APIs, and components
 4. **Necessity & scope check** — evaluate whether the request warrants a full spec:
    - **Already exists?** If the feature substantially exists → report: "This feature appears to already exist at {path}." Ask user: enhance existing, replace entirely, or abort.
-   - **Over-scoped?** If `$ARGUMENTS` implies 10+ files or multiple unrelated concerns → warn and suggest splitting into separate specs.
+   - **Over-scoped?** If `$ARGUMENTS` implies multiple unrelated concerns or changes that span different architectural boundaries, warn and suggest splitting. Judge by the diversity and independence of concerns, not by file count — a well-organized feature touching many files in one module is fine, while a small change spanning security, database, and UI layers may be over-scoped.
    - **Trivial?** If the change is small enough to implement directly (typo, config value, single-line fix) → suggest: "This can be implemented directly without a full spec. Proceed with direct edit?"
    - If user chooses abort → end with `"No spec generated — {reason}."` and suggest the appropriate alternative.
 

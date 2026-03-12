@@ -53,7 +53,7 @@ Analyze ALL queue entries together as a batch. For each entry, you receive struc
 **Classification rules:**
 1. Group semantically similar entries into clusters (e.g., "use const not let" + "always use const" = 1 cluster)
 2. For each cluster, determine:
-   - **Confidence**: high (explicit preference, ≥2 occurrences) / medium (single clear correction) / low (ambiguous excerpt)
+   - **Confidence**: Assess based on the strength and clarity of the signal, not occurrence count. A single explicit user correction ("never do X") is high confidence. Two ambiguous occurrences may still be medium. Consider: was the feedback direct and clear? Does it apply broadly or only to a specific case? Use high / medium / low accordingly.
    - **Rule type**: naming, style, workflow, testing, architecture
    - **Scope**: universal (all files) or file-type-specific (e.g., "In TypeScript files...")
 
@@ -73,7 +73,7 @@ For each candidate rule:
 
 ### 4. Present Suggestions
 
-Show clustered suggestions to user. Cap at **5 suggestions per review** (highest confidence first).
+Show clustered suggestions to user, most impactful first. Present the most impactful suggestions first. If there are many high-confidence patterns, present them all rather than artificially capping. If most are low-confidence, present fewer. Let relevance and confidence drive the count, not a fixed limit.
 
 ```markdown
 ## Learned Patterns ({N} pending, showing top {M})
@@ -125,7 +125,7 @@ For each approved rule:
 
 3. **Remove consumed entries** from `.claude/.afc-learner-queue.jsonl` (entries that were approved, skipped, or rejected — only keep entries not yet reviewed)
 
-4. **Rule count check**: If `afc-learned.md` now has ≥30 rules (count `<!-- afc:learned` markers), suggest consolidation:
+4. **Rule count check**: Suggest consolidation when the rules file becomes unwieldy — when rules overlap, contradict each other, or are too numerous to effectively guide behavior. Use judgment rather than a fixed count:
    ```
    afc-learned.md has {N} rules. Consider reviewing and consolidating related rules
    to keep context budget efficient. You can edit the file directly.
@@ -147,6 +147,6 @@ Learner review complete
 - **Opt-in only**: Learner signal collection requires `.claude/afc/learner.json` to exist. Run `/afc:learner enable` to start.
 - **Project-scoped rules**: All rules write to `.claude/rules/afc-learned.md` (git-tracked, team-visible). Never writes to root `CLAUDE.md`, `~/.claude/CLAUDE.md`, or auto memory.
 - **No raw prompts stored**: The signal queue contains only structured metadata (type, category, 80-char redacted excerpt, timestamp). Full prompt text is never persisted.
-- **Queue limits**: Max 50 entries, 7-day TTL. Stale entries are pruned at session start.
+- **Queue limits**: Manage queue size to prevent unbounded growth. Remove entries that have been reviewed, are no longer relevant (the code they reference has changed significantly), or are duplicates of already-processed patterns. As a practical guideline, keep the queue focused on recent, actionable items. Stale entries are pruned at session start.
 - **Safe by design**: Anti-injection guardrails prevent propagation of harmful instructions. Category blocklist prevents rules about permissions/security/hooks.
 - **Editable output**: `afc-learned.md` is a regular markdown file. Edit, delete, or reorganize rules at any time.

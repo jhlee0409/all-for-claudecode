@@ -41,11 +41,26 @@ For dependency audit command: infer from `packageManager` field in `package.json
 - `$ARGUMENTS` = "full" → entire `src/`
 - Not specified → changed files from `git diff --name-only HEAD`
 
-### 2. Agent Teams (if more than 10 files)
+### 2. Agent Teams (when scan complexity warrants it)
 
-Use parallel agents for wide-scope scans:
+Use Agent Teams when the scan scope is complex enough that a single-pass review would miss cross-file vulnerability patterns. Assess holistically:
 
-**Pre-scan: Data Flow Context** (before distributing to agents):
+- **File types**: Auth handlers, trust boundary code, and input-processing layers warrant deeper multi-agent scrutiny than config files or simple utilities
+- **Code volume**: Large files with dense logic benefit from focused agent attention
+- **Diversity of concerns**: Multiple distinct security domains (auth + injection + data exposure) across separate modules
+- **Trust boundaries**: Files that cross privilege levels (user input → DB, client → server, public → internal API)
+
+Use Agent Teams when any of the following apply:
+- Scan includes auth handlers, session management, or access control logic spanning multiple files
+- Input entry points and their sanitization/consumption code live in different directories
+- The scope spans multiple distinct security domains that cannot be assessed in a single coherent pass
+
+Use direct scan (orchestrator only) when:
+- Scope is a single module or tightly-coupled set of files
+- Security concerns are localized (e.g., one feature, one data flow)
+- No cross-file trust boundary transitions are involved
+
+**Pre-scan: Data Flow Context** (before distributing to agents, when using Agent Teams):
 
 1. For each changed file, identify **input entry points** (user input, API params, URL params, form data) and **sanitization calls** (validation, escaping, encoding)
 2. Trace input flow across changed files: where does user input enter? Where is it sanitized? Where is it consumed?
@@ -65,7 +80,7 @@ Task("Security scan: src/shared/api/", subagent_type: general-purpose,
   prompt: "... {include Data Flow Context} ...")
 ```
 
-For scans with ≤10 files: skip pre-scan — orchestrator has full context.
+For direct scans (orchestrator only): skip pre-scan — orchestrator has full context.
 
 ### 2.5. Cross-Boundary Verification
 

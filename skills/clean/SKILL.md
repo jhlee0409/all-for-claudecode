@@ -60,23 +60,24 @@ Set `PIPELINE_ARTIFACT_DIR` = `.claude/afc/specs/{feature}/`
 - **If retrospective.md exists** -> record as patterns missed by the Plan phase Critic Loop in `.claude/afc/memory/retrospectives/` (reuse as RISK checklist items in future runs)
 - **If review-report.md exists** -> copy to `.claude/afc/memory/reviews/{feature}-{date}.md` before .claude/afc/specs/ deletion
 - **If research.md exists** and was not already persisted in Plan phase -> copy to `.claude/afc/memory/research/{feature}.md`
-- **Agent memory consolidation**: check each agent's MEMORY.md line count -- if either exceeds 100 lines, invoke the respective agent to self-prune:
+- **Agent memory consolidation**: Check each agent's MEMORY.md for bloat — if it contains redundant, obsolete, or superseded entries that reduce signal-to-noise ratio, invoke the agent to self-prune:
   ```
   Task("Memory cleanup: afc-architect", subagent_type: "afc:afc-architect",
-    prompt: "Your MEMORY.md exceeds 100 lines. Read it, prune old/redundant entries, and rewrite to under 100 lines following your size limit rules.")
+    prompt: "Review your MEMORY.md. Read it, identify and prune old/redundant/obsolete entries, and rewrite it keeping only entries that are still relevant and non-overlapping.")
   ```
-  (Same pattern for afc-security if needed. Skip if both are under 100 lines.)
-- **Memory rotation**: for each memory subdirectory, check file count and prune oldest files if over threshold:
-  | Directory | Threshold | Action |
-  |-----------|-----------|--------|
-  | `quality-history/` | 30 files | Delete oldest files beyond threshold |
-  | `reviews/` | 40 files | Delete oldest files beyond threshold |
-  | `retrospectives/` | 30 files | Delete oldest files beyond threshold |
-  | `research/` | 50 files | Delete oldest files beyond threshold |
-  | `decisions/` | 60 files | Delete oldest files beyond threshold |
-  - Sort by filename ascending (oldest first), delete excess
+  Use semantic assessment (are entries still relevant? do entries overlap?) rather than a line-count threshold. (Same pattern for afc-security if needed.)
+- **Memory rotation**: For each memory subdirectory, assess whether the oldest files still provide value. Prune files that are superseded by newer entries, reference features/code that no longer exists, or overlap with other files. As a practical guideline, keep the most recent and relevant entries — if a directory has grown large enough that scanning it would be slow (roughly 30+ files), prioritize pruning the least relevant entries:
+  | Directory | Pruning Intent | Soft Guideline |
+  |-----------|---------------|----------------|
+  | `quality-history/` | Remove superseded or redundant quality records | ~30 files |
+  | `reviews/` | Remove reviews for features no longer in the codebase | ~40 files |
+  | `retrospectives/` | Remove retrospectives whose learnings are already captured elsewhere | ~30 files |
+  | `research/` | Remove research for libraries/patterns no longer used | ~50 files |
+  | `decisions/` | Remove decisions that have been reversed or are no longer relevant | ~60 files |
+  - These numbers are soft guidelines, not hard cutoffs — use judgment based on relevance
+  - Sort by filename ascending (oldest first) when pruning by recency
   - Log: `"Memory rotation: {dir} pruned {N} files"`
-  - Skip directories that do not exist or are under threshold
+  - Skip directories that do not exist or clearly do not need pruning
 
 ### 6. Quality Report
 
