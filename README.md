@@ -52,6 +52,10 @@ Spec (1/5) → Plan (2/5) → Implement (3/5) → Review (4/5) → Clean (5/5)
   │              └─ File change map, ADR recording, research persistence
   └─ Acceptance criteria, pre-implementation gates
 
+Skill Advisor checkpoints (A–E) between phases dynamically invoke
+auxiliary skills (ideate, consult, architect, security, test, qa, learner)
+when LLM evaluation detects they would add value. Budget: max 5 per run.
+
 Hooks run automatically at each step.
 CI failure → debug-based RCA (not blind retry).
 Critic Loops verify quality at each gate until convergence.

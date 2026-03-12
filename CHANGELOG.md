@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2026-03-12
+
+### Added
+- **Skill Advisor system**: 5 phase-boundary checkpoints (A–E) in the auto pipeline dynamically invoke auxiliary skills (ideate, consult, architect, security, analyze, test, qa, learner) based on LLM semantic evaluation. Budget-controlled: max 5 auxiliary invocations per pipeline, max 2 per checkpoint, max 1 Transform mode per pipeline.
+- **Expert Agent Routing**: Skill Advisor routes to 8 domain experts (backend, infra, PM, design, marketing, legal, security, tech-advisor) via explicit agent ID lookup — not keyword matching.
+- **Advisor state persistence**: `ADVISOR_COUNT` and `ADVISOR_TRANSFORM_USED` persisted to `.afc-state.json` for context-loss resilience.
+- **Dynamic template pattern support**: consistency check now skips `afc-{domain}-expert` style patterns in subagent_type validation.
+- **Learner safety guardrails in auto pipeline**: Checkpoint E pattern promotion enforces category blocklist (no permissions/security/hook rules).
+
+### Changed
+- **Intent-based evaluation across all skills**: Replaced 26 static keyword matching patterns and arbitrary numeric thresholds with LLM semantic judgment across 16 skill files. Covers: consult domain routing, review/implement orchestration mode selection, triage risk assessment, release-notes categorization, learner confidence scoring, and more.
+- **Memory management aligned**: Auto pipeline Phase 5 now uses the same soft-guideline memory rotation and semantic agent memory pruning as standalone clean — no more hard line-count thresholds.
+- **Critic loop standardized**: All skills now use 5-pass safety cap and consistent terminology ("passes" not "rounds"). QA critic loop doc path standardized to `${CLAUDE_PLUGIN_ROOT}/docs/`.
+- **Error retry classification**: Implement skill now classifies errors as deterministic vs transient before retrying. First failure initializes `metadata.lastError`; subsequent same-error failures stop immediately. Hard cap raised to 5.
+
+### Fixed
+- **Ideate Transform extraction**: Checkpoint A now extracts correct section names from ideate output (Problem Statement, Value Proposition, Core Features) instead of non-existent sections.
+- **Security agent memory write**: Removed unreachable MEMORY.md write instructions from afc-security agent prompts (agent has `disallowedTools: [Write, Edit]`).
+- **QA_FINDINGS injection**: Added explicit Step 4.7 in auto Phase 4 to inject Checkpoint D quality findings into review context.
+- **Complexity analysis consumption**: Added explicit read step in auto Phase 3 for `complexity-analysis.md` produced by Checkpoint C.
+- **Stale numeric references**: Removed "11+" file count and ">3 references" thresholds from auto/review cross-boundary verification.
+- **Phase gate step count**: "3-step gate" corrected to "3-4 step gate" matching phase-gate-protocol.md.
+- **Architect subagent_type**: Added missing quotes to `Explore` subagent type.
+- **Implement terminology**: "File Change List" unified to "File Change Map".
+- **CONTRIBUTING.md**: Replaced deprecated `.afc-active` state file reference with `.afc-state.json`.
+
+### Tests
+- 397 examples, 0 failures (+1 new: dynamic template pattern skip in consistency check)
+
 ## [2.10.0] - 2026-03-11
 
 ### Changed
