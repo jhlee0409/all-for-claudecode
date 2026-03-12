@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2026-03-13
+
+### Added
+- **`/afc:setup` skill**: New dedicated skill for managing the AFC routing block in `~/.claude/CLAUDE.md`. Handles injection, version updates, conflict detection, and legacy migration. Idempotent — skips if version already matches.
+
+### Changed
+- **Init/Setup separation**: `/afc:init` now only creates project-local files (`.claude/afc.config.md`, `.claude/rules/afc-project.md`, `.claude/afc/project-profile.md`). Global `~/.claude/CLAUDE.md` management moved to `/afc:setup`.
+- **`${CLAUDE_PLUGIN_ROOT}` → `${CLAUDE_SKILL_DIR}/../..`** in all 14 SKILL.md files. `CLAUDE_PLUGIN_ROOT` is not substituted in skill content — only `CLAUDE_SKILL_DIR` is resolved by Claude Code at load time. This was the root cause of doctor running from stale cache versions and init trying to execute a nonexistent `afc-init.sh` script.
+- **Doctor version header**: `afc-doctor.sh` now prints the running plugin version and root path at the top of output, making stale-cache issues immediately visible.
+- **Fix suggestions split**: Doctor and session-start now suggest `/afc:setup` for CLAUDE.md issues and `/afc:init` for project config issues.
+- **Consistency check**: Skill routing validation now checks `setup/SKILL.md` instead of `init/SKILL.md`.
+
+### Fixed
+- **Skills referencing wrong cache version**: LLM was guessing `CLAUDE_PLUGIN_ROOT` path (not substituted in SKILL.md), causing doctor to run from old cached versions (e.g., 2.7.1 instead of 2.11.0).
+- **Init executing nonexistent script**: LLM inferred `afc-init.sh` from doctor's pattern — init is a prompt-only skill with no bash script.
+- **Doctor example output**: Updated to match actual script output (category names, version header, fix messages).
+
 ## [2.11.0] - 2026-03-12
 
 ### Added
