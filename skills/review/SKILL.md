@@ -204,7 +204,7 @@ For each changed file, examine from the following perspectives:
 
 After individual/parallel reviews complete, the **orchestrator** MUST perform a cross-boundary check. This is a required step, not optional — skipping it is a review defect.
 
-**For 11+ file reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
+**For High complexity (Review Swarm) reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
 
 0. **Impact Map integration**: Use the Impact Map from Step 1.5 to prioritize verification. Affected files with significant coupling to changed symbols (behavioral call references, not just type imports, especially in critical code paths) should be read and checked for breakage — even if no finding was raised against them.
 

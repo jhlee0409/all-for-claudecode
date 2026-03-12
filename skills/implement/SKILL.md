@@ -209,7 +209,8 @@ Task("T004: Create AuthService", subagent_type: "afc:afc-impl-worker", isolation
 3. Reset: `TaskUpdate(taskId, status: "pending")`
 4. Track: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
 5. **Classify the error before deciding to retry**:
-   - Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
+   - **First failure** (no `metadata.lastError` exists): store `metadata.lastError = {current error message}`. Classify as transient (no prior error to compare) and proceed with retry.
+   - **Subsequent failures** (`metadata.lastError` exists): Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
    - If the error **differs** from the previous attempt (transient/flaky — different message, network blip, lock contention) → re-launch with `resume: lastAgentId`. The resumed agent retains full context from the previous attempt (what it tried, what failed, partial progress), enabling more targeted retry.
    - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
    - Update `metadata.lastError` with the current error on each attempt.
@@ -289,7 +290,8 @@ When a worker agent returns an error:
 4. Reset uncompleted tasks: `TaskUpdate(taskId, status: "pending")`
 5. Track retry count: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
 6. **Classify the error before deciding to retry**:
-   - Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
+   - **First failure** (no `metadata.lastError` exists): store `metadata.lastError = {current error message}`. Classify as transient (no prior error to compare) and proceed with retry.
+   - **Subsequent failures** (`metadata.lastError` exists): Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
    - If the error **differs** from the previous attempt (transient/flaky — different message, network blip, lock contention) → re-launch with `resume: lastAgentId`. The resumed agent retains its full conversation history (files read, changes attempted, errors encountered), enabling targeted retry.
    - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
    - Update `metadata.lastError` with the current error on each attempt.

@@ -63,24 +63,26 @@ Each checkpoint contains a **structured evaluation prompt** that the orchestrato
 | Transform mode | max 1 per pipeline | Main context pollution prevention |
 | Concurrent fork | max 3 per checkpoint | Agent resource limit |
 
-Track auxiliary invocations in `ADVISOR_COUNT` (starts at 0, increments per invocation). If `ADVISOR_COUNT >= 5`, skip remaining checkpoints. Transform invocations tracked in `ADVISOR_TRANSFORM_USED` (boolean).
+Track auxiliary invocations in `ADVISOR_COUNT` (starts at 0, increments per invocation). If `ADVISOR_COUNT >= 5`, skip remaining checkpoints. Transform invocations tracked in `ADVISOR_TRANSFORM_USED` (boolean). **Every increment** must persist to pipeline state: `afc_state_write "advisorCount" "$ADVISOR_COUNT"`. On context recovery, restore from state: `ADVISOR_COUNT = afc_state_read "advisorCount"`.
 
 ### Expert Agent Routing
 
 When a checkpoint determines that domain expertise is needed, route to the appropriate expert agent:
 
-| Domain | Agent | When to route |
-|--------|-------|---------------|
-| backend | afc-backend-expert | API design, database schema, server architecture, auth flows |
-| infra | afc-infra-expert | Deployment, CI/CD, cloud infrastructure, containerization, scaling |
-| pm | afc-pm-expert | Product decisions, user stories, prioritization, metrics |
-| design | afc-design-expert | UI/UX, accessibility, component design, visual hierarchy |
-| marketing | afc-marketing-expert | SEO, analytics, growth, conversion optimization |
-| legal | afc-legal-expert | Privacy regulations, licensing, compliance, data protection |
-| security | afc-appsec-expert | Application security, vulnerability patterns, secure coding |
-| advisor | afc-tech-advisor | Technology selection, library comparison, stack decisions |
+| Domain | Agent ID | When to route |
+|--------|----------|---------------|
+| backend | `afc-backend-expert` | API design, database schema, server architecture, auth flows |
+| infra | `afc-infra-expert` | Deployment, CI/CD, cloud infrastructure, containerization, scaling |
+| pm | `afc-pm-expert` | Product decisions, user stories, prioritization, metrics |
+| design | `afc-design-expert` | UI/UX, accessibility, component design, visual hierarchy |
+| marketing | `afc-marketing-expert` | SEO, analytics, growth, conversion optimization |
+| legal | `afc-legal-expert` | Privacy regulations, licensing, compliance, data protection |
+| security | `afc-appsec-expert` | Application security, vulnerability patterns, secure coding |
+| advisor | `afc-tech-advisor` | Technology selection, library comparison, stack decisions |
 
 Route based on **what expertise the feature actually needs**, not keyword presence. Consider the project's `{config.architecture}` and tech stack — skip domains irrelevant to the project.
+
+**Agent ID lookup**: Use the Agent ID column directly as the `subagent_type` value (e.g., `subagent_type: "afc:afc-backend-expert"`). Do NOT construct agent names from the domain name — `security` maps to `afc-appsec-expert` (not `afc-security-expert`), and `advisor` maps to `afc-tech-advisor` (not `afc-advisor-expert`).
 
 ---
 
@@ -113,7 +115,11 @@ Route based on **what expertise the feature actually needs**, not keyword presen
    - File change tracking started
    - Timeline log: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-start "Auto pipeline: {feature}"`
 5. Create `.claude/afc/specs/{feature}/` directory → **record path as `PIPELINE_ARTIFACT_DIR`** (for Clean scope)
-6. **Initialize Skill Advisor**: `ADVISOR_COUNT = 0`, `ADVISOR_TRANSFORM_USED = false`
+6. **Initialize Skill Advisor**: `ADVISOR_COUNT = 0`, `ADVISOR_TRANSFORM_USED = false`. Persist to pipeline state for context-loss resilience:
+   ```bash
+   afc_state_write "advisorCount" "0"
+   afc_state_write "advisorTransformUsed" "false"
+   ```
 7. Start notification:
    ```
    Auto pipeline started: {feature}
@@ -215,8 +221,12 @@ If all checks pass, proceed to Phase 0.8.
 
 **If A1 >= 3** (Transform — skip if `ADVISOR_TRANSFORM_USED`):
 1. Execute `/afc:ideate` inline with `$ARGUMENTS`
-2. Read generated `ideate.md` → extract "## Core Concept" + "## Success Criteria" sections
-3. Construct enriched spec input:
+2. If ideate fails or produces no output:
+   - Do NOT set `ADVISOR_TRANSFORM_USED = true`
+   - Proceed with original `$ARGUMENTS`
+   - Log: `"Skill Advisor [A]: ideate failed, proceeding with original input"`
+3. On success: read generated `ideate.md` → extract "## Core Concept" + "## Success Criteria" sections
+4. Construct enriched spec input:
    ```
    SPEC_INPUT = "$ARGUMENTS
 
@@ -224,16 +234,16 @@ If all checks pass, proceed to Phase 0.8.
    {extracted Core Concept section}
    {extracted Success Criteria section}"
    ```
-4. Replace `$ARGUMENTS` with `SPEC_INPUT` for Phase 1
-5. Set `ADVISOR_TRANSFORM_USED = true`, increment `ADVISOR_COUNT`
-6. Progress: `  ├─ Skill Advisor [A]: ideate (score: {N}/5, input restructured from idea to structured brief)`
+5. Replace `$ARGUMENTS` with `SPEC_INPUT` for Phase 1
+6. Set `ADVISOR_TRANSFORM_USED = true`, increment `ADVISOR_COUNT`, persist: `afc_state_write "advisorCount" "$ADVISOR_COUNT"` and `afc_state_write "advisorTransformUsed" "true"`
+7. Progress: `  ├─ Skill Advisor [A]: ideate (score: {N}/5, input restructured from idea to structured brief)`
 
 **If A2 >= 3** (Enrich):
 1. Determine which domain from Expert Agent Routing table best matches the **actual expertise gap** (not keyword presence)
 2. Verify domain relevance: does this project's `{config.architecture}` and tech stack make this domain applicable? (e.g., skip `design` for a CLI tool, skip `infra` if the project has no deployment config)
-3. Invoke expert agent:
+3. Invoke expert agent (look up the agent-id from the Expert Agent Routing table — do NOT construct from domain name):
    ```
-   Task("Domain pre-consultation: {domain}", subagent_type: "afc:afc-{domain}-expert",
+   Task("Domain pre-consultation: {domain}", subagent_type: "afc:{agent-id-from-routing-table}",
      prompt: "You are being consulted automatically during pipeline spec preparation.
 
      ## Feature Context
@@ -362,7 +372,10 @@ Execute `/afc:spec` logic inline:
 4. Increment `ADVISOR_COUNT`
 5. Progress: `  ├─ Skill Advisor [B]: architect (score: {N}/5, advisory: {M} recommendations, {K} conflicts)`
 
-**If both B1 and B2 >= 3**: launch both agents in a **single message** (parallel fork). Both count toward budget.
+**If both B1 and B2 >= 3**: launch both agents in a **single message** (parallel fork). Both count toward budget. After both return:
+1. Apply `THREAT_MODEL` to plan Risk & Mitigation section
+2. Apply `ARCH_ADVISORY` to plan Architecture Decision section
+3. If security mitigations conflict with architecture proposals (e.g., "encrypt at rest" vs "use in-memory cache") → **ESCALATE** to user with conflict details
 
 **If all scores < 3**: proceed silently to Phase 2.
 
@@ -482,9 +495,9 @@ Execute `/afc:plan` logic inline:
 
 **If C2 >= 3** (Enrich):
 1. Determine which domain expert can best resolve the uncertainties (based on the nature of the open questions, not keywords)
-2. Invoke expert agent:
+2. Invoke expert agent (look up the agent-id from the Expert Agent Routing table — do NOT construct from domain name):
    ```
-   Task("Domain gap resolution: {domain}", subagent_type: "afc:afc-{domain}-expert",
+   Task("Domain gap resolution: {domain}", subagent_type: "afc:{agent-id-from-routing-table}",
      prompt: "Resolve domain uncertainties found during planning.
 
      ## Uncertain Items
@@ -670,7 +683,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 | D1 | Were **testable source files changed without corresponding test coverage**? Look at `git diff --name-only` — for each changed source file, does a test file covering its behavior also appear in the diff? Consider the project's test convention and whether the changed files contain logic that should be tested (skip config files, types-only files, static assets). Only evaluate if `{config.test}` is non-empty. | 1=all changes have test coverage, 5=critical logic changed with zero tests | `test` | Enrich |
 | D2 | Based on **past pipeline quality data**, is there reason to believe this implementation has hidden quality issues? Check `.claude/afc/memory/quality-history/*.json` (if exists) — have recent pipelines shown elevated critical findings? Are there recurring problem categories that this feature's changed files might be susceptible to? | 1=clean history or no history, 5=strong pattern of recurring issues in similar areas | `qa` | Observe (fork) |
 
-**If D1 >= 3** (Enrich):
+**If D1 >= 3 AND `{config.test}` is non-empty** (Enrich — skip if no test framework configured):
 1. Identify which changed source files lack test coverage — focus on files with meaningful logic (not config, not types, not assets):
    ```
    For each changed source file:
