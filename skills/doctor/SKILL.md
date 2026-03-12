@@ -16,7 +16,7 @@ model: sonnet
 > Like `brew doctor` or `flutter doctor` — verifies the **tool's setup**, NOT the project's code quality.
 > Read-only — never modifies files. Reports issues with actionable fix commands.
 >
-> **IMPORTANT: Do NOT analyze project source code, architecture, or code quality. Only check afc plugin configuration, hooks, state, and environment as defined in the check tables below.**
+> **IMPORTANT: Do NOT analyze project source code, architecture, or code quality. Only check afc plugin configuration, hooks, state, and environment. All checks are handled by the bash script — just run it and print the output.**
 
 ## Arguments
 
@@ -39,7 +39,7 @@ Each failing check includes a **Fix:** line with the exact command to resolve it
 
 1. Run the health check script (covers ALL categories — no manual checks needed):
    ```
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-doctor.sh" $ARGUMENTS
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-doctor.sh" $ARGUMENTS
    ```
 
 2. Print the script's stdout output as-is. Do not reformat, summarize, or interpret.
@@ -54,8 +54,8 @@ Each failing check includes a **Fix:** line with the exact command to resolve it
 ## Example Output
 
 ```
-all-for-claudecode Doctor
-=======================
+all-for-claudecode Doctor (v2.11.0)
+Plugin root: /path/to/plugin
 
 Environment
   ✓ git installed (2.43.0)
@@ -64,34 +64,38 @@ Environment
 
 Project Config
   ✓ .claude/afc.config.md exists
-  ✓ Required sections: ci, gate, architecture, code_style
-  ✓ CI command runnable
-  ✓ Gate command runnable
+  ✓ Required sections present
+  ✓ Gate command defined
 
 CLAUDE.md Integration
   ✓ Global ~/.claude/CLAUDE.md exists
   ✓ all-for-claudecode block present
-  ⚠ all-for-claudecode block version outdated (1.0.0 → 1.1.0)
-    Fix: /afc:init
-  ✓ No conflicting routing
+  ⚠ all-for-claudecode block outdated (block: 1.0.0, plugin: 1.1.0)
+    Fix: run /afc:setup to update
+
+Legacy Migration
+  ✓ No legacy artifacts found
 
 Pipeline State
-  ✓ No stale pipeline flag
+  ✓ No stale pipeline state
   ✓ No orphaned artifacts
-  ✓ No lingering safety tags
-  ✓ No stale checkpoint
+
+Memory Health
 
 Hook Health
   ✓ hooks.json valid
-  ✓ All scripts exist
+  ✓ All hook scripts exist
   ✓ All scripts executable
 
+Learner Health
+  ✓ Learner not enabled (opt-in via /afc:learner enable)
+
 Version Sync (dev)
-  ✓ Version triple match
+  ✓ Version triple match (1.1.0)
   ✓ Cache in sync
 
-Command Definitions (dev)
-  ✓ Frontmatter exists (25 files)
+Skill Definitions (dev)
+  ✓ Frontmatter exists (29 files)
   ✓ Required fields present
   ✓ Name-filename match
   ✓ Fork-agent references valid
@@ -108,7 +112,7 @@ Doc References (dev)
   ✓ Domain adapters exist (3 files)
 
 ─────────────────────────
-Results: 28 passed, 2 warnings, 0 failures
+Results: 26 passed, 2 warnings, 0 failures
 2 warnings found. Non-blocking but review recommended.
 ```
 
@@ -119,4 +123,4 @@ Results: 28 passed, 2 warnings, 0 failures
 - **Always run all checks**: do not stop on first failure. The full picture is the value.
 - **Actionable fixes**: every non-pass result must include a Fix line. Never report a problem without a solution.
 - **Fast execution**: skip CI/gate command checks if `--fast` is in arguments (these are the slowest checks).
-- **Development checks**: Categories 8–11 (Version Sync, Command Definitions, Agent Definitions, Doc References) only run when inside the all-for-claudecode source repo.
+- **Development checks**: Version Sync, Skill Definitions, Agent Definitions, Doc References only run when inside the all-for-claudecode source repo.

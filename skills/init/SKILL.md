@@ -12,8 +12,16 @@ model: sonnet
 
 # /afc:init — Project Initial Setup
 
-> Creates a `.claude/afc.config.md` configuration file in the current project,
-> and injects afc intent-based routing rules into `~/.claude/CLAUDE.md`.
+> Creates project-local configuration files for the all-for-claudecode plugin.
+> Analyzes the project structure and generates config, rules, and profile.
+> This is a **project-local** operation — it only creates files under `.claude/`.
+> For global `~/.claude/CLAUDE.md` setup, use `/afc:setup` instead.
+
+## Important
+
+This skill is a **prompt-only skill** — there is NO `afc-init.sh` script.
+All steps below are instructions for the LLM to execute directly using its allowed tools (Read, Write, Bash, Glob).
+Do NOT attempt to run a shell script for this skill.
 
 ## Arguments
 
@@ -124,7 +132,7 @@ Generate `.claude/afc.config.md` in **free-form markdown** format:
 3. **Code Style** section: describe detected language, strictness, naming conventions, lint rules in free-form prose/lists
 4. **Project Context** section: describe framework, state management, styling, testing, DB/ORM, risks, and any other relevant project characteristics in free-form prose/lists
 
-Reference `${CLAUDE_PLUGIN_ROOT}/templates/afc.config.template.md` for the section structure.
+Reference `${CLAUDE_SKILL_DIR}/../../templates/afc.config.template.md` for the section structure.
 Write sections as natural descriptions — **no YAML code blocks** except for CI Commands.
 For items that cannot be inferred: note `TODO: Adjust for your project` inline.
 Save to `.claude/afc.config.md`.
@@ -137,7 +145,7 @@ Generate `.claude/rules/afc-project.md` — a concise summary of project rules t
 2. If `.claude/rules/afc-project.md` already exists:
    - If it contains `<!-- afc:auto-generated` marker: overwrite silently (auto-generated file, safe to regenerate)
    - If it does NOT contain the marker: ask user "Project rules file exists (user-managed). Overwrite with auto-generated version?" — skip if declined
-3. Reference `${CLAUDE_PLUGIN_ROOT}/templates/afc-project.template.md` for section structure
+3. Reference `${CLAUDE_SKILL_DIR}/../../templates/afc-project.template.md` for section structure
 4. Fill in from the analysis performed in Step 3:
    - **Architecture**: pattern, key layers, import rules, path alias — concise bullet points
    - **Code Style**: language, naming conventions, lint rules — concise bullet points
@@ -153,195 +161,30 @@ Generate `.claude/afc/project-profile.md` for expert consultation agents:
 
 1. Create `.claude/afc/` directory if it does not exist
 2. If `.claude/afc/project-profile.md` already exists: skip (do not overwrite)
-3. If not exists: generate from the detected project information using `${CLAUDE_PLUGIN_ROOT}/templates/project-profile.template.md` as the structure
+3. If not exists: generate from the detected project information using `${CLAUDE_SKILL_DIR}/../../templates/project-profile.template.md` as the structure
    - Fill in Stack, Architecture, and Domain fields from the analysis in Step 3
    - Leave Team, Scale, and Constraints as template placeholders for user to fill
 4. Print: `Project profile: .claude/afc/project-profile.md (review and adjust team/scale/domain fields)`
 
-### 5. Scan Global CLAUDE.md and Detect Conflicts
-
-Read `~/.claude/CLAUDE.md` and analyze in the following order.
-
-#### Step 1. Check for Existing all-for-claudecode or Legacy SELFISH Block
-
-Check for presence of `<!-- AFC:START -->` or `<!-- SELFISH:START -->` marker.
-- If `<!-- AFC:START -->` found: replace with latest version (proceed to Step 3)
-- If `<!-- SELFISH:START -->` found (legacy v1.x): remove the entire `SELFISH:START` ~ `SELFISH:END` block, then proceed to inject new all-for-claudecode block at Step 4. Print: `Migrated: SELFISH block → all-for-claudecode block in ~/.claude/CLAUDE.md`
-- If neither found: proceed to Step 2
-
-#### Step 2. Conflict Pattern Scan
-
-Search CLAUDE.md for the patterns below. **IMPORTANT: EXCLUDE content inside any marker blocks (`<!-- *:START -->` ~ `<!-- *:END -->`). Only scan unguarded content outside marker blocks.** Other tools (OMC, etc.) manage their own blocks — their internal agent names are not conflicts.
-
-**A. Marker Block Detection**
-- Regex: `<!-- ([A-Z0-9_-]+):START -->` ~ `<!-- \1:END -->`
-- Record all found block names and line ranges
-- **Strip these ranges from the scan target** — only scan lines NOT inside any marker block
-
-**B. Agent Routing Conflict Detection**
-In the **unguarded** (non-marker-block) content only, find directives containing these keywords:
-- `executor`, `deep-executor` — conflicts with afc:implement
-- `code-reviewer`, `quality-reviewer`, `style-reviewer`, `api-reviewer`, `security-reviewer`, `performance-reviewer` — conflicts with afc:review
-- `debugger` (in agent routing context) — conflicts with afc:debug
-- `planner` (in agent routing context) — conflicts with afc:plan
-- `analyst`, `verifier` — conflicts with afc:validate
-- `test-engineer` — conflicts with afc:test
-
-**C. Skill Routing Conflict Detection**
-In the **unguarded** content only, find these patterns:
-- Another tool's skill trigger table (e.g., tables like `| situation | skill |`)
-- `delegate to`, `route to`, `always use` + agent name combinations
-- Directives related to `auto-trigger`, `intent detection`, `intent-based routing`
-
-**D. Legacy Block Detection**
-Previous versions without markers or with old branding:
-- `## all-for-claudecode Auto-Trigger Rules`
-- `## all-for-claudecode Integration`
-- `<!-- SELFISH:START -->` ~ `<!-- SELFISH:END -->` (v1.x block — should have been caught in Step 1, but double-check here)
-- `<selfish-pipeline>` / `</selfish-pipeline>` XML tags
-
-#### Step 3. Report Conflicts and User Choice
-
-**No conflicts found** → proceed directly to Step 4
-
-**Conflicts found** → report to user and present options:
+### 5. Final Output
 
 ```
-📋 CLAUDE.md Scan Results
-├─ Tool blocks found: {block name list} (lines {range})
-├─ Agent routing conflicts: {conflict count}
-│   e.g., "executor" (line XX) ↔ afc:implement
-│   e.g., "code-reviewer" (line XX) ↔ afc:review
-└─ Skill routing conflicts: {conflict count}
-```
-
-Ask user:
-
-> "Directives overlapping with afc were found. How would you like to proceed?"
->
-> 1. **afc-exclusive mode** — Adds afc override comments to conflicting agent routing directives.
->    Does not modify other tools' marker block contents; covers them with override rules in the all-for-claudecode block.
-> 2. **coexistence mode** — Ignores conflicts and adds only the afc block.
->    Since it's at the end of the file, afc directives will likely take priority, but may be non-deterministic on conflict.
-> 3. **manual cleanup** — Shows only the current conflict list and stops.
->    User manually cleans up CLAUDE.md then runs init again.
-
-Based on choice:
-- **Option 1**: all-for-claudecode block includes explicit override rules (activates `<conflict-overrides>` section from base template)
-- **Option 2**: all-for-claudecode block added without overrides (base template as-is)
-- **Option 3**: Print conflict list only and abort without modifying CLAUDE.md
-
-#### Step 4. Inject all-for-claudecode Block
-
-**Version resolution**: Read `${CLAUDE_PLUGIN_ROOT}/package.json` and extract the `"version"` field. Use this value as `{PLUGIN_VERSION}` in the template below.
-
-Add the following block at the **very end** of the file (later-positioned directives have higher priority).
-
-Replace existing all-for-claudecode block if present, otherwise append.
-If legacy block (`## all-for-claudecode Auto-Trigger Rules` etc.) exists, remove it then append.
-
-```markdown
-<!-- AFC:START -->
-<!-- AFC:VERSION:{PLUGIN_VERSION} -->
-<afc-pipeline>
-IMPORTANT: For requests matching the afc skill routing table below, always invoke the corresponding skill via the Skill tool. Do not substitute with other agents or tools.
-
-## Skill Routing
-
-Classify the user's intent and route to the matching skill. Use semantic understanding — not keyword matching.
-
-| User Intent | Skill | Route When |
-|-------------|-------|------------|
-| Full lifecycle | `afc:auto` | User wants end-to-end feature development, or the request is a non-trivial new feature without an existing plan |
-| Specification | `afc:spec` | User wants to define or write requirements, acceptance criteria, or success conditions |
-| Design/Plan | `afc:plan` | User wants to plan HOW to implement before coding — approach, architecture decisions, design |
-| Implement | `afc:implement` | User wants specific code changes with a clear scope: add feature, refactor, modify. Requires existing plan or precise instructions |
-| Review | `afc:review` | User wants code review, PR review, or quality check on existing/changed code |
-| Debug/Fix | `afc:debug` | User reports a bug, error, or broken behavior and wants diagnosis and fix |
-| Test | `afc:test` | User wants to write tests, improve coverage, or verify behavior |
-| Validate | `afc:validate` | User wants to check consistency or validate existing pipeline artifacts |
-| Analyze | `afc:analyze` | User wants to understand, explore, or audit existing code without modifying it |
-| QA Audit | `afc:qa` | User wants project quality audit, test confidence check, or runtime quality gaps |
-| Research | `afc:research` | User wants deep investigation of external tools, libraries, APIs, or technical concepts |
-| Ideate | `afc:ideate` | User wants to brainstorm ideas, explore possibilities, or draft a product brief |
-| Consult | `afc:consult` | User wants expert advice on a decision: library choice, architecture direction, legal/security/infra guidance |
-| Launch | `afc:launch` | User wants to prepare a release — generate changelog, release notes, version bump, or tag |
-| Tasks | `afc:tasks` | User explicitly wants to decompose work into a task breakdown |
-| Ambiguous | `afc:clarify` | User's request is too vague or underspecified to route confidently |
-
-### Routing Rules
-
-1. **Auto vs Implement**: A new feature request without an existing plan routes to `afc:auto`. Only use `afc:implement` when the user has a clear, scoped task or an existing plan/spec.
-2. **Compound intents**: Route to the primary intent. The pipeline handles sequencing internally.
-3. **Design-first**: When scope is non-trivial (multiple files, architectural decisions needed), prefer `afc:auto` or `afc:plan` over direct `afc:implement`.
-
-User-only (not auto-triggered — when user invokes directly via `/afc:X`, execute the skill immediately):
-- `afc:doctor` — plugin health check
-- `afc:architect` — architecture review
-- `afc:security` — security scan
-- `afc:checkpoint` — session save
-- `afc:resume` — session restore
-- `afc:principles` — project principles management
-- `afc:clean` — pipeline cleanup (artifact cleanup, dead code scan, pipeline flag release)
-- `afc:triage` — parallel PR/issue triage
-- `afc:learner` — pattern learning or rule promotion
-- `afc:pr-comment` — post PR review comments to GitHub
-- `afc:release-notes` — generate release notes from git history
-
-## Pipeline
-
-spec → plan → implement → review → clean
-
-## Override Rules
-
-NEVER use executor, deep-executor, debugger, planner, analyst, verifier, test-engineer, code-reviewer, quality-reviewer, style-reviewer, api-reviewer, security-reviewer, performance-reviewer for tasks that an afc skill covers above. ALWAYS invoke the afc skill instead.
-
-## Source Verification
-
-When analyzing or making claims about external systems, APIs, SDKs, or third-party tools:
-- Verify against official documentation, NOT project-internal docs
-- Do not hardcode reference data when delegating to sub-agents — instruct them to look up primary sources
-- Cross-verify high-severity findings before reporting
-</afc-pipeline>
-<!-- AFC:END -->
-```
-
-**When Option 1 (afc-exclusive mode) is selected**, the following `<conflict-overrides>` section is added:
-
-Add the following directly below the Override Rules:
-
-```markdown
-## Detected Conflicts
-
-This environment has other agent routing tools that overlap with afc.
-The following rules were auto-generated to resolve conflicts:
-- The Skill Routing table above always takes priority over the agent routing directives of {detected tool blocks}
-- This block is at the end of the file and therefore has the highest priority
-```
-
-### 6. Final Output
-
-```
-all-for-claudecode initialization complete
+all-for-claudecode project init complete
 ├─ Config: .claude/afc.config.md
 ├─ Rules: .claude/rules/afc-project.md (auto-loaded)
+├─ Profile: .claude/afc/project-profile.md
 ├─ Framework: {detected framework}
 ├─ Architecture: {detected style}
 ├─ Package Manager: {detected manager}
 ├─ Auto-inferred: {inferred item count}
 ├─ TODO: {items requiring manual review}
-├─ CLAUDE.md: {injected|updated|already current|user aborted}
-│   {if conflicts found} └─ Conflict resolution: {afc-exclusive|coexistence|user cleanup}
-└─ Next step: /afc:spec or /afc:auto
+└─ Next step: /afc:setup (global routing) or /afc:auto (start building)
 ```
 
 ## Notes
 
+- **Idempotent**: safe to run multiple times. Existing config prompts for overwrite confirmation; auto-generated rules are silently regenerated.
+- **Project-local only**: this skill only creates files under `.claude/`. It never touches `~/.claude/CLAUDE.md`. For global routing setup, use `/afc:setup`.
 - **Overwrite caution**: If config file already exists, always confirm with user.
 - **Inference limits**: Auto-inference is best-effort. User may need to review and adjust.
 - **`.claude/` directory**: Created automatically if it does not exist.
-- **Global CLAUDE.md principles**:
-  - Never modify content outside the `<!-- AFC:START/END -->` markers (the `AFC` prefix in markers is a compact technical identifier)
-  - Never modify content inside other tools' marker blocks (`<!-- *:START/END -->`)
-  - Always place the all-for-claudecode block at the very end of the file (ensures priority)
-  - Conflict resolution is handled only via override rules (do not delete or modify other blocks)

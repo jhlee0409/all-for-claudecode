@@ -28,7 +28,8 @@ npx all-for-claudecode
 Then:
 
 ```
-/afc:init                              # Detect your stack, generate config
+/afc:setup                             # Set up global routing in ~/.claude/CLAUDE.md
+/afc:init                              # Detect your stack, generate project config
 /afc:auto "Add user authentication"    # Run the full pipeline
 ```
 
@@ -115,7 +116,8 @@ Performance: ✓ no N+1 queries
 | `/afc:clean` | Pipeline artifact cleanup and codebase hygiene |
 | `/afc:research` | Technical research with persistent storage |
 | `/afc:debug` | Bug diagnosis and fix |
-| `/afc:init` | Project setup — detects stack and generates config |
+| `/afc:init` | Project setup — detects stack and generates project config |
+| `/afc:setup` | Global CLAUDE.md configuration — injects/updates AFC routing block |
 | `/afc:doctor` | Diagnose project health and plugin setup |
 | `/afc:architect` | Architecture analysis (persistent memory) |
 | `/afc:security` | Security scan (persistent memory, isolated worktree) |
@@ -248,10 +250,12 @@ Dependencies are tracked via DAG. CI gate + Mini-Review + Auto-Checkpoint run at
 ## Configuration
 
 ```
-/afc:init
+/afc:setup    # One-time: inject routing block into ~/.claude/CLAUDE.md
+/afc:init     # Per-project: detect stack and generate .claude/afc.config.md
 ```
 
-Auto-detects your tech stack (package manager, framework, architecture, testing, linting) and generates `.claude/afc.config.md` with CI commands, architecture rules, and code style conventions. No manual preset selection needed — the init command analyzes your project structure directly.
+- **`/afc:setup`** — Manages the AFC routing block in your global `~/.claude/CLAUDE.md`. Run once after install and again after plugin updates. Idempotent — skips if version matches.
+- **`/afc:init`** — Auto-detects your tech stack (package manager, framework, architecture, testing, linting) and generates project-local config files. No manual preset selection needed.
 
 ## FAQ
 

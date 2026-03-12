@@ -97,6 +97,7 @@ async function main() {
     console.log("  ✓ Installation complete!");
     console.log();
     console.log("  Next steps:");
+    console.log("    /afc:setup                   Set up global routing");
     console.log("    /afc:init                    Create project config");
     console.log('    /afc:auto "feature desc"      Run the pipeline');
     console.log();

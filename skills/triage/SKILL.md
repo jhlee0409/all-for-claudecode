@@ -33,7 +33,7 @@ model: sonnet
 Run the metadata collection script:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-triage.sh" "$ARGUMENTS"
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-triage.sh" "$ARGUMENTS"
 ```
 
 This returns JSON with PR/issue metadata. If the script is not available, fall back to direct `gh` commands:

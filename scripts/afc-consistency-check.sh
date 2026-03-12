@@ -264,7 +264,7 @@ check_command_docs() {
   [ -d "$skills_dir" ] || return
 
   local readme="$PROJECT_DIR/README.md"
-  local init_skill="$skills_dir/init/SKILL.md"
+  local setup_skill="$skills_dir/setup/SKILL.md"
   local claude_md="$PROJECT_DIR/CLAUDE.md"
   local issues=0
 
@@ -281,12 +281,12 @@ check_command_docs() {
       fi
     fi
 
-    # Sub-check B: init/SKILL.md should mention afc:{name} for user-invocable skills
+    # Sub-check B: setup/SKILL.md should mention afc:{name} for user-invocable skills
     local invocable
     invocable=$(get_cmd_field "$skill_file" "user-invocable")
-    if [ "$invocable" != "false" ] && [ -f "$init_skill" ]; then
-      if ! grep -qE "afc:${cmd_name}([^a-z0-9-]|$)" "$init_skill" 2>/dev/null; then
-        warn "Skill '$cmd_name' missing from init/SKILL.md skill routing"
+    if [ "$invocable" != "false" ] && [ -f "$setup_skill" ]; then
+      if ! grep -qE "afc:${cmd_name}([^a-z0-9-]|$)" "$setup_skill" 2>/dev/null; then
+        warn "Skill '$cmd_name' missing from setup/SKILL.md skill routing"
         issues=$((issues + 1))
       fi
     fi
@@ -303,7 +303,7 @@ check_command_docs() {
   done
 
   if [ "$issues" -eq 0 ]; then
-    ok "Skill docs: all skills referenced in README.md, init/SKILL.md, CLAUDE.md"
+    ok "Skill docs: all skills referenced in README.md, setup/SKILL.md, CLAUDE.md"
   fi
 }
 

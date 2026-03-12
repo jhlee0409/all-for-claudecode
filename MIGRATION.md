@@ -20,7 +20,7 @@
 - If you previously used `/afc:analyze` for artifact consistency checking, use `/afc:validate` instead (or let the pipeline invoke it automatically).
 - Agent memory files (`.claude/agent-memory/afc-architect/MEMORY.md`, `.claude/agent-memory/afc-security/MEMORY.md`) exceeding 100 lines will be auto-pruned on next pipeline run.
 - Memory subdirectories exceeding rotation thresholds will be auto-pruned during the Clean phase.
-- Run `/afc:init` to update the `AFC:VERSION` tag in your CLAUDE.md.
+- Run `/afc:setup` to update the `AFC:VERSION` tag in your CLAUDE.md.
 
 ---
 
@@ -77,7 +77,7 @@ Replace the `SELFISH:START` / `SELFISH:END` block in your project's CLAUDE.md:
 - Change all `selfish:` command references → `afc:`
 - Change `selfish-architect` / `selfish-security` → `afc-architect` / `afc-security`
 
-Or simply run `/afc:init` to regenerate the block.
+Or simply run `/afc:setup` to regenerate the block.
 
 #### 4. Migrate state files (if pipeline was active)
 

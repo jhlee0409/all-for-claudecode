@@ -55,6 +55,20 @@ section() {
   printf '\n%s\n' "$1"
 }
 
+# --- Header: show which plugin version is running ---
+if [ -f "$PLUGIN_ROOT/package.json" ]; then
+  if command -v jq >/dev/null 2>&1; then
+    RUNNING_VERSION=$(jq -r '.version // "unknown"' "$PLUGIN_ROOT/package.json" 2>/dev/null || echo "unknown")
+  else
+    RUNNING_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_ROOT/package.json" 2>/dev/null | head -1 | sed 's/.*: *"//;s/"//' || echo "unknown")
+  fi
+  printf 'all-for-claudecode Doctor (v%s)\n' "$RUNNING_VERSION"
+  printf 'Plugin root: %s\n' "$PLUGIN_ROOT"
+else
+  printf 'all-for-claudecode Doctor (version unknown)\n'
+  printf 'Plugin root: %s\n' "$PLUGIN_ROOT"
+fi
+
 # --- Category 1: Environment ---
 section "Environment"
 
@@ -160,15 +174,15 @@ if [ -f "$GLOBAL_CLAUDE" ]; then
         if [ "$BLOCK_VERSION" = "$PLUGIN_VERSION" ]; then
           pass "Block version matches plugin ($PLUGIN_VERSION)"
         else
-          warn "all-for-claudecode block outdated (block: $BLOCK_VERSION, plugin: $PLUGIN_VERSION)" "run /afc:init to update"
+          warn "all-for-claudecode block outdated (block: $BLOCK_VERSION, plugin: $PLUGIN_VERSION)" "run /afc:setup to update"
         fi
       fi
     fi
   else
-    fail "all-for-claudecode block not found" "run /afc:init to inject all-for-claudecode block"
+    fail "all-for-claudecode block not found" "run /afc:setup to inject all-for-claudecode block"
   fi
 else
-  warn "No global ~/.claude/CLAUDE.md" "run /afc:init"
+  warn "No global ~/.claude/CLAUDE.md" "run /afc:setup"
 fi
 
 # --- Category 4: Legacy Migration ---
@@ -179,7 +193,7 @@ LEGACY_FOUND=false
 # Legacy CLAUDE.md block
 if [ -f "$GLOBAL_CLAUDE" ] && grep -q '<!-- SELFISH:START -->' "$GLOBAL_CLAUDE" 2>/dev/null; then
   LEGACY_FOUND=true
-  warn "Legacy SELFISH:START block in ~/.claude/CLAUDE.md" "run /afc:init (will replace)"
+  warn "Legacy SELFISH:START block in ~/.claude/CLAUDE.md" "run /afc:setup (will replace)"
 fi
 
 # Legacy config

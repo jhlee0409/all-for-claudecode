@@ -24,7 +24,7 @@ model: sonnet
 ### 1. Resolve Feature
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clean
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase clean
 ```
 
 - If pipeline is active: read feature from state
@@ -98,13 +98,13 @@ Clear `.claude/afc/memory/checkpoint.md` **and** `~/.claude/projects/{ENCODED_PA
 ### 8. Timeline Finalize
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"
 ```
 
 ### 9. Release Pipeline Flag
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" end
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" end
 ```
 
 - Stop Gate Hook deactivated

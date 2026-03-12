@@ -73,7 +73,7 @@ if [ -f "$PLUGIN_ROOT/package.json" ]; then
     if [ -f "$GLOBAL_CLAUDE" ]; then
       BLOCK_VERSION=$(grep -o 'AFC:VERSION:[0-9][0-9.]*' "$GLOBAL_CLAUDE" 2>/dev/null | head -1 | sed 's/AFC:VERSION://' || true)
       if [ -n "${BLOCK_VERSION:-}" ] && [ "$BLOCK_VERSION" != "$PLUGIN_VERSION" ]; then
-        OUTPUT="${OUTPUT:+$OUTPUT | }[AFC VERSION MISMATCH] v$PLUGIN_VERSION installed but CLAUDE.md block is v$BLOCK_VERSION. Run /afc:init to update."
+        OUTPUT="${OUTPUT:+$OUTPUT | }[AFC VERSION MISMATCH] v$PLUGIN_VERSION installed but CLAUDE.md block is v$BLOCK_VERSION. Run /afc:setup to update."
       fi
     fi
   fi

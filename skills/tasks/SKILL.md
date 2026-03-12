@@ -80,8 +80,8 @@ Decompose tasks per Phase defined in plan.md.
 1. **1 task = 1 file** principle (where possible)
 2. **Same file = sequential**, **different files = [P] candidate**
 3. **Explicit dependencies**: Use `depends: [T001, T002]` to declare blocking dependencies. Tasks without `depends:` and with [P] marker are immediately parallelizable.
-4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
-5. **Dependency graph must be a DAG**: no circular dependencies allowed. **Mandatory validation**: run `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md` before output. Abort if cycle detected.
+4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_SKILL_DIR}/../../scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
+5. **Dependency graph must be a DAG**: no circular dependencies allowed. **Mandatory validation**: run `"${CLAUDE_SKILL_DIR}/../../scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md` before output. Abort if cycle detected.
 6. **Test tasks**: Include a verification task for each testable unit
 7. **Phase gate**: Add a `{config.gate}` validation task at the end of each Phase
 
@@ -93,14 +93,14 @@ If `.claude/afc/memory/retrospectives/` directory exists, load the **most recent
 
 ### 4. Critic Loop
 
-> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 
 Run the critic loop until convergence. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
 | **COVERAGE** | Are all files in plan.md's File Change Map included in tasks? Are all FR-* in spec.md covered? |
-| **DEPENDENCIES** | Is the dependency graph a valid DAG? Do [P] tasks within the same phase have no file overlaps? Are all `depends:` targets valid task IDs? For physical validation of [P] file overlaps, reference the validation script: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-parallel-validate.sh"` can be called with the tasks.md path to verify no conflicts exist. |
+| **DEPENDENCIES** | Is the dependency graph a valid DAG? Do [P] tasks within the same phase have no file overlaps? Are all `depends:` targets valid task IDs? For physical validation of [P] file overlaps, reference the validation script: `"${CLAUDE_SKILL_DIR}/../../scripts/afc-parallel-validate.sh"` can be called with the tasks.md path to verify no conflicts exist. |
 
 **On FAIL**: auto-fix and continue to next pass.
 **On ESCALATE**: pause, present options to user, apply choice, resume.

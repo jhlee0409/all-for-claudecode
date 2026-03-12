@@ -43,8 +43,8 @@ git tag -f afc/pre-implement
 **Standalone safety activation** (skip if inside `/afc:auto`):
 If no active pipeline state exists, activate it for the duration of this command:
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" start {feature-name-from-plan.md}
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" start {feature-name-from-plan.md}
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase implement
 ```
 This enables Stop Gate and CI Gate hooks during standalone implementation. Release on completion (Step 7) or failure rollback.
 
@@ -81,8 +81,8 @@ If `.claude/afc/specs/{feature}/tasks.md` does not exist, generate it from plan.
      - Constraint → tasks (every spec Constraint is addressed by at least one task)
 3. **Validate** (script-based, no critic loop):
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md
    ```
 4. If validation fails → fix tasks.md and re-validate (max 2 attempts)
 5. Save to `.claude/afc/specs/{feature}/tasks.md`
@@ -312,12 +312,12 @@ When a worker agent returns an error:
 
 #### Phase Completion Gate (3 steps)
 
-> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first and perform the 3–4 steps (CI gate → Mini-Review → Integration/E2E Gate (conditional) → Auto-Checkpoint) in order.
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/phase-gate-protocol.md` first and perform the 3–4 steps (CI gate → Mini-Review → Integration/E2E Gate (conditional) → Auto-Checkpoint) in order.
 > Cannot advance to the next phase without passing the gate. Abort and report to user after 3 consecutive CI failures.
 
 After passing the gate, create a phase rollback point:
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase-tag {phase_number}
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase-tag {phase_number}
 ```
 This enables granular rollback: `git reset --hard afc/phase-{N}` restores state after Phase N completed.
 
@@ -359,7 +359,7 @@ After all tasks are complete:
 
 After CI passes, run a convergence-based Critic Loop to verify design alignment before reporting completion.
 
-> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 
 **Critic Loop until convergence** (safety cap: 5):
 
@@ -378,7 +378,7 @@ After CI passes, run a convergence-based Critic Loop to verify design alignment 
 
 **Standalone cleanup** (if pipeline was activated in Step 0):
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" end
+"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" end
 ```
 
 ```

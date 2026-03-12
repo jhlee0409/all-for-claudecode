@@ -88,7 +88,7 @@ Route based on **what expertise the feature actually needs**, not keyword presen
 
 ## Critic Loop Rules (common to all phases)
 
-> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 > Core: minimum 1 concern per criterion + mandatory Adversarial failure scenario each pass + quantitative evidence required. "PASS" as a single word is prohibited. Uses convergence-based termination with 4 verdicts (PASS/FAIL/ESCALATE/DEFER). On ESCALATE: pause and present options to user even in auto mode.
 
 ---
@@ -102,18 +102,18 @@ Route based on **what expertise the feature actually needs**, not keyword presen
 3. Determine feature name (2-3 keywords → kebab-case)
 3.5. **Preflight Check**:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-preflight-check.sh"
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-preflight-check.sh"
    ```
    - If exit 1 (hard failure) → print error and **abort**
    - If warnings only (exit 0) → print warnings and continue
 4. **Activate Pipeline Flag** (hook integration):
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" start {feature}
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" start {feature}
    ```
    - Safety Snapshot created automatically (`afc/pre-auto` git tag)
    - Stop Gate Hook activated (blocks response termination on CI failure)
    - File change tracking started
-   - Timeline log: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-start "Auto pipeline: {feature}"`
+   - Timeline log: `"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" log pipeline-start "Auto pipeline: {feature}"`
 5. Create `.claude/afc/specs/{feature}/` directory → **record path as `PIPELINE_ARTIFACT_DIR`** (for Clean scope)
 6. **Initialize Skill Advisor**: `ADVISOR_COUNT = 0`, `ADVISOR_TRANSFORM_USED = false`. Persist to pipeline state for context-loss resilience:
    ```bash
@@ -134,7 +134,7 @@ Before investing pipeline resources, evaluate whether the request warrants execu
 1. **Necessity check**: Explore codebase for existing implementations related to `$ARGUMENTS`.
    - If the feature substantially exists → ask user via AskUserQuestion:
      - "This feature appears to already exist at {path}. (1) Enhance existing (2) Replace entirely (3) Abort"
-   - If user chooses abort → release pipeline flag (`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" end`), end with: `"Pipeline aborted — feature already exists."`
+   - If user chooses abort → release pipeline flag (`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" end`), end with: `"Pipeline aborted — feature already exists."`
 
 2. **Scope check**: Estimate the scope of `$ARGUMENTS`:
    - If description implies 10+ files or multiple unrelated concerns → warn:
@@ -171,8 +171,8 @@ If all checks pass, proceed to Phase 0.8.
 3. If change touches > 2 files OR modifies any `.sh` script: **rollback fast-path changes** (`git reset --hard afc/pre-auto`), then restart with full pipeline
 4. **Checkpoint**:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase fast-path
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" ci-pass
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase fast-path
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" ci-pass
    ```
 5. Run `/afc:review` logic inline (mini-review only — single Critic pass)
 6. Run Phase 5 Clean logic (artifact cleanup, CI gate, pipeline flag release)
@@ -187,7 +187,7 @@ If all checks pass, proceed to Phase 0.8.
 
 ### Phase 0.5: Auto-Clarify Gate (conditional)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clarify`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase clarify`
 
 **Trigger condition**: Score `$ARGUMENTS` on 5 ambiguity signals. If score >= 3, trigger clarification.
 
@@ -274,7 +274,7 @@ If all checks pass, proceed to Phase 0.8.
 
 ### Phase 1: Spec (1/5)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase spec`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase spec`
 
 Execute `/afc:spec` logic inline:
 
@@ -381,7 +381,7 @@ Execute `/afc:spec` logic inline:
 
 ### Phase 2: Plan (2/5)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase plan`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase plan`
 
 Execute `/afc:plan` logic inline:
 
@@ -523,7 +523,7 @@ Execute `/afc:plan` logic inline:
 
 ### Phase 3: Implement (3/5)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase implement`
 
 **Session context reload**: At implement start, read `.claude/afc/specs/{feature}/context.md` if it exists. This restores key decisions and constraints from Plan phase (resilient to context compaction).
 
@@ -576,14 +576,14 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 #### Step 3.2: TDD Pre-Generation (conditional)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase test-pre-gen`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase test-pre-gen`
 
 **Trigger condition**: tasks.md contains at least 1 task targeting a `.sh` file in `scripts/`.
 
 **If triggered**:
 1. Run the test pre-generation script:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-test-pre-gen.sh" ".claude/afc/specs/{feature}/tasks.md" "spec/"
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-test-pre-gen.sh" ".claude/afc/specs/{feature}/tasks.md" "spec/"
    ```
 2. Review generated skeleton files — verify they are parseable:
    ```bash
@@ -598,14 +598,14 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 #### Step 3.3: Blast Radius Analysis (conditional)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase blast-radius`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase blast-radius`
 
 **Trigger condition**: plan.md File Change Map lists >= 3 files to change.
 
 **If triggered**:
 1. Run the blast radius analysis:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-blast-radius.sh" ".claude/afc/specs/{feature}/plan.md" "${CLAUDE_PROJECT_DIR}"
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-blast-radius.sh" ".claude/afc/specs/{feature}/plan.md" "${CLAUDE_PROJECT_DIR}"
    ```
 2. If exit 1 (cycle detected): **ESCALATE** — present the cycle to user with options:
    - Option 1: Refactor plan to break the cycle
@@ -621,11 +621,11 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 0. **Baseline test** (follows implement.md Step 1, item 5): if `{config.test}` is non-empty, run `{config.test}` before starting task execution. On failure, report pre-existing test failures to user and ask: "(1) Proceed anyway (2) Fix first (3) Abort". On pass or empty config, continue.
 1. Execute tasks phase by phase using implement.md orchestration rules (sequential/batch/swarm based on [P] count)
 2. **Implementation Context injection**: Every sub-agent prompt includes the `## Implementation Context` section from plan.md **and relevant FR/AC items from spec.md** (ensures spec intent propagates to workers)
-3. Perform **3-4 step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
-   - On gate pass: create phase rollback point `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase-tag {phase_number}`
+3. Perform **3-4 step gate** on each Implementation Phase completion — **always** read `${CLAUDE_SKILL_DIR}/../../docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
+   - On gate pass: create phase rollback point `"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase-tag {phase_number}`
 4. Real-time `[x]` updates in tasks.md
 5. After full completion, run `{config.ci}` final verification
-   - On pass: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" ci-pass` (releases Stop Gate)
+   - On pass: `"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" ci-pass` (releases Stop Gate)
    - **On fail: Debug-based RCA** (replaces blind retry):
      1. Execute `/afc:debug` logic inline with the CI error output as input
      2. Debug performs RCA: error trace → data flow → hypothesis → targeted fix
@@ -656,7 +656,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 #### Step 3.6: Implement Critic Loop
 
-> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 
 **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
 - **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change Map. Flag any file modified that is NOT in the plan. Flag any planned file NOT modified. Provide "M of N files match" count.
@@ -750,7 +750,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 ### Phase 4: Review (4/5)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase review`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase review`
 
 Execute `/afc:review` logic inline — **follow all review perspectives defined in `skills/review/SKILL.md`** (A through H). The review skill is the single source of truth for review criteria.
 
@@ -902,7 +902,7 @@ If Checkpoint D produced outputs, inject them into the review context:
 
 #### Step 4.9: Critic Loop
 
-> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 
 **Critic Loop until convergence** (safety cap: 5, follow Critic Loop rules):
 - COMPLETENESS: were all changed files reviewed across all 8 perspectives (A-H)?
@@ -1005,7 +1005,7 @@ Persist the review results for memory:
 
 ### Phase 5: Clean (5/5)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clean`
+`"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase clean`
 
 Artifact cleanup and codebase hygiene check after implementation and review:
 
@@ -1078,11 +1078,11 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - Clear `.claude/afc/memory/checkpoint.md` **and** `~/.claude/projects/{ENCODED_PATH}/memory/checkpoint.md` (pipeline complete = session goal achieved, dual-delete prevents stale checkpoint in either location; `ENCODED_PATH` = project path with `/` replaced by `-`)
 7. **Timeline finalize**:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" log pipeline-end "Pipeline complete: {feature}"
    ```
 8. **Release Pipeline Flag** (hook integration):
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" end
+   "${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" end
    ```
    - Stop Gate Hook deactivated
    - Change tracking log deleted

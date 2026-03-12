@@ -93,7 +93,7 @@ Confirm strategy with user before proceeding.
 
 ### 4. Critic Loop
 
-> **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 
 Run the critic loop until convergence. Safety cap: 5 passes.
 

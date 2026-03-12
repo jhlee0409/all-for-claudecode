@@ -74,6 +74,7 @@ SCRIPT
 # Test Project
 | `/afc:spec` | Write spec |
 | `/afc:init` | Project setup |
+| `/afc:setup` | Global config |
 README
 
     # CLAUDE.md with fork list
@@ -82,12 +83,22 @@ README
 - `context: fork` — runs in isolated subagent (validate, analyze, qa, architect, security)
 CLAUDEMD
 
-    # init/SKILL.md with skill routing
+    # setup/SKILL.md with skill routing (global CLAUDE.md config)
+    mkdir -p "$dir/skills/setup"
+    cat > "$dir/skills/setup/SKILL.md" << 'SETUP'
+---
+name: afc:setup
+---
+| Specification | `afc:spec` | spec command |
+- `afc:init` — project-local setup
+SETUP
+
+    # init/SKILL.md (project-local setup)
     cat > "$dir/skills/init/SKILL.md" << 'INIT'
 ---
 name: afc:init
 ---
-| Specification | `afc:spec` | spec command |
+Project init
 INIT
 
     # Version files (all matching)
@@ -261,12 +272,12 @@ CMD
     End
   End
 
-  Describe "when user-invocable command is missing from init.md"
+  Describe "when user-invocable command is missing from setup.md"
     setup_tmpdir DIR10
     BeforeAll "setup_project_fixture $DIR10"
     AfterAll "cleanup_tmpdir $DIR10"
 
-    It "warns on missing init/SKILL.md routing"
+    It "warns on missing setup/SKILL.md routing"
       mkdir -p "$DIR10/skills/newcmd"
       cat > "$DIR10/skills/newcmd/SKILL.md" << 'CMD'
 ---
@@ -280,7 +291,7 @@ CMD
       The status should eq 0
       The output should include "Done"
       The stderr should include "newcmd"
-      The stderr should include "missing from init/SKILL.md"
+      The stderr should include "missing from setup/SKILL.md"
     End
   End
 
@@ -325,7 +336,7 @@ Task("consult", subagent_type: "afc:afc-{domain}-expert")
 Task("test", subagent_type: "afc:afc-test-agent")
 CMD
       printf '| `/afc:auto` | Auto |\n' >> "$DIR13/README.md"
-      printf '| Auto | `afc:auto` | auto |\n' >> "$DIR13/skills/init/SKILL.md"
+      printf '| Auto | `afc:auto` | auto |\n' >> "$DIR13/skills/setup/SKILL.md"
       When run bash "$SCRIPT" "$DIR13"
       The status should eq 0
       The output should include "Agent names:"
@@ -350,10 +361,10 @@ context: fork
 Analysis body
 CMD
       printf '| `/afc:analyze` | Analysis |\n' >> "$DIR12/README.md"
-      printf '| Analyze | `afc:analyze` | analysis |\n' >> "$DIR12/skills/init/SKILL.md"
+      printf '| Analyze | `afc:analyze` | analysis |\n' >> "$DIR12/skills/setup/SKILL.md"
       # Add analyze to CLAUDE.md fork list
       printf '%s\n' '- `context: fork` — runs in subagent (validate, analyze, qa, architect, security)' > "$DIR12/CLAUDE.md"
-      # Add a user-invocable:false skill (should NOT require init/SKILL.md entry)
+      # Add a user-invocable:false skill (should NOT require setup/SKILL.md entry)
       cat > "$DIR12/skills/hidden/SKILL.md" << 'CMD'
 ---
 name: afc:hidden

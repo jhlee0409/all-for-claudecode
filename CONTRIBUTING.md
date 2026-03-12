@@ -20,7 +20,7 @@ bin/        ESM CLI installer
 
 | I want to... | Primary file(s) | Also update |
 |---------------|-----------------|-------------|
-| Add a new skill | `skills/{name}/SKILL.md` | `npm run lint` validates: README.md, init/SKILL.md, CLAUDE.md. Add `spec/{name}_spec.sh` if hooks involved |
+| Add a new skill | `skills/{name}/SKILL.md` | `npm run lint` validates: README.md, setup/SKILL.md, CLAUDE.md. Add `spec/{name}_spec.sh` if hooks involved |
 | Add a new hook event | `hooks/hooks.json` + `scripts/{name}.sh` | README.md (table), `spec/{name}_spec.sh` |
 | Modify config template | `templates/afc.config.template.md` | |
 | Add a new agent | `agents/{name}.md` | |
@@ -106,7 +106,7 @@ Follow this structure:
 
 Run `npm run lint` — the consistency check automatically detects missing references in:
 - **README.md**: All skills must appear in the skill table (`/afc:{name}`)
-- **skills/init/SKILL.md**: User-invocable skills must appear in the skill routing table (`afc:{name}`)
+- **skills/setup/SKILL.md**: User-invocable skills must appear in the skill routing table (`afc:{name}`)
 - **CLAUDE.md**: Skills with `context: fork` must appear in the fork list
 
 Additionally:
@@ -354,7 +354,7 @@ The pipeline is `spec → plan → implement → review → clean` (tasks are au
    - Add `afc-pipeline-manage.sh phase {name}` call
 3. Update `scripts/afc-pipeline-manage.sh` to handle the new phase name
 4. Update `CLAUDE.md` pipeline description
-5. Update the all-for-claudecode block template in `skills/init/SKILL.md`
+5. Update the all-for-claudecode block template in `skills/setup/SKILL.md`
 
 ### Modifying orchestration (implement phase)
 
