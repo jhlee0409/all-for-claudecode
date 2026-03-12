@@ -309,6 +309,30 @@ CMD
     End
   End
 
+  Describe "when dynamic template pattern is used in subagent_type"
+    setup_tmpdir DIR13
+    BeforeAll "setup_project_fixture $DIR13"
+    AfterAll "cleanup_tmpdir $DIR13"
+
+    It "skips dynamic template patterns like afc-{domain}-expert"
+      mkdir -p "$DIR13/skills/auto"
+      cat > "$DIR13/skills/auto/SKILL.md" << 'CMD'
+---
+name: afc:auto
+description: "Auto pipeline"
+---
+Task("consult", subagent_type: "afc:afc-{domain}-expert")
+Task("test", subagent_type: "afc:afc-test-agent")
+CMD
+      printf '| `/afc:auto` | Auto |\n' >> "$DIR13/README.md"
+      printf '| Auto | `afc:auto` | auto |\n' >> "$DIR13/skills/init/SKILL.md"
+      When run bash "$SCRIPT" "$DIR13"
+      The status should eq 0
+      The output should include "Agent names:"
+      The output should include "0 errors"
+    End
+  End
+
   Describe "when all command docs are present including fork and non-invocable"
     setup_tmpdir DIR12
     BeforeAll "setup_project_fixture $DIR12"

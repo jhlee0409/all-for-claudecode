@@ -10,6 +10,7 @@ argument-hint: "[feature description in natural language]"
 > Tasks are generated automatically at implement start (no separate tasks phase).
 > Critic Loop runs at each phase with unified safety cap (5). Convergence terminates early when quality is sufficient.
 > Pre-implementation gates (clarify, TDD pre-gen, blast-radius) run conditionally within the implement phase.
+> **Skill Advisor**: 5 checkpoints (A–E) at phase boundaries dynamically invoke auxiliary skills (ideate, consult, architect, security, analyze, test, qa, learner) based on signal detection. Budget-controlled (max 5 per pipeline).
 
 ## Arguments
 
@@ -32,6 +33,54 @@ If config file is missing:
 1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
 2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
 3. If user declines → **abort**
+
+---
+
+## Skill Advisor System
+
+> Auxiliary skills (ideate, consult, architect, security, analyze, test, qa, learner) are dynamically invoked at phase boundaries based on **intent-based evaluation**. Each checkpoint uses LLM semantic judgment — not keyword counting — to determine whether auxiliary skills would add value.
+
+### Core Principle: Intent-Based Evaluation
+
+Each checkpoint contains a **structured evaluation prompt** that the orchestrator answers by reading the actual artifact content (not scanning for keywords). The evaluation produces a 1–5 score per signal. Score >= 3 triggers the corresponding skill.
+
+**Why not keywords**: Keyword matching produces false positives (e.g., "token" in CSS vs auth context) and misses implicit intent (e.g., "user upload feature" implies security concerns without mentioning "XSS"). The orchestrator is an LLM — it should use semantic understanding.
+
+### Execution Modes
+
+| Mode | Description | Context cost | Example |
+|------|-------------|-------------|---------|
+| **Transform** | Skill output **replaces or restructures** the next phase's input | High (blocking) | ideate → $ARGUMENTS restructured |
+| **Enrich** | Skill output **appends context** to the next phase's input | Low (fork/Task) | consult → domain constraints section added |
+| **Observe** | Skill output is **metadata only** (logged, flags set) | Low (fork) | qa → quality score recorded |
+
+### Budget Control
+
+| Constraint | Limit | Rationale |
+|-----------|-------|-----------|
+| Per checkpoint | max 2 skills | Phase transition delay cap |
+| Pipeline total | max 5 auxiliary invocations | Total execution time cap |
+| Transform mode | max 1 per pipeline | Main context pollution prevention |
+| Concurrent fork | max 3 per checkpoint | Agent resource limit |
+
+Track auxiliary invocations in `ADVISOR_COUNT` (starts at 0, increments per invocation). If `ADVISOR_COUNT >= 5`, skip remaining checkpoints. Transform invocations tracked in `ADVISOR_TRANSFORM_USED` (boolean).
+
+### Expert Agent Routing
+
+When a checkpoint determines that domain expertise is needed, route to the appropriate expert agent:
+
+| Domain | Agent | When to route |
+|--------|-------|---------------|
+| backend | afc-backend-expert | API design, database schema, server architecture, auth flows |
+| infra | afc-infra-expert | Deployment, CI/CD, cloud infrastructure, containerization, scaling |
+| pm | afc-pm-expert | Product decisions, user stories, prioritization, metrics |
+| design | afc-design-expert | UI/UX, accessibility, component design, visual hierarchy |
+| marketing | afc-marketing-expert | SEO, analytics, growth, conversion optimization |
+| legal | afc-legal-expert | Privacy regulations, licensing, compliance, data protection |
+| security | afc-appsec-expert | Application security, vulnerability patterns, secure coding |
+| advisor | afc-tech-advisor | Technology selection, library comparison, stack decisions |
+
+Route based on **what expertise the feature actually needs**, not keyword presence. Consider the project's `{config.architecture}` and tech stack — skip domains irrelevant to the project.
 
 ---
 
@@ -64,7 +113,8 @@ If config file is missing:
    - File change tracking started
    - Timeline log: `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" log pipeline-start "Auto pipeline: {feature}"`
 5. Create `.claude/afc/specs/{feature}/` directory → **record path as `PIPELINE_ARTIFACT_DIR`** (for Clean scope)
-6. Start notification:
+6. **Initialize Skill Advisor**: `ADVISOR_COUNT = 0`, `ADVISOR_TRANSFORM_USED = false`
+7. Start notification:
    ```
    Auto pipeline started: {feature}
    ├─ Clarify? → 1/5 Spec → 2/5 Plan → 3/5 Implement → 4/5 Review → 5/5 Clean
@@ -152,6 +202,65 @@ If all checks pass, proceed to Phase 0.8.
 
 **If score < 3** (clear): skip silently, proceed to Phase 1.
 
+### Skill Advisor Checkpoint A (Pre-Spec)
+
+> Evaluate auxiliary skill triggers BEFORE entering Phase 1. Budget: max 2 skills, max 1 Transform. Skip all if `ADVISOR_COUNT >= 5`.
+
+**Intent evaluation** — Read `$ARGUMENTS` and answer these questions semantically (not by keyword scanning):
+
+| # | Question | Score 1–5 | If >= 3 | Skill | Mode |
+|---|----------|-----------|---------|-------|------|
+| A1 | Is this request at the **idea/vision level** rather than a concrete feature? (e.g., "make onboarding better" vs "add email verification to signup flow") Does it lack specific technical scope — no file paths, no API endpoints, no component names? | 1=concrete spec-ready, 5=pure vision | `ideate` | Transform |
+| A2 | Does implementing this feature require **specialized domain knowledge** that a generalist developer wouldn't have? Consider: regulatory requirements, industry-specific patterns, domain-specific anti-patterns, compliance rules. Which domain from the Expert Agent Routing table would add the most value? | 1=general programming, 5=deep domain expertise essential | `consult({domain})` | Enrich (fork) |
+
+**If A1 >= 3** (Transform — skip if `ADVISOR_TRANSFORM_USED`):
+1. Execute `/afc:ideate` inline with `$ARGUMENTS`
+2. Read generated `ideate.md` → extract "## Core Concept" + "## Success Criteria" sections
+3. Construct enriched spec input:
+   ```
+   SPEC_INPUT = "$ARGUMENTS
+
+   ## Ideation Context (auto-generated)
+   {extracted Core Concept section}
+   {extracted Success Criteria section}"
+   ```
+4. Replace `$ARGUMENTS` with `SPEC_INPUT` for Phase 1
+5. Set `ADVISOR_TRANSFORM_USED = true`, increment `ADVISOR_COUNT`
+6. Progress: `  ├─ Skill Advisor [A]: ideate (score: {N}/5, input restructured from idea to structured brief)`
+
+**If A2 >= 3** (Enrich):
+1. Determine which domain from Expert Agent Routing table best matches the **actual expertise gap** (not keyword presence)
+2. Verify domain relevance: does this project's `{config.architecture}` and tech stack make this domain applicable? (e.g., skip `design` for a CLI tool, skip `infra` if the project has no deployment config)
+3. Invoke expert agent:
+   ```
+   Task("Domain pre-consultation: {domain}", subagent_type: "afc:afc-{domain}-expert",
+     prompt: "You are being consulted automatically during pipeline spec preparation.
+
+     ## Feature Context
+     {$ARGUMENTS}
+
+     ## Why You Were Consulted
+     {1-sentence explanation of what domain expertise gap was identified}
+
+     ## Instructions
+     1. Read your MEMORY.md for prior project context
+     2. Read .claude/afc/project-profile.md if it exists
+     3. Provide domain-specific constraints, regulations, and anti-patterns that MUST be reflected in the spec
+     4. Format your response EXACTLY as:
+        ## Domain Constraints ({domain})
+        - [MUST] {constraint}: {rationale}
+        - [MUST NOT] {anti-pattern}: {risk}
+        - [CONSIDER] {best practice}: {benefit}
+     5. Keep to max 10 items. Prioritize by risk severity.
+     6. Update your MEMORY.md with the consultation context")
+   ```
+4. Store output as `DOMAIN_CONSTRAINTS` → injected into Phase 1 spec context
+5. Spec phase MUST include a `## Domain Constraints` section reflecting these items
+6. Increment `ADVISOR_COUNT`
+7. Progress: `  ├─ Skill Advisor [A]: consult({domain}) (score: {N}/5, {M} constraints injected)`
+
+**If all scores < 3**: proceed silently to Phase 1.
+
 ### Phase 1: Spec (1/5)
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase spec`
@@ -182,6 +291,80 @@ Execute `/afc:spec` logic inline:
    - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 7. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase spec` at phase start
 8. Progress: `✓ 1/5 Spec complete (US: {N}, FR: {N}, researched: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
+
+### Skill Advisor Checkpoint B (Post-Spec)
+
+> Evaluate auxiliary skill triggers AFTER spec completion, BEFORE plan creation. Budget: max 2 skills. Skip all if `ADVISOR_COUNT >= 5`.
+
+**Intent evaluation** — Read the completed spec.md and answer these questions:
+
+| # | Question | Score 1–5 | If >= 3 | Skill | Mode |
+|---|----------|-----------|---------|-------|------|
+| B1 | Does this feature **handle, store, or transmit sensitive data or trust boundaries**? Consider: user authentication/authorization, cryptographic operations, PII/financial data processing, external input that reaches internal systems, session/token lifecycle. Judge by the feature's actual behavior, not by whether security-related words appear. | 1=no trust boundary touched, 5=core security feature | `security` | Enrich (fork) |
+| B2 | Does this feature **cross multiple architectural boundaries** or introduce a new structural pattern? Consider: does it touch 3+ layers (e.g., API + service + data + external), create a new component type not seen in the codebase, or require coordination between independently-deployable units? | 1=single-layer change, 5=cross-cutting architectural change | `architect` | Enrich (fork) |
+
+**If B1 >= 3** (Enrich):
+1. Invoke security agent for pre-plan threat modeling:
+   ```
+   Task("Threat Model: {feature}", subagent_type: "afc:afc-security",
+     prompt: "Generate a threat model BEFORE implementation planning begins.
+
+     ## Spec Summary
+     {spec.md FR/NFR/Key Entities — security-relevant items only}
+
+     ## Why This Was Triggered
+     {1-sentence explanation of which trust boundary or sensitive data flow was identified}
+
+     ## Instructions
+     1. Read your MEMORY.md for known vulnerability patterns in this project
+     2. Identify attack surfaces from the spec requirements
+     3. For each threat, specify the mitigation that MUST appear in the plan
+     4. Format your response EXACTLY as:
+        ## Threat Model (pre-scan)
+        | Threat | Attack Surface | Mitigation Required | Priority |
+        |--------|---------------|-------------------|----------|
+     5. Max 8 threats. Prioritize by exploitability and impact.
+     6. Update your MEMORY.md with the threat model context")
+   ```
+2. Store output as `THREAT_MODEL` → injected into Phase 2 plan context
+3. Plan phase MUST address each mitigation in its Risk & Mitigation section
+4. Plan Critic RISK criterion MUST verify: `{M}/{N} threat mitigations addressed`
+5. Increment `ADVISOR_COUNT`
+6. Progress: `  ├─ Skill Advisor [B]: security (score: {N}/5, threat model: {M} threats identified)`
+
+**If B2 >= 3** (Enrich):
+1. Invoke architect agent for pre-plan guidance:
+   ```
+   Task("Architecture Advisory: {feature}", subagent_type: "afc:afc-architect",
+     prompt: "Provide architecture guidance BEFORE plan creation.
+
+     ## Spec Summary
+     {spec.md Key Entities + layer analysis from {config.architecture}}
+
+     ## Why This Was Triggered
+     {1-sentence explanation of which architectural boundary crossing was identified}
+
+     ## Instructions
+     1. Read your MEMORY.md for prior ADRs and architecture patterns
+     2. Recommend: component placement, layer boundaries, interface contracts
+     3. Flag conflicts with existing architecture patterns
+     4. Format your response EXACTLY as:
+        ## Architecture Advisory (pre-plan)
+        - [PLACE] {component} → {layer/module}: {rationale}
+        - [BOUNDARY] {interface}: {contract description}
+        - [CONFLICT] {existing} ↔ {new}: {resolution recommendation}
+        - [PATTERN] {recommended pattern}: {why it fits}
+     5. Max 10 items.
+     6. Update your MEMORY.md if new patterns are identified")
+   ```
+2. Store output as `ARCH_ADVISORY` → injected into Phase 2 plan context
+3. Plan Critic ARCHITECTURE criterion MUST validate against this advisory
+4. Increment `ADVISOR_COUNT`
+5. Progress: `  ├─ Skill Advisor [B]: architect (score: {N}/5, advisory: {M} recommendations, {K} conflicts)`
+
+**If both B1 and B2 >= 3**: launch both agents in a **single message** (parallel fork). Both count toward budget.
+
+**If all scores < 3**: proceed silently to Phase 2.
 
 ### Phase 2: Plan (2/5)
 
@@ -253,6 +436,77 @@ Execute `/afc:plan` logic inline:
    This file is read at Implement start to restore context after compaction. The full AC section ensures Review phase (Phase 4) can verify spec compliance even after spec.md is compacted.
 9. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase plan` at phase start
 10. Progress: `✓ 2/5 Plan complete (Critic: converged ({N} passes, {M} fixes, {E} escalations), files: {N}, ADR: {N} recorded, Implementation Context: {W} words)`
+
+### Skill Advisor Checkpoint C (Post-Plan)
+
+> Evaluate auxiliary skill triggers AFTER plan completion, BEFORE implementation. Budget: max 2 skills. Skip all if `ADVISOR_COUNT >= 5`.
+
+**Intent evaluation** — Read the completed plan.md and answer these questions:
+
+| # | Question | Score 1–5 | If >= 3 | Skill | Mode |
+|---|----------|-----------|---------|-------|------|
+| C1 | Is the **implementation risk high enough** that a dependency pre-analysis would catch problems the plan missed? Consider: are there files in the File Change Map that import each other (potential circular dependency)? Are there shared utility files that many other files depend on (high fan-out risk)? Are the declared `Depends On` relationships complete, or could there be hidden coupling? | 1=isolated changes, 5=deeply interconnected change set | `analyze` | Observe (fork) |
+| C2 | Does the plan contain **unresolved domain uncertainties** — items tagged `[UNCERTAIN]`, open questions in Implementation Context, or design decisions that assume domain knowledge the team may not have? | 1=all decisions are well-grounded, 5=critical domain questions remain open | `consult({domain})` | Enrich (fork) |
+
+**If C1 >= 3** (Observe):
+1. Invoke analysis in fork context:
+   ```
+   Task("Complexity Analysis: {feature}", subagent_type: "general-purpose",
+     prompt: "Analyze the dependency graph of files listed in the plan's File Change Map.
+
+     ## File Change Map
+     {paste File Change Map table from plan.md}
+
+     ## Instructions
+     1. For each file in the map, check its imports/dependencies in the codebase (Grep for import/require/source patterns)
+     2. Identify:
+        - Circular dependencies between planned files
+        - High fan-out files (>5 dependents outside the change set)
+        - Hidden coupling not captured in the Depends On column
+        - Files that are imported by many other files (risk of breakage)
+     3. Format your response EXACTLY as:
+        ## Complexity Analysis
+        - [CIRCULAR] {file A} ↔ {file B}: {description}
+        - [FAN-OUT] {file} → {N} dependents: {list top 5}
+        - [COUPLING] {file A} → {file B}: {not in Depends On column}
+        - [HIGH-RISK] {file}: {reason — most impactful if broken}
+        ## Risk Summary
+        Circular: {N}, High fan-out: {N}, Hidden coupling: {N}
+     4. If no issues found, return: '## Complexity Analysis\nNo significant risks detected.'")
+   ```
+2. Store output to `.claude/afc/specs/{feature}/complexity-analysis.md`
+3. Implement phase reads this file → high-risk files get extra verification after modification
+4. If circular dependencies found → **ESCALATE** to user (circular deps in implementation plan are a design flaw)
+5. Increment `ADVISOR_COUNT`
+6. Progress: `  ├─ Skill Advisor [C]: analyze (score: {N}/5, circular: {C}, fan-out: {F}, coupling: {H})`
+
+**If C2 >= 3** (Enrich):
+1. Determine which domain expert can best resolve the uncertainties (based on the nature of the open questions, not keywords)
+2. Invoke expert agent:
+   ```
+   Task("Domain gap resolution: {domain}", subagent_type: "afc:afc-{domain}-expert",
+     prompt: "Resolve domain uncertainties found during planning.
+
+     ## Uncertain Items
+     {extract all [UNCERTAIN] tagged items and open questions from plan.md}
+
+     ## Plan Context
+     {Implementation Context section from plan.md}
+
+     ## Instructions
+     1. For each uncertain item, provide a definitive answer with rationale
+     2. Format your response EXACTLY as:
+        ## Domain Resolutions
+        - [RESOLVED] {item}: {answer} — {rationale}
+        - [NEEDS-USER] {item}: {why this requires human judgment}
+     3. Update your MEMORY.md with the resolution context")
+   ```
+3. Apply resolutions to plan.md Implementation Context (replace `[UNCERTAIN]` with `[RESOLVED: {answer}]`)
+4. `[NEEDS-USER]` items → **ESCALATE** to user via AskUserQuestion
+5. Increment `ADVISOR_COUNT`
+6. Progress: `  ├─ Skill Advisor [C]: consult({domain}) (score: {N}/5, {M} resolved, {K} needs-user)`
+
+**If all scores < 3**: proceed silently to Phase 3.
 
 ### Phase 3: Implement (3/5)
 
@@ -404,6 +658,80 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 6. **Implement retrospective**: if unexpected problems arose that weren't predicted in Plan, record in `.claude/afc/specs/{feature}/retrospective.md` (for memory update in Clean)
 7. **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase implement` at phase start
 8. Progress: `✓ 3/5 Implement complete ({completed}/{total} tasks, CI: ✓, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
+
+### Skill Advisor Checkpoint D (Post-Implement)
+
+> Evaluate auxiliary skill triggers AFTER implementation, BEFORE review. Budget: max 2 skills. Skip all if `ADVISOR_COUNT >= 5`.
+
+**Intent evaluation** — Examine the implementation results and answer these questions:
+
+| # | Question | Score 1–5 | If >= 3 | Skill | Mode |
+|---|----------|-----------|---------|-------|------|
+| D1 | Were **testable source files changed without corresponding test coverage**? Look at `git diff --name-only` — for each changed source file, does a test file covering its behavior also appear in the diff? Consider the project's test convention and whether the changed files contain logic that should be tested (skip config files, types-only files, static assets). Only evaluate if `{config.test}` is non-empty. | 1=all changes have test coverage, 5=critical logic changed with zero tests | `test` | Enrich |
+| D2 | Based on **past pipeline quality data**, is there reason to believe this implementation has hidden quality issues? Check `.claude/afc/memory/quality-history/*.json` (if exists) — have recent pipelines shown elevated critical findings? Are there recurring problem categories that this feature's changed files might be susceptible to? | 1=clean history or no history, 5=strong pattern of recurring issues in similar areas | `qa` | Observe (fork) |
+
+**If D1 >= 3** (Enrich):
+1. Identify which changed source files lack test coverage — focus on files with meaningful logic (not config, not types, not assets):
+   ```
+   For each changed source file:
+   - Does the project have a test file for it? (check test directory patterns)
+   - Was that test file also modified in this diff?
+   - Does the source file contain testable exports? (functions, classes, handlers)
+   → List files that have testable logic but no test coverage in this diff
+   ```
+2. Invoke test generation (fork):
+   ```
+   Task("Coverage boost: {feature}", subagent_type: "general-purpose",
+     prompt: "Generate missing tests for recently implemented files.
+
+     ## Uncovered Files (testable logic, no test changes in this diff)
+     {list of uncovered source files with their full paths}
+
+     ## Instructions
+     1. Read each uncovered file to understand its exports and behavior
+     2. Read existing test files in the project for pattern reference
+     3. Generate unit tests targeting:
+        - Exported functions/classes
+        - Edge cases and error paths
+        - Integration points (if the file calls other changed files)
+     4. Follow the project's test framework: {config.test framework}
+     5. Place test files following project convention
+     6. Run {config.test} to verify tests pass
+     7. Return: files created, test count, pass/fail status")
+   ```
+3. New test files automatically enter review scope (Phase 4)
+4. Increment `ADVISOR_COUNT`
+5. Progress: `  ├─ Skill Advisor [D]: test (score: {N}/5, {M} uncovered files → {K} test files generated)`
+
+**If D2 >= 3** (Observe):
+1. Load `.claude/afc/memory/quality-history/*.json` (most recent 3 files, sorted by filename descending)
+2. Identify recurring problem categories and which changed files are most at risk:
+   ```
+   Task("Pre-review QA: {feature}", subagent_type: "general-purpose",
+     prompt: "Perform a pre-review quality audit focused on historically problematic areas.
+
+     ## Changed Files
+     {git diff --name-only}
+
+     ## Quality History Context
+     {summary of patterns from recent quality-history reports — categories, frequencies, affected file types}
+
+     ## Instructions
+     1. Focus on the recurring problem categories identified above
+     2. Check: error handling completeness, input validation, resource cleanup
+     3. Format your response EXACTLY as:
+        ## Pre-Review QA Findings
+        - [{severity}] {file}:{line} — {issue}: {suggested fix}
+        ## Priority Hints for Review
+        - {file}: focus on {area} (historically problematic)
+     4. Read-only — do NOT modify any files")
+   ```
+3. Store output as `QA_FINDINGS` → injected into Phase 4 review context
+4. Review phase uses "Priority Hints" to focus attention
+5. Increment `ADVISOR_COUNT`
+6. Progress: `  ├─ Skill Advisor [D]: qa (score: {N}/5, {M} priority hints for review)`
+
+**If all scores < 3**: proceed silently to Phase 4.
 
 ### Phase 4: Review (4/5)
 
@@ -601,6 +929,54 @@ Persist the review results for memory:
 - **Checkpoint**: phase transition already recorded by `afc-pipeline-manage.sh phase review` at phase start
 - Progress: `✓ 4/5 Review complete (Critical:{N} Warning:{N} Info:{N}, Cross-boundary: {M} verified, SC shortfalls: {N})`
 
+### Skill Advisor Checkpoint E (Post-Review)
+
+> Evaluate auxiliary skill triggers AFTER review, BEFORE clean. Budget: max 1 skill. Skip all if `ADVISOR_COUNT >= 5`.
+
+**Intent evaluation** — Examine review findings and retrospective history:
+
+| # | Question | Score 1–5 | If >= 3 | Skill | Mode |
+|---|----------|-----------|---------|-------|------|
+| E1 | Are there **recurring problem patterns** across this and past pipelines that should be codified as project rules? Check `.claude/afc/memory/retrospectives/` — do the same types of issues (e.g., "missing error handling in hooks", "forgotten spec file updates") keep appearing? Also consider: did this pipeline's review reveal issues that match past retrospective patterns? | 1=no retrospective history or no patterns, 5=same issue type recurred 3+ times and is not yet a project rule | `learner` | Observe (fork) |
+
+**If E1 >= 3** (Observe):
+1. Read retrospective files and identify recurring pattern categories:
+   - What types of issues keep recurring?
+   - Are they already covered by existing rules in `.claude/rules/afc-learned.md`?
+   - Would a project rule have prevented the recurrence?
+2. Invoke learner:
+   ```
+   Task("Pattern promotion: {feature}", subagent_type: "general-purpose",
+     prompt: "Review recurring patterns for potential promotion to project rules.
+
+     ## Recurring Patterns
+     {list each pattern with: category, occurrence count, concrete examples from retrospective entries}
+
+     ## Current Review Findings
+     {summary of this pipeline's review findings that match retrospective patterns}
+
+     ## Current Rules
+     {read .claude/rules/afc-learned.md if it exists, else 'No learned rules yet'}
+
+     ## Instructions
+     1. For each recurring pattern, evaluate:
+        - Is it actionable? (specific enough to enforce)
+        - Is it already covered by existing rules?
+        - Would enforcing it have prevented the recurrence?
+     2. For patterns worth promoting, write a rule in this format:
+        ### {Category}
+        - **Rule**: {concise, enforceable statement}
+        - **Rationale**: {why — based on {N} occurrences across pipelines}
+        - **Enforcement**: {how to check — linter, review criterion, or convention}
+     3. Append new rules to .claude/rules/afc-learned.md (create if absent)
+     4. Do NOT duplicate existing rules
+     5. Return: {N} patterns evaluated, {M} promoted, {K} already covered")
+   ```
+3. Increment `ADVISOR_COUNT`
+4. Progress: `  ├─ Skill Advisor [E]: learner (score: {N}/5, {M} patterns evaluated, {K} promoted to rules)`
+
+**If score < 3**: proceed silently to Phase 5.
+
 ### Phase 5: Clean (5/5)
 
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase clean`
@@ -702,6 +1078,8 @@ Auto pipeline complete: {feature}
 │   ├─ Perspectives: Quality, Architecture*, Security*, Performance, Patterns, Reusability, Maintainability, Extensibility
 │   └─ (* = delegated to persistent-memory agent)
 ├─ 5/5 Clean: {N} artifacts deleted, {N} dead code removed
+├─ Skill Advisor: {ADVISOR_COUNT} auxiliary skills invoked
+│   {for each invoked: ├─ [{checkpoint}] {skill}: {summary}}
 ├─ Changed files: {N}
 ├─ Auto-resolved: {N} ({M} validated in review)
 ├─ Agent memory: architect {updated/skipped}, security {updated/skipped}

@@ -113,6 +113,8 @@ check_agent_names() {
   local count=0
   local invalid=0
   for ref in $referenced_agents; do
+    # Skip dynamic template patterns (e.g., afc-{domain}-expert)
+    case "$ref" in *"{"*) continue ;; esac
     count=$((count + 1))
     if ! printf '%s\n' "$defined_agents" | grep -qxF "$ref"; then
       fail "subagent_type 'afc:$ref' referenced but no agents/$ref.md found"
