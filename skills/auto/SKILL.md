@@ -225,14 +225,15 @@ If all checks pass, proceed to Phase 0.8.
    - Do NOT set `ADVISOR_TRANSFORM_USED = true`
    - Proceed with original `$ARGUMENTS`
    - Log: `"Skill Advisor [A]: ideate failed, proceeding with original input"`
-3. On success: read generated `ideate.md` → extract "## Core Concept" + "## Success Criteria" sections
+3. On success: read generated `ideate.md` → extract `## Problem Statement` + `## Value Proposition` + `## Core Features (MoSCoW)` sections
 4. Construct enriched spec input:
    ```
    SPEC_INPUT = "$ARGUMENTS
 
    ## Ideation Context (auto-generated)
-   {extracted Core Concept section}
-   {extracted Success Criteria section}"
+   {extracted Problem Statement section}
+   {extracted Value Proposition section}
+   {extracted Core Features (MoSCoW) — Must Have items only}"
    ```
 5. Replace `$ARGUMENTS` with `SPEC_INPUT` for Phase 1
 6. Set `ADVISOR_TRANSFORM_USED = true`, increment `ADVISOR_COUNT`, persist: `afc_state_write "advisorCount" "$ADVISOR_COUNT"` and `afc_state_write "advisorTransformUsed" "true"`
@@ -333,8 +334,7 @@ Execute `/afc:spec` logic inline:
         ## Threat Model (pre-scan)
         | Threat | Attack Surface | Mitigation Required | Priority |
         |--------|---------------|-------------------|----------|
-     5. Max 8 threats. Prioritize by exploitability and impact.
-     6. Update your MEMORY.md with the threat model context")
+     5. Max 8 threats. Prioritize by exploitability and impact.")
    ```
 2. Store output as `THREAT_MODEL` → injected into Phase 2 plan context
 3. Plan phase MUST address each mitigation in its Risk & Mitigation section
@@ -458,8 +458,8 @@ Execute `/afc:plan` logic inline:
 
 | # | Question | Score 1–5 | If >= 3 | Skill | Mode |
 |---|----------|-----------|---------|-------|------|
-| C1 | Is the **implementation risk high enough** that a dependency pre-analysis would catch problems the plan missed? Consider: are there files in the File Change Map that import each other (potential circular dependency)? Are there shared utility files that many other files depend on (high fan-out risk)? Are the declared `Depends On` relationships complete, or could there be hidden coupling? | 1=isolated changes, 5=deeply interconnected change set | `analyze` | Observe (fork) |
-| C2 | Does the plan contain **unresolved domain uncertainties** — items tagged `[UNCERTAIN]`, open questions in Implementation Context, or design decisions that assume domain knowledge the team may not have? | 1=all decisions are well-grounded, 5=critical domain questions remain open | `consult({domain})` | Enrich (fork) |
+| C1 | Is the **implementation risk high enough** that a dependency pre-analysis would catch problems the plan missed? Consider: are there files in the File Change Map that import each other (potential circular dependency)? Are there shared utility files that many other files depend on (high fan-out risk)? Are the declared `Depends On` relationships complete, or could there be hidden coupling? | 1=isolated changes, 5=deeply interconnected change set | dependency analysis (general-purpose fork) | Observe |
+| C2 | Does the plan contain **unresolved domain uncertainties** — items tagged `[UNCERTAIN]`, open questions in Implementation Context, or design decisions that assume domain knowledge the team may not have? | 1=all decisions are well-grounded, 5=critical domain questions remain open | `consult({domain})` expert agent | Enrich (fork) |
 
 **If C1 >= 3** (Observe):
 1. Invoke analysis in fork context:
@@ -526,6 +526,8 @@ Execute `/afc:plan` logic inline:
 `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase implement`
 
 **Session context reload**: At implement start, read `.claude/afc/specs/{feature}/context.md` if it exists. This restores key decisions and constraints from Plan phase (resilient to context compaction).
+
+**Advisor context reload**: If Checkpoint C produced `.claude/afc/specs/{feature}/complexity-analysis.md`, read it and flag high-risk files (circular dependencies, high fan-out) for extra verification after modification during task execution.
 
 Execute `/afc:implement` logic inline — **follow all orchestration rules defined in `skills/implement/SKILL.md`** (task generation, mode selection, batch/swarm execution, failure recovery, task execution pattern). The implement skill is the single source of truth for orchestration details.
 
@@ -619,7 +621,7 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 0. **Baseline test** (follows implement.md Step 1, item 5): if `{config.test}` is non-empty, run `{config.test}` before starting task execution. On failure, report pre-existing test failures to user and ask: "(1) Proceed anyway (2) Fix first (3) Abort". On pass or empty config, continue.
 1. Execute tasks phase by phase using implement.md orchestration rules (sequential/batch/swarm based on [P] count)
 2. **Implementation Context injection**: Every sub-agent prompt includes the `## Implementation Context` section from plan.md **and relevant FR/AC items from spec.md** (ensures spec intent propagates to workers)
-3. Perform **3-step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
+3. Perform **3-4 step gate** on each Implementation Phase completion — **always** read `${CLAUDE_PLUGIN_ROOT}/docs/phase-gate-protocol.md` first. Cannot advance to next phase without passing the gate.
    - On gate pass: create phase rollback point `"${CLAUDE_PLUGIN_ROOT}/scripts/afc-pipeline-manage.sh" phase-tag {phase_number}`
 4. Real-time `[x]` updates in tasks.md
 5. After full completion, run `{config.ci}` final verification
@@ -680,8 +682,8 @@ Execute `/afc:implement` logic inline — **follow all orchestration rules defin
 
 | # | Question | Score 1–5 | If >= 3 | Skill | Mode |
 |---|----------|-----------|---------|-------|------|
-| D1 | Were **testable source files changed without corresponding test coverage**? Look at `git diff --name-only` — for each changed source file, does a test file covering its behavior also appear in the diff? Consider the project's test convention and whether the changed files contain logic that should be tested (skip config files, types-only files, static assets). Only evaluate if `{config.test}` is non-empty. | 1=all changes have test coverage, 5=critical logic changed with zero tests | `test` | Enrich |
-| D2 | Based on **past pipeline quality data**, is there reason to believe this implementation has hidden quality issues? Check `.claude/afc/memory/quality-history/*.json` (if exists) — have recent pipelines shown elevated critical findings? Are there recurring problem categories that this feature's changed files might be susceptible to? | 1=clean history or no history, 5=strong pattern of recurring issues in similar areas | `qa` | Observe (fork) |
+| D1 | Were **testable source files changed without corresponding test coverage**? Look at `git diff --name-only` — for each changed source file, does a test file covering its behavior also appear in the diff? Consider the project's test convention and whether the changed files contain logic that should be tested (skip config files, types-only files, static assets). Only evaluate if `{config.test}` is non-empty. | 1=all changes have test coverage, 5=critical logic changed with zero tests | test generation (general-purpose fork) | Enrich |
+| D2 | Based on **past pipeline quality data**, is there reason to believe this implementation has hidden quality issues? Check `.claude/afc/memory/quality-history/*.json` (if exists) — have recent pipelines shown elevated critical findings? Are there recurring problem categories that this feature's changed files might be susceptible to? | 1=clean history or no history, 5=strong pattern of recurring issues in similar areas | pre-review QA (general-purpose fork) | Observe |
 
 **If D1 >= 3 AND `{config.test}` is non-empty** (Enrich — skip if no test framework configured):
 1. Identify which changed source files lack test coverage — focus on files with meaningful logic (not config, not types, not assets):
@@ -835,7 +837,7 @@ Task("Security Review: {feature}", subagent_type: "afc:afc-security",
   2. Check for: command injection, path traversal, unvalidated input, sensitive data exposure
   3. Skip patterns recorded as false positives in your memory
   4. Return findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix
-  5. Update your MEMORY.md with new patterns or confirmed false positives")
+  5. Include any new vulnerability patterns or confirmed false positives in your response (orchestrator will record them)")
 ```
 - Collect agent outputs and merge into the consolidated review
 - Agent findings inherit their severity classification directly
@@ -856,9 +858,9 @@ Check across **8 perspectives** (A-H as defined in `skills/review/SKILL.md`):
 
 After individual/parallel reviews and specialist agents complete, the **orchestrator** MUST perform a cross-boundary check. This is a required step, not optional — skipping it is a review defect.
 
-**For 11+ file reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
+**For High complexity (Review Swarm) reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
 
-0. **Impact Map integration**: Use the Impact Map from Step 4.2 to prioritize verification. Affected files with >3 references to changed symbols should be read and checked for breakage — even if no finding was raised against them.
+0. **Impact Map integration**: Use the Impact Map from Step 4.2 to prioritize verification. Affected files with significant coupling to changed symbols (behavioral call references, not just type imports, especially in critical code paths) should be read and checked for breakage — even if no finding was raised against them.
 
 1. **Filter**: From all collected findings, select those involving:
    - Call order changes (function A now calls B before C)
@@ -884,7 +886,13 @@ After individual/parallel reviews and specialist agents complete, the **orchestr
 
 This step runs in the orchestrator context (not delegated), as it requires reading code across file boundaries.
 
-#### Step 4.7: Auto-specific Validations
+#### Step 4.7: Inject Advisor Context
+
+If Checkpoint D produced outputs, inject them into the review context:
+- **`QA_FINDINGS`** (from D2): read the stored findings and include as "Priority Hints for Review" — focus review attention on historically problematic areas and pre-identified quality concerns.
+- **New test files** (from D1): include in the review scope alongside implementation changes.
+
+#### Step 4.8: Auto-specific Validations
 
 1. **Auto-resolved validation**: Check all `[AUTO-RESOLVED]` items from spec phase — does the implementation match the guess? Flag mismatches as Critical.
 2. **Past reviews check**: if `.claude/afc/memory/reviews/` exists, load the **most recent 15 files** (sorted by filename descending) and scan for recurring finding patterns across past review reports. Prioritize those areas.
@@ -892,7 +900,7 @@ This step runs in the orchestrator context (not delegated), as it requires readi
    - Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
    - Were there false positives that wasted effort? Reduce sensitivity for those patterns.
 
-#### Step 4.8: Critic Loop
+#### Step 4.9: Critic Loop
 
 > **Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it.
 
@@ -903,12 +911,12 @@ This step runs in the orchestrator context (not delegated), as it requires readi
 - PRECISION: are there unnecessary changes? Are there out-of-scope modifications? Are findings actual issues, not false positives?
 - FAIL → auto-fix and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
 
-#### Step 4.9: Handling SC shortfalls
+#### Step 4.10: Handling SC shortfalls
 
 - Fixable → attempt auto-fix → re-run `{config.ci}` verification
 - Not fixable → state in final report with reason (no post-hoc rationalization; record as Plan-phase target-setting error)
 
-#### Step 4.10: Retrospective Entry (if new pattern found)
+#### Step 4.11: Retrospective Entry (if new pattern found)
 
 If this review reveals a recurring pattern not previously documented in `.claude/afc/memory/retrospectives/`:
 
@@ -923,7 +931,7 @@ Append to `.claude/afc/memory/retrospectives/{YYYY-MM-DD}.md`:
 
 Only write if the pattern is new and actionable. Generic observations are prohibited.
 
-#### Step 4.11: Archive Review Report
+#### Step 4.12: Archive Review Report
 
 Persist the review results for memory:
 
@@ -950,7 +958,7 @@ Persist the review results for memory:
 
 | # | Question | Score 1–5 | If >= 3 | Skill | Mode |
 |---|----------|-----------|---------|-------|------|
-| E1 | Are there **recurring problem patterns** across this and past pipelines that should be codified as project rules? Check `.claude/afc/memory/retrospectives/` — do the same types of issues (e.g., "missing error handling in hooks", "forgotten spec file updates") keep appearing? Also consider: did this pipeline's review reveal issues that match past retrospective patterns? | 1=no retrospective history or no patterns, 5=same issue type recurred 3+ times and is not yet a project rule | `learner` | Observe (fork) |
+| E1 | Are there **recurring problem patterns** across this and past pipelines that should be codified as project rules? Check `.claude/afc/memory/retrospectives/` — do the same types of issues (e.g., "missing error handling in hooks", "forgotten spec file updates") keep appearing? Also consider: did this pipeline's review reveal issues that match past retrospective patterns? | 1=no retrospective history or no patterns, 5=same issue type recurred 3+ times and is not yet a project rule | pattern promotion (general-purpose fork, with learner guardrails) | Observe |
 
 **If E1 >= 3** (Observe):
 1. Read retrospective files and identify recurring pattern categories:
@@ -981,9 +989,14 @@ Persist the review results for memory:
         - **Rule**: {concise, enforceable statement}
         - **Rationale**: {why — based on {N} occurrences across pipelines}
         - **Enforcement**: {how to check — linter, review criterion, or convention}
-     3. Append new rules to .claude/rules/afc-learned.md (create if absent)
-     4. Do NOT duplicate existing rules
-     5. Return: {N} patterns evaluated, {M} promoted, {K} already covered")
+     3. **Safety guardrails** (mandatory):
+        - Do NOT create rules about: permissions, security policies, hook behavior, tool access
+        - Do NOT create rules that contradict existing CLAUDE.md or .claude/rules/ content
+        - Each rule must be scoped to code conventions only (naming, style, workflow, testing, architecture)
+        - Verify no duplicate or contradictory rule exists before appending
+     4. Append new rules to .claude/rules/afc-learned.md (create if absent)
+     5. Do NOT duplicate existing rules
+     6. Return: {N} patterns evaluated, {M} promoted, {K} already covered")
    ```
 3. Increment `ADVISOR_COUNT`
 4. Progress: `  ├─ Skill Advisor [E]: learner (score: {N}/5, {M} patterns evaluated, {K} promoted to rules)`
@@ -1015,23 +1028,24 @@ Artifact cleanup and codebase hygiene check after implementation and review:
    - **If retrospective.md exists** → record as patterns missed by the Plan phase Critic Loop in `.claude/afc/memory/retrospectives/` (reuse as RISK checklist items in future runs)
    - **If review-report.md exists** → copy to `.claude/afc/memory/reviews/{feature}-{date}.md` before .claude/afc/specs/ deletion
    - **If research.md exists** and was not already persisted in Plan phase → copy to `.claude/afc/memory/research/{feature}.md`
-   - **Agent memory consolidation**: architect and security agents have already updated their persistent MEMORY.md during Review phase. **Size enforcement**: check each agent's MEMORY.md line count — if either exceeds 100 lines, invoke the respective agent to self-prune:
+   - **Agent memory consolidation**: Check each agent's MEMORY.md for bloat — if it contains redundant, obsolete, or superseded entries that reduce signal-to-noise ratio, invoke the agent to self-prune:
      ```
      Task("Memory cleanup: afc-architect", subagent_type: "afc:afc-architect",
-       prompt: "Your MEMORY.md exceeds 100 lines. Read it, prune old/redundant entries, and rewrite to under 100 lines following your size limit rules.")
+       prompt: "Review your MEMORY.md. Read it, identify and prune old/redundant/obsolete entries, and rewrite it keeping only entries that are still relevant and non-overlapping.")
      ```
-     (Same pattern for afc-security if needed. Skip if both are under 100 lines.)
-   - **Memory rotation**: for each memory subdirectory, check file count and prune oldest files if over threshold:
-     | Directory | Threshold | Action |
-     |-----------|-----------|--------|
-     | `quality-history/` | 30 files | Delete oldest files beyond threshold |
-     | `reviews/` | 40 files | Delete oldest files beyond threshold |
-     | `retrospectives/` | 30 files | Delete oldest files beyond threshold |
-     | `research/` | 50 files | Delete oldest files beyond threshold |
-     | `decisions/` | 60 files | Delete oldest files beyond threshold |
-     - Sort by filename ascending (oldest first), delete excess
+     Use semantic assessment (are entries still relevant? do entries overlap?) rather than a line-count threshold. (Same pattern for afc-security if needed.)
+   - **Memory rotation**: For each memory subdirectory, assess whether the oldest files still provide value. Prune files that are superseded by newer entries, reference features/code that no longer exists, or overlap with other files. As a practical guideline, keep the most recent and relevant entries — if a directory has grown large enough that scanning it would be slow (roughly 30+ files), prioritize pruning the least relevant entries:
+     | Directory | Pruning Intent | Soft Guideline |
+     |-----------|---------------|----------------|
+     | `quality-history/` | Remove superseded or redundant quality records | ~30 files |
+     | `reviews/` | Remove reviews for features no longer in the codebase | ~40 files |
+     | `retrospectives/` | Remove retrospectives whose learnings are already captured elsewhere | ~30 files |
+     | `research/` | Remove research for libraries/patterns no longer used | ~50 files |
+     | `decisions/` | Remove decisions that have been reversed or are no longer relevant | ~60 files |
+     - These numbers are soft guidelines, not hard cutoffs — use judgment based on relevance
+     - Sort by filename ascending (oldest first) when pruning by recency
      - Log: `"Memory rotation: {dir} pruned {N} files"`
-     - Skip directories that do not exist or are under threshold
+     - Skip directories that do not exist or clearly do not need pruning
 5. **Quality report** (structured pipeline metrics):
    - Generate `.claude/afc/memory/quality-history/{feature}-{date}.json` with the following structure:
      ```json

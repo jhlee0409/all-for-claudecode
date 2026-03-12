@@ -229,7 +229,8 @@ Describe "{name}.sh"
   Context "when pipeline is active"
     setup() {
       setup_tmpdir TEST_DIR
-      echo "feature-name" > "$TEST_DIR/.claude/.afc-active"
+      # Use afc-state.sh API to initialize pipeline state
+      printf '{"feature":"feature-name","phase":"implement","startedAt":"%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$TEST_DIR/.claude/.afc-state.json"
     }
 
     It "exits 0 and produces expected output"

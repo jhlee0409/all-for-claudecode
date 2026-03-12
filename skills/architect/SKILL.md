@@ -53,8 +53,8 @@ Analyze `$ARGUMENTS` to identify the task type:
 
 Use Agent Teams for wide analysis scope (3+ modules) with parallel exploration:
 ```
-Task("analyze features/timeline", subagent_type: Explore)
-Task("analyze widgets/timeline", subagent_type: Explore)
+Task("analyze features/timeline", subagent_type: "Explore")
+Task("analyze widgets/timeline", subagent_type: "Explore")
 ```
 
 **Cross-Module Import Chain Verification** (after Explore agents return):

@@ -128,7 +128,7 @@ For each active category:
 
 ### 5. Critic Loop
 
-Apply `docs/critic-loop-rules.md` with **safety cap: 5 rounds**.
+**Always** read `${CLAUDE_PLUGIN_ROOT}/docs/critic-loop-rules.md` first and follow it. Safety cap: **5 passes**.
 
 Focus the critic on:
 - Are the findings actionable or just noise?

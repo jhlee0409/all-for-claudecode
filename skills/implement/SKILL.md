@@ -363,7 +363,7 @@ After CI passes, run a convergence-based Critic Loop to verify design alignment 
 
 **Critic Loop until convergence** (safety cap: 5):
 
-- **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change List. Flag any file modified that is NOT in the plan. Flag any planned file NOT modified. Provide "M of N files match" count.
+- **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change Map. Flag any file modified that is NOT in the plan. Flag any planned file NOT modified. Provide "M of N files match" count.
 - **ARCHITECTURE**: Validate changed files against `{config.architecture}` rules (layer boundaries, naming conventions, import paths). Provide "N of M rules checked" count.
 - **CORRECTNESS**: Cross-check implemented changes against spec.md acceptance criteria (AC). Verify each AC has corresponding code. Provide "N of M AC verified" count.
 - **SIDE_EFFECT_SAFETY**: For tasks that changed call order, error handling, or state flow: verify that callee behavior is compatible with the new call pattern. Provide "{M} of {N} behavioral changes verified" count.
