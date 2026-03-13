@@ -41,7 +41,8 @@ If config file is missing:
 2. Determine **feature name**:
    - Extract 2-3 key keywords from `$ARGUMENTS`
    - Convert to kebab-case (e.g., "add user authentication" → `user-auth`)
-3. **Create directory**: `.claude/afc/specs/{feature-name}/` (create parent `.claude/afc/specs/` directory if it does not exist)
+   - Prepend today's date in `YYYY-MM-DD` format (e.g., `2026-03-13-user-auth`)
+3. **Create directory**: `.claude/afc/specs/{YYYY-MM-DD}-{feature-name}/` (create parent `.claude/afc/specs/` directory if it does not exist)
 4. If already exists, confirm with user: "Overwrite existing spec?"
 
 ### 2. Explore Codebase
@@ -67,7 +68,7 @@ Detect whether `$ARGUMENTS` references external libraries, APIs, or technologies
 4. **If external references detected**:
    - For each unknown reference, run a focused WebSearch query: `"{library/API name} latest stable version usage guide {current year}"`
    - Optionally use Context7 (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) for library-specific documentation
-   - Record findings to `.claude/afc/specs/{feature-name}/research-notes.md` (lightweight spec-scoped notes; distinct from plan phase's `research.md` which covers deep technical research)
+   - Record findings to `.claude/afc/specs/{YYYY-MM-DD}-{feature-name}/research-notes.md` (lightweight spec-scoped notes; distinct from plan phase's `research.md` which covers deep technical research)
    - Also use findings inline as context for spec writing
    - Tag each researched item in spec with `[RESEARCHED]` for traceability
 
@@ -75,7 +76,7 @@ Detect whether `$ARGUMENTS` references external libraries, APIs, or technologies
 
 ### 3. Write Spec
 
-Create `.claude/afc/specs/{feature-name}/spec.md` following the template in `${CLAUDE_SKILL_DIR}/spec-template.md`. Read it first, then generate the spec using that structure.
+Create `.claude/afc/specs/{YYYY-MM-DD}-{feature-name}/spec.md` following the template in `${CLAUDE_SKILL_DIR}/spec-template.md`. Read it first, then generate the spec using that structure.
 
 ### 3.5. Inline Clarification (standalone mode only)
 
@@ -127,7 +128,7 @@ When not running inside `/afc:auto`, save progress for `/afc:resume`:
 
 ```
 Spec generated
-├─ .claude/afc/specs/{feature-name}/spec.md
+├─ .claude/afc/specs/{YYYY-MM-DD}-{feature-name}/spec.md
 ├─ User Stories: {count}
 ├─ Requirements: FR {count}, NFR {count}
 ├─ Research: {N} external references researched / skipped (all internal)
