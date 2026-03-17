@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-03-17
+
+### Added
+- **`/afc:issue` skill**: Analyze a single GitHub issue — collects title, body, labels, comments, and attached images (multimodal), searches codebase for related files, classifies issue type (Bug/Feature/Question/Enhancement), and suggests the appropriate next afc skill (`/afc:debug`, `/afc:spec`, or `/afc:auto`). Saves structured analysis document to `.claude/afc/issues/`.
+- **`/afc:resolve` skill**: Collect and address LLM bot review comments (CodeRabbit, Copilot, Codex) on a PR. Classifies each comment as VALID/NOISE/DISCUSS, auto-fixes VALID items, asks user about DISCUSS items, and commits changes with an itemized message. Safety: requires user confirmation before committing.
+- **Intent routing for new skills**: UserPromptSubmit hook detects `issue.*분석`, `analyze.*issue`, `review.*comment`, `coderabbit` keywords and routes to the corresponding skill.
+
+### Changed
+- **Spec directory naming**: Spec directories now include date prefix for chronological ordering.
+
 ## [2.12.0] - 2026-03-13
 
 ### Added
