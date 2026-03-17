@@ -132,6 +132,8 @@ Performance: ✓ no N+1 queries
 | `/afc:qa` | Project quality audit — test confidence, error resilience, code health |
 | `/afc:consult` | Expert consultation (backend, infra, PM, design, marketing) |
 | `/afc:triage` | Analyze open PRs and issues in parallel |
+| `/afc:issue` | Analyze a single GitHub issue and create actionable document |
+| `/afc:resolve` | Analyze and address LLM bot review comments on a PR |
 | `/afc:pr-comment` | Generate structured PR review comments |
 | `/afc:release-notes` | Generate release notes from git history |
 | `/afc:learner` | Review and promote learned patterns to project rules |

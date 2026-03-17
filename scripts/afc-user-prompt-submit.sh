@@ -42,7 +42,7 @@ if ! afc_state_is_active; then
   LOWER=$(printf '%s' "$USER_TEXT" | tr '[:upper:]' '[:lower:]' | cut -c1-500)
 
   # Compact skill catalog: injected when regex misses, so the model classifies semantically
-  FALLBACK_HINT="[afc] Route via Skill tool if applicable — debug(bug/에러/수정/fix) | review(코드검토/리뷰/PR) | test(테스트/coverage) | spec(요구사항/스펙) | plan(설계/계획) | implement(구현/리팩터) | auto(새기능/feature) | consult(조언/상의/discuss) | analyze(분석/trace) | research(조사/리서치) | security(보안/취약점) | architect(아키텍처/설계) | qa(품질감사) | launch(릴리스/배포) | triage(PR정리/이슈분류) | clean(정리/cleanup) | ideate(아이디어/brainstorm) | doctor(진단/health) | release-notes(변경이력)"
+  FALLBACK_HINT="[afc] Route via Skill tool if applicable — debug(bug/에러/수정/fix) | review(코드검토/리뷰/PR) | test(테스트/coverage) | spec(요구사항/스펙) | plan(설계/계획) | implement(구현/리팩터) | auto(새기능/feature) | consult(조언/상의/discuss) | analyze(분석/trace) | research(조사/리서치) | security(보안/취약점) | architect(아키텍처/설계) | qa(품질감사) | launch(릴리스/배포) | triage(PR정리/이슈분류) | issue(이슈분석) | resolve(LLM리뷰대응) | clean(정리/cleanup) | ideate(아이디어/brainstorm) | doctor(진단/health) | release-notes(변경이력)"
 
   # Early exit for empty prompts (context-only messages, malformed JSON)
   if [ -z "$LOWER" ]; then
@@ -83,6 +83,10 @@ if ! afc_state_is_active; then
     SKILL="afc:launch"
   elif printf '%s' "$LOWER" | grep -qE '(triage|pr.?정리|이슈.?정리|백로그.?정리|pr.?분류|이슈.?분류)' 2>/dev/null; then
     SKILL="afc:triage"
+  elif printf '%s' "$LOWER" | grep -qE '(issue.*분석|이슈.*분석|analyze.*issue|issue.*#[0-9]|이슈.*#[0-9])' 2>/dev/null; then
+    SKILL="afc:issue"
+  elif printf '%s' "$LOWER" | grep -qE '(review.*comment|resolve.*comment|coderabbit|copilot.*review|리뷰.*코멘트|봇.*리뷰|bot.*review.*fix)' 2>/dev/null; then
+    SKILL="afc:resolve"
   # Medium confidence: still distinctive but broader
   elif printf '%s' "$LOWER" | grep -qE '(specification|requirements|acceptance criteria|요구.?사항|기능.?정의|인수.?조건)' 2>/dev/null; then
     SKILL="afc:spec"

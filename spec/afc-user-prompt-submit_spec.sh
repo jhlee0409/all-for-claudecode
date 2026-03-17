@@ -156,6 +156,38 @@ Describe "afc-user-prompt-submit.sh"
         The output should include "afc:triage"
       End
 
+      It "routes issue analysis intent from English keyword"
+        Data '{"prompt":"analyze issue #123 for this repo"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:issue"
+      End
+
+      It "routes issue analysis intent from Korean keyword"
+        Data '{"prompt":"이슈 #42 분석해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:issue"
+      End
+
+      It "routes resolve intent from review comment keyword"
+        Data '{"prompt":"resolve the coderabbit review comments on PR 456"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:resolve"
+      End
+
+      It "routes resolve intent from Korean keyword"
+        Data '{"prompt":"PR의 봇 리뷰 코멘트 처리해줘"}'
+        When run script scripts/afc-user-prompt-submit.sh
+        The status should eq 0
+        The output should include "afc:route"
+        The output should include "afc:resolve"
+      End
+
       It "routes release-notes intent"
         Data '{"prompt":"generate release notes for this version"}'
         When run script scripts/afc-user-prompt-submit.sh

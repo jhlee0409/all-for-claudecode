@@ -163,6 +163,8 @@ User-only (not auto-triggered — when user invokes directly via `/afc:X`, execu
 - `afc:principles` — project principles management
 - `afc:clean` — pipeline cleanup (artifact cleanup, dead code scan, pipeline flag release)
 - `afc:triage` — parallel PR/issue triage
+- `afc:issue` — analyze a single GitHub issue
+- `afc:resolve` — address LLM bot review comments on a PR
 - `afc:learner` — pattern learning or rule promotion
 - `afc:pr-comment` — post PR review comments to GitHub
 - `afc:release-notes` — generate release notes from git history
