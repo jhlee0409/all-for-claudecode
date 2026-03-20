@@ -19,11 +19,17 @@ allowed-tools:
 
 - `$ARGUMENTS` — (optional) checkpoint message (e.g., "Phase 2 complete, before starting UI implementation")
 
+## Current State (auto-loaded)
+
+!`git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "[NO_BRANCH]"`
+!`git log --oneline -1 2>/dev/null || echo "[NO_COMMITS]"`
+!`ls .claude/afc/specs/ 2>/dev/null || echo "[NO_SPECS]"`
+
 ## Execution Steps
 
 ### 1. Collect Current State
 
-Collect automatically:
+Collect automatically (use pre-fetched state above when available):
 
 1. **Git status**:
    - Current branch

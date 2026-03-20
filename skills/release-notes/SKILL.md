@@ -220,4 +220,5 @@ To publish these notes as a GitHub Release, run again with --post flag.
 - **Conventional Commits aware**: Projects using conventional commits get better categorization. Projects without them still get reasonable results via heuristic matching.
 - **Contributor attribution**: Best effort. GitHub username resolution requires `gh` CLI and repository access.
 - **User confirmation required**: `--post` always asks for explicit approval before publishing to GitHub.
+- **Verify after publishing**: After `gh release create` completes, verify success by checking the exit code and output URL. If it fails, report the error and suggest manual creation.
 - **Idempotent**: Running without `--post` is safe to repeat. With `--post`, GitHub Releases for existing tags will fail (GitHub does not allow duplicate release tags).

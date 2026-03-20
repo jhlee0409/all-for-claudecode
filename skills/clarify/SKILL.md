@@ -81,6 +81,7 @@ Clarification complete
 ## Notes
 
 - **Question focus**: Ask only what is needed to resolve critical ambiguities. Defer lower-priority questions to the plan phase rather than overwhelming the user.
+- **Verify after update**: After updating spec.md, re-read the modified sections to confirm changes are consistent and no new `[NEEDS CLARIFICATION]` tags were introduced by the edit itself.
 - **Modify spec only**: Do not touch plan.md or tasks.md.
 - **Avoid redundancy**: Do not ask about items already clearly stated in spec.
 - **If `$ARGUMENTS` is provided**: Focus the scan on that area.

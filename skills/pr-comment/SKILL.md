@@ -162,6 +162,7 @@ PR review posted
 ## Notes
 
 - **User confirmation required**: Never post to GitHub without explicit user approval.
+- **Verify after posting**: After `gh pr review` completes, confirm success by checking the exit code. If it fails, report the error and suggest manual posting.
 - **Idempotent**: Multiple runs create additional review comments (GitHub does not deduplicate).
 - **Respects existing reviews**: Does not dismiss or override other reviewers' reviews.
 - **Perspectives reference**: Full criteria for A–H in [review/perspectives.md](../review/perspectives.md). This skill uses A–E only (focused on PR-level review, not full pipeline review).

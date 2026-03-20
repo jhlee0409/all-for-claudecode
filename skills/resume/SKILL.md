@@ -17,15 +17,20 @@ allowed-tools:
 
 - `$ARGUMENTS` — (optional) none
 
+## Checkpoint State (auto-loaded)
+
+!`cat .claude/afc/memory/checkpoint.md 2>/dev/null || echo "[NO_CHECKPOINT]"`
+
 ## Execution Steps
 
 ### 1. Load Checkpoint
 
-Read `.claude/afc/memory/checkpoint.md`:
-- If not found: check **auto-memory fallback** — read `~/.claude/projects/{ENCODED_PATH}/memory/checkpoint.md` (where `ENCODED_PATH` = project path with `/` replaced by `-`):
-  - If fallback found: use it as the checkpoint source (auto-memory is written by `pre-compact-checkpoint.sh` during context compaction)
-  - If fallback also not found: output "No saved checkpoint found. Use `/afc:checkpoint` to create one, or checkpoints are created automatically on context compaction." then **stop**
-- If found: parse the full contents (extract branch, commit hash, pipeline feature, task progress, modified files)
+Use the pre-fetched checkpoint above. If it shows `[NO_CHECKPOINT]`:
+- Check auto-memory fallback: read `~/.claude/projects/{ENCODED_PATH}/memory/checkpoint.md`
+- If fallback also not found: output "No saved checkpoint found." then **stop**
+
+If checkpoint data was pre-fetched successfully:
+parse the full contents (extract branch, commit hash, pipeline feature, task progress, modified files).
 
 ### 2. Validate Environment
 

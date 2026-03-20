@@ -73,31 +73,7 @@ For each candidate rule:
 
 ### 4. Present Suggestions
 
-Show clustered suggestions to user, most impactful first. Present the most impactful suggestions first. If there are many high-confidence patterns, present them all rather than artificially capping. If most are low-confidence, present fewer. Let relevance and confidence drive the count, not a fixed limit.
-
-```markdown
-## Learned Patterns ({N} pending, showing top {M})
-
-### 1. [Style] Prefer const over let
-- Detected: 3 times across 2 sessions
-- Confidence: HIGH
-- Proposed rule:
-  ```
-  Prefer `const` for variable declarations. Use `let` only when reassignment is required.
-  ```
-- Target: `.claude/rules/afc-learned.md` (universal)
-- [Approve] [Edit] [Skip] [Reject permanently]
-
-### 2. [Naming] No default exports in React components
-- Detected: 2 times (pipeline: auth-feature)
-- Confidence: HIGH
-- Proposed rule:
-  ```
-  In React component files (*.tsx), use named exports only. Avoid default exports.
-  ```
-- Target: `.claude/rules/afc-learned.md` (universal — scope expressed in prose)
-- [Approve] [Edit] [Skip] [Reject permanently]
-```
+Show clustered suggestions to user, most impactful first. Let relevance and confidence drive the count, not a fixed limit. See [suggestion-format.md](suggestion-format.md) for the presentation template.
 
 Wait for user response on each suggestion.
 
