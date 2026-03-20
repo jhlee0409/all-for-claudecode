@@ -111,11 +111,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | **EDGE_CASES** | Are at least 2 edge cases identified? Any missing boundary conditions? |
 | **TESTABILITY** | Does every System Requirement follow one of the 5 EARS patterns (WHEN/WHILE/IF/WHERE/SHALL)? Does each EARS requirement have a mapped TC (`→ TC: should_...`)? If not → FAIL and auto-fix: rewrite to EARS + generate TC mapping. |
 
-**On FAIL**: auto-fix and continue to next pass.
-**On ESCALATE**: pause, present options to user, apply choice, resume.
-**On DEFER**: record reason, mark criterion clean, continue.
-**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
-**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
+Follow verdict handling and output format per `docs/critic-loop-rules.md`.
 
 ### 5.5. Auto-Checkpoint (standalone only)
 

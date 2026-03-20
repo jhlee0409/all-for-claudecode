@@ -20,9 +20,9 @@ model: sonnet
 
 - `$ARGUMENTS` — (optional) focus on a specific area (e.g., "security", "performance", "UI flow")
 
-## Config Load
+## Project Config (auto-loaded)
 
-**Must** read `.claude/afc.config.md` first. If the config file is not present, print "`.claude/afc.config.md` not found. Run `/afc:init` first." then **abort**.
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Run /afc:init first — abort if missing."`
 
 ## Execution Steps
 

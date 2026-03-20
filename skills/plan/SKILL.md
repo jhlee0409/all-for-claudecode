@@ -139,11 +139,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 4. **Constraint propagation**: every item in spec.md `Constraints` section is addressed in Risk & Mitigation or Implementation Context `Must NOT`. Report: `{M}/{N} constraints propagated`.
 5. **Acceptance anchor alignment**: Implementation Context `Acceptance Anchors` faithfully reflect spec.md's acceptance scenarios (no omissions, no misinterpretations).
 
-**On FAIL**: auto-fix and continue to next pass.
-**On ESCALATE**: pause, present options to user, apply choice, resume.
-**On DEFER**: record reason, mark criterion clean, continue.
-**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
-**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
+Follow verdict handling and output format per `docs/critic-loop-rules.md`.
 
 ### 5.5. ADR Recording (optional)
 

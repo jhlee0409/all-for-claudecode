@@ -12,10 +12,10 @@ model: sonnet
 ---
 # /afc:tasks — Task Decomposition
 
-> Generates an executable task list (tasks.md) based on plan.md.
-> Validates coverage with convergence-based Critic Loop.
+> Generates an executable task list (tasks.md) from plan.md.
+> Validates coverage with a convergence-based Critic Loop.
 >
-> **Note**: In `/afc:auto` pipeline, task generation is handled automatically at implement start (no separate tasks phase). This command is for standalone use when manual task decomposition control is needed.
+> **Note**: In `/afc:auto`, task generation runs automatically at implement start. Use this command only for standalone manual control.
 
 ## Arguments
 
@@ -23,90 +23,73 @@ model: sonnet
 
 ## Config Load
 
-**Must** read `.claude/afc.config.md` first. If the config file is not present, print "`.claude/afc.config.md` not found. Run `/afc:init` first." then **abort**.
+Read `.claude/afc.config.md` first. If missing: print "`.claude/afc.config.md` not found. Run `/afc:init` first." then **abort**.
 
 ## Execution Steps
 
 ### 1. Load Context
 
-1. Load from `.claude/afc/specs/{feature}/`:
-   - **plan.md** (required) — stop if missing: "Run /afc:plan first."
-   - **spec.md** (required)
-   - **research.md** (if present)
-2. Extract from plan.md:
-   - Phase breakdown
-   - File Change Map
-   - Architecture decisions
+From `.claude/afc/specs/{feature}/`:
+- **plan.md** (required) — if missing: "Run /afc:plan first."
+- **spec.md** (required), **research.md** (if present)
+
+Extract from plan.md: phase breakdown, File Change Map, architecture decisions.
 
 ### 2. Decompose Tasks
 
-Decompose tasks per Phase defined in plan.md.
-
-#### Task Format (required)
+#### Task Format
 
 ```markdown
-- [ ] T{NNN} {[P]} {[US*]} {description} `{file path}` {depends: [TXXX, TXXX]}
+- [ ] T{NNN} {[P]} {[US*]} {description} `{file path}` {depends: [TXXX, ...]}
 ```
 
 | Component | Required | Description |
 |-----------|----------|-------------|
-| `T{NNN}` | Yes | 3-digit sequential ID (T001, T002, ...) |
-| `[P]` | No | **Mandatory parallel execution** — task MUST run in parallel with other [P] tasks in the same phase. Requires: (1) no file overlap with other [P] tasks in the same phase, (2) different target files per task (enforced by `afc-parallel-validate.sh`). Sequential substitution of [P] tasks is prohibited. |
-| `[US*]` | No | User Story label (US1, US2, ... from spec.md) |
-| description | Yes | Clear task description (start with a verb) |
-| file path | Yes | Primary target file (wrapped in backticks) |
-| `depends:` | No | Explicit dependency list — task cannot start until all listed tasks complete |
+| `T{NNN}` | Yes | 3-digit sequential ID |
+| `[P]` | No | Mandatory parallel execution — no file overlap with other [P] tasks in same phase |
+| `[US*]` | No | User Story label from spec.md |
+| `description` | Yes | Verb-first clear description |
+| `` `file path` `` | Yes | Primary target file |
+| `depends:` | No | Blocking dependency list |
 
 #### Phase Structure
 
 ```markdown
 # Tasks: {feature name}
-
-## Phase 1: Setup
-{type definitions, configuration, directory structure}
-
-## Phase 2: Core
-{core business logic, store, API}
-
-## Phase 3: UI
-{components, interactions}
-
-## Phase 4: Integration & Polish
-{integration, error handling, optimization}
+## Phase 1: Setup    — type definitions, configuration
+## Phase 2: Core     — business logic, store, API
+## Phase 3: UI       — components, interactions
+## Phase 4: Integration & Polish — error handling, optimization
 ```
 
-#### Decomposition Principles
+#### Decomposition Rules
 
-1. **1 task = 1 file** principle (where possible)
-2. **Same file = sequential**, **different files = [P] candidate**
-3. **Explicit dependencies**: Use `depends: [T001, T002]` to declare blocking dependencies. Tasks without `depends:` and with [P] marker are immediately parallelizable.
-4. **[P] physical validation**: Before finalizing tasks.md, run `"${CLAUDE_SKILL_DIR}/../../scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md` to verify no file path overlaps exist among [P] tasks within the same phase. Fix any conflicts before proceeding.
-5. **Dependency graph must be a DAG**: no circular dependencies allowed. **Mandatory validation**: run `"${CLAUDE_SKILL_DIR}/../../scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md` before output. Abort if cycle detected.
-6. **Test tasks**: Include a verification task for each testable unit
-7. **Phase gate**: Add a `{config.gate}` validation task at the end of each Phase
+1. **1 task = 1 file** (where possible)
+2. Same file → sequential; different files → `[P]` candidate
+3. **`[P]` is mandatory, not optional** — once marked, task MUST run in parallel
+4. Validate `[P]` file overlaps: run `"${CLAUDE_SKILL_DIR}/../../scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md`
+5. Validate DAG (no cycles): run `"${CLAUDE_SKILL_DIR}/../../scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md` — abort if cycle detected
+6. Include a verification task per testable unit
+7. Add `{config.gate}` validation task at end of each Phase
+8. **No over-decomposition**: skip separate tasks for single-line changes
 
 ### 3. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` directory exists, load the **most recent 10 files** (sorted by filename descending) and check:
-- Were there previous parallel conflict issues ([P] file overlaps)? Flag similar file patterns.
-- Were there tasks that were over-decomposed or under-decomposed? Adjust granularity.
+If `.claude/afc/memory/retrospectives/` exists, load the 10 most recent files (sorted descending) and check for prior `[P]` conflict patterns or granularity issues.
 
 ### 4. Critic Loop
 
-> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
-
-Run the critic loop until convergence. Safety cap: 5 passes.
+Read [`docs/critic-loop-rules.md`](../../docs/critic-loop-rules.md) first and follow all rules. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
-| **COVERAGE** | Are all files in plan.md's File Change Map included in tasks? Are all FR-* in spec.md covered? |
-| **DEPENDENCIES** | Is the dependency graph a valid DAG? Do [P] tasks within the same phase have no file overlaps? Are all `depends:` targets valid task IDs? For physical validation of [P] file overlaps, reference the validation script: `"${CLAUDE_SKILL_DIR}/../../scripts/afc-parallel-validate.sh"` can be called with the tasks.md path to verify no conflicts exist. |
+| **COVERAGE** | All files in plan.md File Change Map included? All FR-* in spec.md covered? |
+| **DEPENDENCIES** | DAG valid? `[P]` tasks in same phase have no file overlaps? All `depends:` IDs exist? |
 
-**On FAIL**: auto-fix and continue to next pass.
-**On ESCALATE**: pause, present options to user, apply choice, resume.
-**On DEFER**: record reason, mark criterion clean, continue.
-**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
-**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
+**Verdicts**: PASS / FAIL (auto-fix, continue) / ESCALATE (pause for user) / DEFER (record, continue)
+
+On convergence: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
+On safety cap: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
 ### 5. Coverage Mapping
 
@@ -115,17 +98,15 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | Requirement | Tasks |
 |-------------|-------|
 | FR-001 | T003, T007 |
-| FR-002 | T005, T008 |
 | NFR-001 | T012 |
 ```
 
-Every FR-*/NFR-* must be mapped to at least one task.
+Every FR-*/NFR-* must map to at least one task.
 
 ### 5.5. Auto-Checkpoint (standalone only)
 
-When not running inside `/afc:auto`, save progress for `/afc:resume`:
-- Write/update `.claude/afc/memory/checkpoint.md` with: branch, last commit, feature name, current phase (tasks complete), task count ({total} tasks, {parallel} parallel), next step (`/afc:implement`)
-- Skip if running inside auto pipeline (auto manages its own checkpoints via phase transitions)
+When not inside `/afc:auto`, write `.claude/afc/memory/checkpoint.md`:
+- branch, last commit, feature name, phase (tasks complete), task count, next step (`/afc:implement`)
 
 ### 6. Final Output
 
@@ -134,19 +115,15 @@ Save to `.claude/afc/specs/{feature}/tasks.md`, then:
 ```
 Tasks generated
 ├─ .claude/afc/specs/{feature}/tasks.md
-├─ Tasks: {total count} ({[P] count} parallelizable)
-├─ Phases: {phase count}
-├─ Coverage: FR {coverage}%, NFR {coverage}%
+├─ Tasks: {total} ({[P] count} parallelizable)
+├─ Phases: {count}
+├─ Coverage: FR {N}%, NFR {N}%
 ├─ Critic: converged ({N} passes, {M} fixes, {E} escalations)
 └─ Next step: /afc:validate (optional) or /afc:implement
 ```
 
 ## Notes
 
-- **Do not write implementation code**: Write task descriptions only. Actual code is the responsibility of /afc:implement.
-- **No over-decomposition**: Do not create separate tasks for single-line changes.
-- **Accurate file paths**: Use paths based on the actual project structure (no guessing).
-- **Use [P] sparingly**: Mark [P] only for truly independent tasks. When in doubt, keep sequential.
-- **Dependencies unlock orchestration**: explicit `depends:` enables /afc:implement to use dependency-aware scheduling. Note: `addBlockedBy` auto-unblocking is only guaranteed in Agent Teams mode. In sub-agent mode, the orchestrator must poll TaskList and manually check blockedBy status after each task completion.
-- **Cross-phase dependencies prohibited**: `depends:` may only reference task IDs within the same phase or a previous phase. Phase N tasks are registered only when Phase N begins — this prevents workers from claiming future-phase tasks.
-- **[P] is mandatory, not optional**: once a [P] marker is assigned, the task MUST execute in parallel. Do not mark [P] unless you are certain the task has no file overlap and no implicit ordering requirement.
+- **Cross-phase `depends:` prohibited**: only reference tasks in same or previous phase
+- **`addBlockedBy` auto-unblocking** is guaranteed in Agent Teams only; in sub-agent mode the orchestrator must poll manually
+- **Accurate file paths**: use actual project structure — no guessing

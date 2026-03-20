@@ -23,14 +23,9 @@ model: sonnet
   - `remove {number}`: remove a principle
   - `init`: interactive initial setup
 
-## Config Load
+## Project Config (auto-loaded)
 
-**Always** read `.claude/afc.config.md` first.
-
-If config file is missing:
-1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
-2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
-3. If user declines → **abort**
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
 ## Execution Steps
 

@@ -17,6 +17,10 @@ model: sonnet
 > Analyzes a single GitHub issue (title, body, labels, comments, attached images) and produces a structured analysis document.
 > Searches the codebase for related files and suggests the appropriate next afc skill (debug, spec, or auto).
 
+## Pre-fetch
+
+!`gh --version >/dev/null 2>&1 && gh auth status >/dev/null 2>&1 && echo "GH_OK" || echo "GH_UNAVAILABLE"`
+
 ## Arguments
 
 - `$ARGUMENTS` — (required) One of:
@@ -28,13 +32,7 @@ model: sonnet
 
 ### 1. Prerequisites Check
 
-Verify `gh` CLI is available and authenticated:
-
-```bash
-gh --version >/dev/null 2>&1 && gh auth status >/dev/null 2>&1
-```
-
-If either check fails:
+If the pre-fetch returned `GH_UNAVAILABLE`:
 - Output: `[afc:issue] Error: GitHub CLI (gh) is not installed or not authenticated. Install from https://cli.github.com/ and run 'gh auth login'.`
 - **Abort immediately.**
 
@@ -42,17 +40,9 @@ If either check fails:
 
 Determine the input format and extract owner, repo, and issue number:
 
-1. **GitHub URL** (`https://github.com/{owner}/{repo}/issues/{number}`):
-   - Extract owner, repo, number from URL path segments
-   - Set `GH_REPO_FLAG="--repo {owner}/{repo}"`
-
-2. **Cross-repo** (`{owner}/{repo}#{number}`):
-   - Split on `#` — left part is `owner/repo`, right part is number
-   - Set `GH_REPO_FLAG="--repo {owner}/{repo}"`
-
-3. **Local number** (`123` or `#123`):
-   - Strip leading `#` if present
-   - Set `GH_REPO_FLAG=""` (use current repo from git remote)
+1. **GitHub URL** (`https://github.com/{owner}/{repo}/issues/{number}`): extract from path, set `GH_REPO_FLAG="--repo {owner}/{repo}"`
+2. **Cross-repo** (`{owner}/{repo}#{number}`): split on `#`, set `GH_REPO_FLAG="--repo {owner}/{repo}"`
+3. **Local number** (`123` or `#123`): strip leading `#`, set `GH_REPO_FLAG=""` (use current repo from git remote)
 
 ### 3. Collect Issue Data
 
@@ -60,90 +50,79 @@ Determine the input format and extract owner, repo, and issue number:
 gh issue view {number} {GH_REPO_FLAG} --json number,title,body,labels,author,comments,createdAt,state,url
 ```
 
-If the command fails:
-- `Issue #{number} not found` → output error and **abort**
-- Other errors → output the gh error message and **abort**
+If the command fails → output error and **abort**.
 
-Parse the JSON response and extract:
-- `TITLE`, `BODY`, `LABELS`, `AUTHOR`, `COMMENTS`, `CREATED_AT`, `STATE`, `URL`
+Parse and extract: `TITLE`, `BODY`, `LABELS`, `AUTHOR`, `COMMENTS`, `CREATED_AT`, `STATE`, `URL`.
 
 ### 4. Analyze Attached Images
 
-Extract image URLs from the issue body:
-- Markdown images: `![alt]({url})`
-- HTML images: `<img src="{url}">`
-- **Skip** images inside code blocks (` ``` ` fences)
+Extract image URLs from the issue body (skip images inside code block fences):
+- Markdown: `![alt]({url})`
+- HTML: `<img src="{url}">`
 
-For each extracted image URL:
-1. Attempt to fetch with WebFetch
-2. If successful: analyze the image content (error messages, UI screenshots, console output, stack traces)
-3. If fetch fails: record `[Image unavailable: {url}]`
+For each URL: fetch with WebFetch, analyze content (error messages, UI screenshots, console output, stack traces), tag results with `[Image Analysis]`. Record failures as `[Image unavailable: {url}]`.
 
-Tag all image analysis results with `[Image Analysis]` to indicate AI interpretation.
-
-If no images found: note `No attached media found.`
+If no images: note `No attached media found.`
 
 ### 5. Analyze Comments
 
-If comments exist:
-- If more than 20 comments: analyze only the **most recent 20** and note `"Analyzed 20 of {N} comments (most recent)"`
-- Extract additional context from comments: reproduction steps, error logs, workarounds, maintainer responses, related issue/PR references
+If more than 20 comments: analyze only the **most recent 20** and note `"Analyzed 20 of {N} comments (most recent)"`.
+
+Extract: reproduction steps, error logs, workarounds, maintainer responses, related issue/PR references.
 
 ### 6. Search Codebase
 
-Extract keywords from the issue title, body, and comments:
+Extract keywords from title, body, and comments:
 - Error messages (quoted strings, stack trace patterns)
-- Function/class/module names
-- File paths mentioned
-- Technical terms specific to the project
+- Function/class/module names, file paths, project-specific technical terms
 
-For each keyword, search the codebase using Grep and Glob:
-- Record matching files with line numbers and relevance reason
-- If no matches found: note `No related code found in current codebase.`
+Search with Grep and Glob. Record matching files with line numbers and relevance reason. If no matches: `No related code found in current codebase.`
 
 ### 7. Classify Issue
 
-Based on the analysis, classify the issue:
+**Type** — choose the strongest matching signal:
 
-| Signal | Classification |
-|--------|---------------|
-| Error messages, stack traces, reproduction steps, "doesn't work", "broken" | **Bug Report** |
+| Signal | Type |
+|--------|------|
+| Error messages, stack traces, "broken", "doesn't work", reproduction steps | **Bug Report** |
 | "Add", "support", "new feature", "would be nice", "enhancement" | **Feature Request** |
 | "How to", "is it possible", "what is", "documentation" | **Question** |
 | "Improve", "refactor", "better", "optimize", existing feature modification | **Enhancement** |
 
-Assess severity:
-- **Critical**: Data loss, security vulnerability, crash, blocks usage
-- **High**: Major functionality broken, no workaround
-- **Medium**: Functionality issue with workaround, or significant UX problem
-- **Low**: Minor issue, cosmetic, or nice-to-have improvement
+**Severity** — based on production impact, not code location:
 
-Estimate scope:
-- **Small** (1-2 files): Typo, config change, simple bug fix
-- **Medium** (3-5 files): Feature addition, moderate refactor
-- **Large** (6+ files): Cross-cutting concern, architectural change
+| Level | Criteria |
+|-------|---------|
+| **Critical** | Data loss, security vulnerability, application crash, or complete feature unavailability with no workaround |
+| **High** | Core functionality broken; workaround exists but is painful or undocumented |
+| **Medium** | Non-critical functionality impacted; reasonable workaround available, or significant UX degradation |
+| **Low** | Cosmetic issue, minor UX friction, or improvement with no functional impact |
+
+**Estimated Scope:**
+
+| Level | Criteria |
+|-------|---------|
+| **Small** | 1–2 files — typo, config change, isolated bug fix |
+| **Medium** | 3–5 files — feature addition, moderate refactor |
+| **Large** | 6+ files — cross-cutting concern, architectural change |
 
 ### 8. Determine Next Step
-
-Based on classification:
 
 | Type | Suggested Next Step |
 |------|-------------------|
 | Bug Report | `/afc:debug "{issue title summary}"` |
 | Feature Request | `/afc:spec "{feature description}"` or `/afc:auto "{feature description}"` |
-| Question | `Reply to issue — provide answer or point to documentation` |
+| Question | Reply to issue — provide answer or point to documentation |
 | Enhancement | `/afc:spec "{enhancement description}"` |
-| Insufficient info | `Reply to issue — request: {specific missing information}` |
+| Insufficient info | Reply to issue — request: {specific missing information} |
 
 ### 9. Save Analysis Document
 
-Create directory if needed:
 ```bash
 mkdir -p .claude/afc/issues
 ```
 
-Check for existing analysis:
-- If `.claude/afc/issues/{number}-*.md` exists → ask user: "Overwrite existing analysis for issue #{number}?"
+If `.claude/afc/issues/{number}-*.md` exists → ask user: "Overwrite existing analysis for issue #{number}?"
 
 Generate slug from title: lowercase, replace non-alphanumeric with `-`, truncate to 40 chars.
 
@@ -160,24 +139,20 @@ Write to `.claude/afc/issues/{number}-{slug}.md`:
 
 ## Summary
 
-{2-4 sentence summary of what the issue is about and what it requires.
-Not just a restatement of the title — include context from body, comments, and images.}
+{2-4 sentence summary including context from body, comments, and images — not just a restatement of the title.}
 
 ## Attached Media Analysis
 
 {If images exist:}
 > [Image Analysis] Below is AI interpretation of attached media.
 
-- **Image 1** ({filename or "screenshot"}): {description of what the image shows — error messages, UI state, console output}
-- **Image 2**: ...
+- **Image 1** ({filename or "screenshot"}): {description}
 
 {If no images:}
 No attached media found.
 
 ## Codebase Impact
 
-{If related files found:}
-- `{path}:{line}` — {why this file is related}
 - `{path}:{line}` — {why this file is related}
 
 {If no related files:}
@@ -209,8 +184,8 @@ Issue analyzed
 
 ## Notes
 
-- **Read-only**: This skill does not modify any code. It only creates an analysis document.
-- **Image analysis is best-effort**: AI interpretation of screenshots may not be 100% accurate. The `[Image Analysis]` tag makes this explicit.
-- **Not part of auto pipeline**: This is a standalone skill invoked manually.
-- **Relationship to triage**: `afc:triage` handles bulk PR/issue analysis. `afc:issue` handles deep individual issue analysis. They are complementary.
-- **Comment limit**: Max 20 comments analyzed to keep context manageable. Most recent comments are prioritized as they often contain the most relevant information.
+- **Read-only**: Does not modify any code. Only creates an analysis document.
+- **Image analysis is best-effort**: AI interpretation of screenshots may be imprecise — `[Image Analysis]` tag makes this explicit.
+- **Not part of auto pipeline**: Standalone skill, invoked manually.
+- **Relationship to triage**: `afc:triage` handles bulk analysis; `afc:issue` handles deep individual analysis.
+- **Comment limit**: Max 20 comments analyzed (most recent prioritized).

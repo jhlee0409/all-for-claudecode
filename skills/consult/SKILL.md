@@ -35,30 +35,24 @@ If `$ARGUMENTS` is empty → go to Step 2 (domain selection).
 
 **B. No domain, but question provided** → intent-based evaluation:
 
-Read the user's question and determine which domain's expertise would provide the most value. Consider the actual intent, not keyword presence.
-
 | Domain | When to route |
 |--------|---------------|
-| backend | User needs help with server-side logic, data modeling, API design, authentication flows, database decisions, or how application code processes and stores data |
-| infra | User needs help with how the application is deployed, operated, or monitored — infrastructure topology, CI/CD pipelines, cloud services, scaling, reliability |
-| pm | User needs help with product decisions: what to build, for whom, when, how to measure success, how to prioritize competing features, or how to define scope |
-| design | User needs help with how something looks or feels to a user — visual hierarchy, interaction patterns, accessibility, component design, or user flow |
-| marketing | User needs help reaching or retaining users outside the product: SEO, content strategy, acquisition funnels, analytics tracking, or growth tactics |
-| legal | User needs help understanding regulatory obligations, license compatibility, privacy requirements, or the legal implications of a design or data practice |
-| security | User needs help identifying or mitigating threats, vulnerabilities, or attack surfaces — secure coding, threat modeling, or compliance with security standards |
-| advisor | User is choosing between technologies, frameworks, libraries, or architectural approaches and wants an informed recommendation with trade-off analysis |
-| peer | User wants to think through a problem collaboratively, explore directions, weigh trade-offs, or have a structured dialogue rather than receive an answer |
+| backend | Server-side logic, data modeling, API design, authentication flows, database decisions |
+| infra | Deployment, CI/CD pipelines, cloud services, scaling, reliability, monitoring |
+| pm | What to build, for whom, when, how to measure success, prioritization, scope |
+| design | Visual hierarchy, interaction patterns, accessibility, component design, user flow |
+| marketing | SEO, content strategy, acquisition funnels, analytics tracking, growth tactics |
+| legal | Regulatory obligations, license compatibility, privacy requirements |
+| security | Threats, vulnerabilities, attack surfaces, threat modeling, compliance |
+| advisor | Choosing between technologies, frameworks, libraries, or architectural approaches |
+| peer | Think through a problem collaboratively, explore directions, weigh trade-offs |
 
-Evaluation rules:
-- Identify what specialized knowledge the user actually needs, not which domain's jargon appears in the text
-- If multiple domains seem relevant, identify the PRIMARY expertise gap — what specialized knowledge does the user need most?
+Identify the PRIMARY expertise gap — what specialized knowledge does the user need most?
 
-**C. No domain, no question, or no keyword match** → ask user:
+**C. No domain, no question** → ask user:
 
-Use AskUserQuestion:
 ```
 "Which expert would you like to consult?"
-Options:
 1. Backend — API design, database, authentication, server architecture
 2. Infra — deployment, CI/CD, cloud, monitoring, scaling
 3. PM — product strategy, prioritization, user stories, metrics
@@ -66,82 +60,21 @@ Options:
 5. Marketing — SEO, analytics, growth, content strategy
 6. Legal — GDPR, privacy, licenses, compliance, terms of service
 7. Security — application security, OWASP, threat modeling, secure coding
-8. Advisor — technology/library/framework selection, ecosystem navigation, stack decisions
-9. Peer — think together, brainstorm, discuss ideas, explore directions as equals
+8. Advisor — technology/library/framework selection, stack decisions
+9. Peer — think together, brainstorm, explore directions as equals
 ```
 
 ### 3. Peer Mode (if domain is `peer`)
 
-If the detected domain is `peer`, **do not delegate to a subagent**. Run the dialogue directly in the main context.
+Do not delegate to a subagent. Run dialogue directly in the main context.
 
-#### Behavior Principles
+See [peer-mode.md](peer-mode.md) for full behavior, coaching techniques, and wrap-up protocol.
 
-You are a thinking partner, not an expert giving answers. Follow these rules:
-
-1. **Ask before answering.** Default to questions that deepen the user's thinking, not solutions. "What would happen if...?", "What are you optimizing for?"
-2. **Challenge, don't agree.** Apply the Anti-Sycophancy Rules from `expert-protocol.md`. When the user states a direction, probe its weaknesses before supporting it.
-3. **Present the strongest counter-argument.** Steel-man the opposing view: "The best case for NOT doing this is..."
-4. **Name what's been decided and what hasn't.** Periodically summarize: "So far we've landed on X. Still open: Y and Z."
-5. **Suggest convergence, don't force it.** When the discussion feels circular or key decisions are made, say so: "I think we have enough to move forward. Want to wrap up?"
-
-#### Coaching Techniques
-
-Use these as appropriate — not all at once, not in order:
-
-- **5 Whys** — repeat "why?" to reach the root motivation
-- **Pre-mortem** — "If this fails in 6 months, what went wrong?"
-- **Constraint flip** — "What if you had half the time?" / "What if cost didn't matter?"
-- **Steel-manning** — present the strongest version of the opposing view
-- **Bisection** — "Is the core question A or B?" to narrow scope
-
-#### Codebase Context
-
-If the discussion involves the current project:
-- Read relevant files (Read/Glob/Grep) to ground the conversation in reality
-- Reference actual code, not hypothetical structures
-- Note existing patterns that constrain or enable options
-
-#### Wrapping Up
-
-When the user signals completion (or agrees to your convergence suggestion):
-
-1. Write `.claude/afc/discuss.md` with:
-
-```markdown
-# Discussion: {topic}
-
-> Date: {YYYY-MM-DD}
-> Seed: {original question/topic}
-
-## Key Decisions
-- [DECIDED] {decision} — {rationale}
-
-## Open Questions
-- [OPEN] {unresolved item}
-
-## Summary
-{3-5 sentence synthesis of what was discussed and concluded}
-
-## Next Steps
-- {recommended action, e.g., → /afc:spec "...", → /afc:plan "...", → /afc:research "..."}
-```
-
-2. Output:
-```
-Discussion complete
-├─ .claude/afc/discuss.md
-├─ Decisions: {count}
-├─ Open questions: {count}
-└─ Suggested next: {command}
-```
-
-**Skip Steps 4-6 and end here.**
+**Skip Steps 3b–6 and end here.**
 
 ---
 
 ### 3b. Construct Expert Prompt (non-peer domains)
-
-Build the prompt for the expert agent:
 
 ```
 You are being consulted via /afc:consult.
@@ -161,8 +94,6 @@ You are being consulted via /afc:consult.
 
 ### 4. Delegate to Expert Agent
 
-Invoke the expert agent via Task(). Map the detected domain to the corresponding agent:
-
 | Domain | subagent_type |
 |--------|---------------|
 | backend | `afc:afc-backend-expert` |
@@ -174,27 +105,17 @@ Invoke the expert agent via Task(). Map the detected domain to the corresponding
 | security | `afc:afc-appsec-expert` |
 | advisor | `afc:afc-tech-advisor` |
 
-Example for each domain:
 ```
-Task("backend consultation", subagent_type: "afc:afc-backend-expert", prompt: "...")
-Task("infra consultation", subagent_type: "afc:afc-infra-expert", prompt: "...")
-Task("pm consultation", subagent_type: "afc:afc-pm-expert", prompt: "...")
-Task("design consultation", subagent_type: "afc:afc-design-expert", prompt: "...")
-Task("marketing consultation", subagent_type: "afc:afc-marketing-expert", prompt: "...")
-Task("legal consultation", subagent_type: "afc:afc-legal-expert", prompt: "...")
-Task("security consultation", subagent_type: "afc:afc-appsec-expert", prompt: "...")
-Task("advisor consultation", subagent_type: "afc:afc-tech-advisor", prompt: "...")
+Task("{domain} consultation", subagent_type: "afc:afc-{domain}-expert", prompt: "...")
 ```
 
 The agent runs in foreground (never `run_in_background`).
 
 ### 5. Relay Response
 
-Return the agent's response to the user as-is. Do not summarize or filter the expert's output.
+Return the agent's response to the user as-is. Do not summarize or filter.
 
 ### 6. Follow-up Prompt
-
-After relaying the response, suggest:
 
 ```
 Follow-up options:
@@ -206,34 +127,20 @@ Follow-up options:
 ## Examples
 
 ```bash
-# Specific domain + question
 /afc:consult backend "Should I use JWT or session cookies for auth?"
-
-# Auto-detect domain from question
-/afc:consult "My API is slow when loading the dashboard"
-
-# Exploratory mode (Socratic diagnostic)
-/afc:consult backend
-
-# With depth hint
+/afc:consult "My API is slow when loading the dashboard"   # auto-detect
+/afc:consult backend                                        # exploratory mode
 /afc:consult infra "How should I set up CI/CD?" deep
-
-# Peer mode — think together (explicit)
-/afc:consult peer "Should we split this into a monorepo or keep it separate?"
-
-# Peer mode — auto-detected from keywords
+/afc:consult peer "Should we split this into a monorepo?"
 /afc:consult "Let's think through the onboarding flow together"
-
-# No arguments (domain selection prompt)
-/afc:consult
+/afc:consult                                                # domain selection prompt
 ```
 
 ## Notes
 
-- **Limited write scope**: Expert agents MUST only write to pipeline and memory paths (`.claude/afc/` and `.claude/agent-memory/`). Writing to application source code is prohibited. If an expert recommends code changes, they return the recommendation as text — the user or orchestrator applies it.
-- **Persistent memory**: Each expert remembers your project's decisions across sessions (stored in `.claude/agent-memory/afc-{domain}-expert/MEMORY.md`).
-- **Project profile**: Shared context at `.claude/afc/project-profile.md` — auto-created on first consultation, review and adjust as needed.
+- **Limited write scope**: Expert agents MUST only write to `.claude/afc/` and `.claude/agent-memory/`. Writing to application source code is prohibited.
+- **Persistent memory**: Stored in `.claude/agent-memory/afc-{domain}-expert/MEMORY.md`.
+- **Project profile**: Shared context at `.claude/afc/project-profile.md` — auto-created on first consultation.
 - **Domain adapters**: Industry-specific guardrails (fintech, ecommerce, healthcare) auto-loaded based on project profile.
-- **Pipeline-independent**: Works anytime, no active pipeline required. If a pipeline is active, experts consider the current phase context.
-- **Cross-referral**: Experts may suggest consulting another domain expert when a question crosses boundaries.
-- **Peer mode**: Unlike other domains, `peer` runs directly in the main context (no subagent). It produces `.claude/afc/discuss.md` on wrap-up. Overwritten on each new peer session — rename to preserve.
+- **Cross-referral**: Experts may suggest consulting another domain when a question crosses boundaries.
+- **Peer mode**: Runs in main context, not subagent. Produces `.claude/afc/discuss.md` on wrap-up. See [peer-mode.md](peer-mode.md).

@@ -31,14 +31,14 @@ Parse the arguments:
    - If single version: use `{version}..HEAD`
    - If empty: auto-detect with `git describe --tags --abbrev=0`
 
+## Git Context (auto-loaded)
+
+!`git describe --tags --abbrev=0 2>/dev/null || echo "[NO_TAGS]"`
+!`git log $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD --pretty=format:"%H %s" --no-merges 2>/dev/null || git log --pretty=format:"%H %s" --no-merges`
+
 ## Execution Steps
 
 ### 1. Determine Range
-
-```bash
-# Auto-detect last tag if no range specified
-git describe --tags --abbrev=0 2>/dev/null
-```
 
 - If a tag is found, set `from_tag` to that tag, `to_tag` to HEAD
 - If no tags exist, inform the user: "No tags found. Include all commits? (y/n)"

@@ -13,78 +13,33 @@ model: sonnet
 
 # /afc:validate — Artifact Consistency Validation
 
-> Validates consistency and quality across spec.md, plan.md, and tasks.md.
-> **Read-only** — does not modify any files.
+> Validates consistency across spec.md, plan.md, and tasks.md. **Read-only** — does not modify files.
+
+## Project Config (auto-loaded)
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND — run /afc:init first]"`
 
 ## Arguments
 
-- `$ARGUMENTS` — (optional) limit validation scope (e.g., "spec-plan", "tasks-only")
-
-## Config Load
-
-**Always** read `.claude/afc.config.md` first. This file contains free-form markdown sections:
-- `## Architecture` — architecture pattern, layers, import rules (primary reference for this command)
-- `## Code Style` — language, naming conventions, lint rules
-- `## Project Context` — framework, state management, testing, etc.
-
-If config file is missing: read `CLAUDE.md` for architecture info. Assume "Layered Architecture" if neither source has it.
+- `$ARGUMENTS` — (optional) limit validation scope (`spec-plan`, `tasks-only`)
 
 ## Execution Steps
 
 ### 1. Load Artifacts
 
 From `.claude/afc/specs/{feature}/`:
-- **spec.md** (required)
-- **plan.md** (required)
-- **tasks.md** (if present)
-- **research.md** (if present)
-- **context.md** (if present — written by auto pipeline Phase 2)
+- **spec.md** (required), **plan.md** (required)
+- **tasks.md**, **research.md**, **context.md** (load if present)
 
 Warn about missing files but proceed with what is available.
+If config is missing: use `CLAUDE.md` for architecture info; assume "Layered Architecture" as fallback.
 
 ### 2. Run Validation
 
-Validate across 6 categories:
+Run all 6 categories defined in [`validation-categories.md`](./validation-categories.md).
 
-#### A. Duplication Detection (DUPLICATION)
-- Similar requirements within spec.md
-- Overlapping tasks within tasks.md
+If `$ARGUMENTS` specifies a scope (e.g., `spec-plan`), run only the relevant categories.
 
-#### B. Ambiguity Detection (AMBIGUITY)
-- Unmeasurable adjectives ("appropriate", "fast", "good")
-- Residual TODO/TBD/FIXME markers
-- Incomplete sentences
-
-#### C. Coverage Gaps (COVERAGE)
-- spec → plan: Are all FR-*/NFR-* reflected in the plan?
-- plan → tasks: Are all items in the plan's File Change Map present in tasks?
-- spec → tasks: Are all requirements mapped to tasks?
-- spec → context.md (if present): Are all FR-*/NFR-*/SC-* items from spec.md copied into context.md's Acceptance Criteria section? (AC completeness check)
-
-#### D. Inconsistencies (INCONSISTENCY)
-- Terminology drift (different names for the same concept)
-- Conflicting requirements
-- Mismatches between technical decisions in plan and execution in tasks
-
-#### E. Principles Compliance (PRINCIPLES)
-- Validate against MUST principles in .claude/afc/memory/principles.md if present
-- Potential violations of {config.architecture} rules
-
-#### F. Unidentified Risks (RISK)
-- Are there risks not identified in plan.md?
-- External dependency risks
-- Potential performance bottlenecks
-
-### 3. Severity Classification
-
-| Severity | Criteria |
-|----------|----------|
-| **CRITICAL** | Principles violation, core feature blocker, security issue |
-| **HIGH** | Duplication/conflict, untestable, coverage gap |
-| **MEDIUM** | Terminology drift, ambiguous requirements |
-| **LOW** | Style improvements, minor duplication |
-
-### 4. Output Results (console)
+### 3. Output Results
 
 ```markdown
 ## Consistency Analysis Results: {feature name}
@@ -93,7 +48,6 @@ Validate across 6 categories:
 | ID | Category | Severity | Location | Summary | Recommended Action |
 |----|----------|----------|----------|---------|-------------------|
 | A-001 | COVERAGE | HIGH | spec FR-003 | No mapping in tasks | Add task |
-| A-002 | AMBIGUITY | MEDIUM | spec NFR-001 | "quickly" is unmeasurable | Add numeric threshold |
 
 ### Coverage Summary
 | Mapping | Coverage |
@@ -103,13 +57,21 @@ Validate across 6 categories:
 | spec → tasks | {N}% |
 
 ### Metrics
-- Total requirements: {N}
-- Total tasks: {N}
+- Total requirements: {N} / Total tasks: {N}
 - Issues: CRITICAL {N} / HIGH {N} / MEDIUM {N} / LOW {N}
 
 ### Next Steps
 {Concrete action proposals for CRITICAL/HIGH issues}
 ```
+
+### 4. After Validation Fails
+
+If CRITICAL or HIGH issues are found:
+1. Return the findings table to the calling skill (spec/plan/tasks/implement)
+2. The calling skill is responsible for fixing the reported issues before proceeding
+3. To re-validate after fixes: re-invoke `/afc:validate` with the same scope
+
+If only MEDIUM/LOW issues: proceed is safe; issues are advisory.
 
 ### 5. Final Output
 
@@ -122,6 +84,6 @@ Analysis complete
 
 ## Notes
 
-- **Read-only**: Do not modify any files. Report only.
-- **Avoid false positives**: Do not over-flag ambiguity. Consider context.
-- **Optional**: Not required in the pipeline. Can proceed plan → implement directly.
+- **Read-only**: Report only, no file writes.
+- **Avoid false positives**: Do not over-flag ambiguity — consider context.
+- **Optional in pipeline**: Not required. Can proceed plan → implement directly.

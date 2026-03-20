@@ -21,14 +21,9 @@ model: sonnet
 
 - `$ARGUMENTS` — (required) Bug description, error message, or reproduction steps
 
-## Config Load
+## Project Config (auto-loaded)
 
-**Always** read `.claude/afc.config.md` first.
-
-If config file is missing:
-1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
-2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
-3. If user declines → **abort**
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
 ## Execution Steps
 
@@ -95,11 +90,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | **SAFETY** | Does the fix break any other functionality? Any side effects? |
 | **CORRECTNESS** | Does it actually resolve the root cause? Or just mask the symptom? |
 
-**On FAIL**: auto-fix and continue to next pass.
-**On ESCALATE**: pause, present options to user, apply choice, resume.
-**On DEFER**: record reason, mark criterion clean, continue.
-**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
-**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
+Follow verdict handling and output format per `docs/critic-loop-rules.md`.
 
 ### 6. Verification
 
@@ -145,15 +136,6 @@ Debug complete
 ├─ Fixed files: none
 └─ Suggestion: {documentation improvement if non-obvious, or "none"}
 ```
-
-## Debugging Checklist (applied automatically)
-
-Always check the Debugging Checklist from CLAUDE.md:
-1. Race Conditions — contention between async operations
-2. Stale State — stale state references
-3. Missing Error Handling — missing Promise .catch()
-4. Incorrect Ordering — operation order dependencies
-5. Boundary Conditions — edge case handling
 
 ## Notes
 

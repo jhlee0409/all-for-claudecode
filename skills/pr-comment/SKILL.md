@@ -16,6 +16,10 @@ model: sonnet
 > Analyzes a PR and posts a structured review comment to GitHub.
 > Reuses existing triage reports when available. Asks for user confirmation before posting.
 
+## Pre-fetch
+
+!`gh pr view $0 --json number,title,headRefName,author,body,additions,deletions,changedFiles,labels,reviewDecision,state,url 2>/dev/null || echo "PR_FETCH_FAILED"`
+
 ## Arguments
 
 - `$ARGUMENTS` — PR number (required), with optional severity filter
@@ -23,70 +27,52 @@ model: sonnet
   - `42 --severity critical,warning` — Only include Critical and Warning findings
   - `42 --severity critical` — Only include Critical findings
 
-Parse the arguments:
+Parse:
 1. Extract the PR number (first numeric argument)
-2. Extract `--severity` filter if present (comma-separated list of: `critical`, `warning`, `info`)
-3. If no PR number is found, ask the user: "Which PR number should I review?"
+2. Extract `--severity` filter if present (comma-separated: `critical`, `warning`, `info`)
+3. If no PR number found, ask the user: "Which PR number should I review?"
 
 ## Execution Steps
 
 ### 1. Collect PR Information
 
-```bash
-gh pr view {number} --json number,title,headRefName,author,body,additions,deletions,changedFiles,labels,reviewDecision,state
-```
+Use the pre-fetched PR metadata. If the pre-fetch returned `PR_FETCH_FAILED`, output `[afc:pr-comment] Error: PR not found or gh not available.` and abort.
 
+Fetch the diff:
 ```bash
 gh pr diff {number}
 ```
 
-Verify the PR exists and is open. If closed/merged, inform the user and ask whether to proceed anyway.
+Verify the PR is open. If closed/merged, inform the user and ask whether to proceed anyway.
 
 ### 2. Check for Existing Triage Report
-
-Look for a recent triage report that covers this PR:
 
 ```bash
 ls -t .claude/afc/memory/triage/*.md 2>/dev/null | head -5
 ```
 
-If a report exists from today, search it for `PR #{number}` analysis. If found, reuse that analysis as the basis for the review instead of re-analyzing from scratch.
+If a report from today contains `PR #{number}` analysis, reuse it as the review basis instead of re-analyzing from scratch.
 
 ### 3. Analyze PR (if no triage data available)
 
-If no existing triage report covers this PR, perform a focused review of the diff.
+Review the diff using perspectives A–E from [review/perspectives.md](../review/perspectives.md):
 
-Examine the diff from the following perspectives (abbreviated from review.md):
+- **A. Code Quality** — style compliance, naming, unnecessary complexity
+- **B. Architecture** — layer violations, boundary crossings, structural concerns
+- **C. Security** — XSS, injection, sensitive data exposure, auth issues
+- **D. Performance** — latency concerns, unnecessary computation, resource leaks
+- **E. Maintainability** — function/file size, naming clarity, readability
 
-#### A. Code Quality
-- Style compliance, naming conventions, unnecessary complexity
-
-#### B. Architecture
-- Layer violations, boundary crossings, structural concerns
-
-#### C. Security
-- XSS, injection, sensitive data exposure, auth issues
-
-#### D. Performance
-- Latency concerns, unnecessary computation, resource leaks
-
-#### E. Maintainability
-- Function/file size, naming clarity, readability
-
-Classify each finding with a severity:
-- **Critical (C)** — Must fix before merge. Bugs, security vulnerabilities, data loss risks.
-- **Warning (W)** — Should fix. Code quality issues, potential problems, maintainability concerns.
-- **Info (I)** — Nice to have. Suggestions, minor improvements, style preferences.
+Classify each finding:
+- **Critical (C)** — Must fix before merge: bugs affecting users, security vulnerabilities, data loss risks
+- **Warning (W)** — Should fix: code quality issues, potential problems, maintainability concerns
+- **Info (I)** — Nice to have: suggestions, minor improvements, style preferences
 
 ### 4. Apply Severity Filter
 
-If `--severity` was specified, filter findings to only include the specified severity levels.
-
-Default (no filter): include all severity levels.
+If `--severity` was specified, filter findings to only the listed levels. Default: include all.
 
 ### 5. Generate Review Comment
-
-Compose the review comment in this format:
 
 ```markdown
 ## AFC Code Review — PR #{number}
@@ -119,8 +105,7 @@ Compose the review comment in this format:
 *Reviewed by [all-for-claudecode](https://github.com/anthropics/claude-code)*
 ```
 
-If there are zero findings after filtering, the comment should be:
-
+If zero findings after filtering:
 ```markdown
 ## AFC Code Review — PR #{number}
 
@@ -132,12 +117,15 @@ No issues found. Code looks good!
 
 ### 6. Preview and Confirm
 
-Display the full review comment to the user in the console.
+Display the full review comment to the user.
 
-Then determine the review event based on the actual severity and context of findings:
-- **REQUEST_CHANGES**: Use when findings indicate genuine risk to production code — bugs that would affect users, security vulnerabilities, or architectural violations that would be costly to fix later. A Critical finding in test code or documentation alone does not warrant blocking the PR.
-- **COMMENT**: Use when findings are improvements or concerns that the author should consider but that don't pose immediate risk. Also appropriate when Critical findings are in non-production code (tests, docs, config) or when the author has already acknowledged the concern in PR discussion.
-- **APPROVE**: Use when no findings exist, or when all findings are informational and the code is ready to merge.
+Determine the review event:
+
+| Event | When to use |
+|-------|-------------|
+| **REQUEST_CHANGES** | Critical findings in production code that pose genuine risk to users: bugs affecting functionality, security vulnerabilities, or architectural violations costly to fix post-merge. A Critical finding limited to test/docs/config alone does NOT qualify. |
+| **COMMENT** | Findings are improvements the author should consider but don't block merging. Also when Critical findings are in non-production code, or the author has already acknowledged the concern in PR discussion. |
+| **APPROVE** | No findings, or all findings are informational and code is ready to merge. |
 
 Tell the user:
 ```
@@ -145,14 +133,12 @@ Review event: {APPROVE|COMMENT|REQUEST_CHANGES}
 Findings: Critical {N} / Warning {N} / Info {N}
 ```
 
-Ask the user to confirm using AskUserQuestion with these options:
+Ask for confirmation (AskUserQuestion):
 1. **Post as-is** — Post the review comment to GitHub
-2. **Edit first** — Let me modify the comment before posting (user provides edits, then re-confirm)
+2. **Edit first** — Let me modify the comment before posting
 3. **Cancel** — Do not post anything
 
 ### 7. Post to GitHub
-
-On approval, write the review comment to a temp file and post via `--body-file` (avoids shell escaping issues with markdown):
 
 ```bash
 tmp_file=$(mktemp)
@@ -170,12 +156,12 @@ PR review posted
 ├─ PR: #{number} ({title})
 ├─ Event: {APPROVE|COMMENT|REQUEST_CHANGES}
 ├─ Findings: Critical {N} / Warning {N} / Info {N}
-└─ URL: {PR URL from gh pr view}
+└─ URL: {PR URL}
 ```
 
 ## Notes
 
 - **User confirmation required**: Never post to GitHub without explicit user approval.
-- **Idempotent**: Running multiple times on the same PR creates additional review comments (GitHub does not deduplicate).
-- **Respects existing reviews**: This command does not dismiss or override other reviewers' reviews.
-- **Rate limits**: Uses a single `gh pr review` call. No rate limit concerns for normal usage.
+- **Idempotent**: Multiple runs create additional review comments (GitHub does not deduplicate).
+- **Respects existing reviews**: Does not dismiss or override other reviewers' reviews.
+- **Perspectives reference**: Full criteria for A–H in [review/perspectives.md](../review/perspectives.md). This skill uses A–E only (focused on PR-level review, not full pipeline review).

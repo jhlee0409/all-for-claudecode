@@ -25,6 +25,11 @@ model: sonnet
   - `"auto"` — auto-detects version from package.json/Cargo.toml/pyproject.toml
   - Not specified: prompts for version
 
+## Git Context (auto-loaded)
+
+!`git describe --tags --abbrev=0 2>/dev/null || echo "[NO_TAGS]"`
+!`git log $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD --pretty=format:"%h %s" --no-merges 2>/dev/null || git log --pretty=format:"%h %s" --no-merges`
+
 ## Execution Steps
 
 ### 1. Detect Project Context

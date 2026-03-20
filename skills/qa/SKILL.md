@@ -26,12 +26,9 @@ model: sonnet
   - `coverage` — categories A + D (Test Confidence + API & Contract Safety)
   - Or a free-form concern (e.g., "are error messages user-friendly", "check for dead exports")
 
-## Config Load
+## Project Config (auto-loaded)
 
-**Always** read `.claude/afc.config.md` first — needed for CI Commands (YAML: ci, gate, test).
-Architecture, Code Style, and Project Context are auto-loaded via `.claude/rules/afc-project.md`.
-
-If config file is missing: read `CLAUDE.md` for project info. Proceed without config if neither exists.
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] Proceeding without config — read CLAUDE.md for project info."`
 
 ## Audit Categories
 
@@ -90,15 +87,7 @@ Checks:
 
 ## Execution Steps
 
-### 1. Load Config
-
-Read `.claude/afc.config.md` (or fallback to `CLAUDE.md`). Extract:
-- Test command (`{config.test}`)
-- CI/gate commands (`{config.ci}`, `{config.gate}`)
-- Architecture layers (`{config.architecture}`)
-- Code style rules (`{config.code_style}`)
-
-### 2. Parse Scope
+### 1. Parse Scope
 
 Interpret `$ARGUMENTS` to determine which categories to run:
 

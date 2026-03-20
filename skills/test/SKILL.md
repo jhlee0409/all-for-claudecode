@@ -24,19 +24,11 @@ model: sonnet
   - Feature name (e.g., `login flow`)
   - `coverage` — full coverage analysis and gap remediation
 
-## Config Load
+## Project Config (auto-loaded)
 
-**Always** read `.claude/afc.config.md` first.
+!`cat .claude/afc.config.md 2>/dev/null || echo "[CONFIG NOT FOUND] .claude/afc.config.md not found. Create it with /afc:init."`
 
-If config file is missing:
-1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
-2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
-3. If user declines → **abort**
-
-Values used from config:
-- `{config.gate}` — CI validation command (from `## CI Commands` YAML)
-- `{config.architecture}` — architecture pattern (from `## Architecture` section)
-- Test framework info — from `## Project Context` section
+Values used: `{config.gate}` (CI), `{config.architecture}` (layers), test framework from Project Context.
 
 ## Execution Steps
 
@@ -102,11 +94,7 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | **COVERAGE** | Are all core logic and branch points covered? |
 | **QUALITY** | Do tests validate behavior, not implementation details? Are there any brittle tests? |
 
-**On FAIL**: auto-fix and continue to next pass.
-**On ESCALATE**: pause, present options to user, apply choice, resume.
-**On DEFER**: record reason, mark criterion clean, continue.
-**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
-**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
+Follow verdict handling and output format per `docs/critic-loop-rules.md`.
 
 ### 5. Run and Verify Tests
 
