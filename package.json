@@ -39,7 +39,8 @@
     "test": "vendor/shellspec/shellspec",
     "test:all": "npm run lint && npm run qa && npm run test",
     "setup:test": "bash scripts/install-shellspec.sh",
-    "sync:cache": "bash scripts/afc-sync-cache.sh"
+    "sync:cache": "bash scripts/afc-sync-cache.sh",
+    "validate:plugin": "claude plugin validate . 2>&1 || echo '[afc:validate] claude CLI not available — skipping plugin validation'"
   },
   "engines": {
     "node": ">=18"

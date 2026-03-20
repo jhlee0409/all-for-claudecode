@@ -13,7 +13,7 @@
     "hooks": {
       "type": "object",
       "patternProperties": {
-        "^(SessionStart|PreCompact|PreToolUse|PostToolUse|SubagentStart|Stop|SessionEnd|PostToolUseFailure|Notification|TaskCompleted|SubagentStop|UserPromptSubmit|PermissionRequest|ConfigChange|TeammateIdle|WorktreeCreate|WorktreeRemove)$": {
+        "^(SessionStart|PreCompact|PostCompact|PreToolUse|PostToolUse|SubagentStart|Stop|StopFailure|SessionEnd|PostToolUseFailure|Notification|TaskCompleted|SubagentStop|UserPromptSubmit|PermissionRequest|ConfigChange|TeammateIdle|WorktreeCreate|WorktreeRemove)$": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/hookGroup"

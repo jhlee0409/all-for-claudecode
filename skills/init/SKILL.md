@@ -104,6 +104,20 @@ When compacting, always preserve:
 
 This ensures auto-compact retains critical pipeline state.
 
+### 4.8. Recommend Context Window Configuration
+
+If the project CLAUDE.md does not already contain auto-compact configuration guidance, append:
+
+```markdown
+# Context window configuration (recommended)
+# Add to .claude/settings.json or .claude/settings.local.json:
+# { "env": { "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000" } }
+# This treats the window as 500k for compaction — the remaining 500k is reserve headroom.
+# Combined with the compact instructions above, this gives you full control over when compaction happens.
+```
+
+Note: This is informational only. Do NOT modify settings.json — just add as a comment in CLAUDE.md for user awareness.
+
 ### 5. Final Output
 
 ```

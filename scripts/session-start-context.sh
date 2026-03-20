@@ -38,6 +38,16 @@ if afc_state_is_active; then
   FEATURE=$(afc_state_read feature || true)
   OUTPUT="[AFC PIPELINE ACTIVE] Feature: $FEATURE"
 
+  # Cache pipeline state in CLAUDE_ENV_FILE for hook performance
+  if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+    CACHED_PHASE=$(afc_state_read phase 2>/dev/null || echo "")
+    CACHED_FEATURE=$(afc_state_read feature 2>/dev/null || echo "")
+    {
+      printf 'export AFC_CACHED_PHASE="%s"\n' "$CACHED_PHASE"
+      printf 'export AFC_CACHED_FEATURE="%s"\n' "$CACHED_FEATURE"
+    } >> "$CLAUDE_ENV_FILE"
+  fi
+
   # tasks.md progress
   TASKS_FILE="$PROJECT_DIR/.claude/afc/specs/$FEATURE/tasks.md"
   if [ -f "$TASKS_FILE" ]; then

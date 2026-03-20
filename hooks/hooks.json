@@ -25,6 +25,18 @@
         ]
       }
     ],
+    "PostCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-post-compact.sh\"",
+            "statusMessage": "Restoring pipeline context..."
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -108,6 +120,17 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-stop-todo-check.sh\"",
             "statusMessage": "Checking code completeness..."
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-stop-failure.sh\"",
+            "statusMessage": "Handling API error..."
           }
         ]
       }
