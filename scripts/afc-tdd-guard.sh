@@ -15,21 +15,23 @@ trap cleanup EXIT
 
 ALLOW='{"hookSpecificOutput":{"permissionDecision":"allow"}}'
 
-# Consume stdin immediately (prevents SIGPIPE if exiting early)
-INPUT=$(cat)
-
-# If pipeline is inactive -> allow
+# Early exit: TDD guard only applies during active pipeline
 if ! afc_state_is_active; then
+  cat > /dev/null  # consume stdin to prevent SIGPIPE
   printf '%s\n' "$ALLOW"
   exit 0
 fi
 
-# Read current phase — only guard during implement
+# Early exit: only guard during implement phase
 PHASE="$(afc_state_read phase || echo '')"
 if [ "$PHASE" != "implement" ]; then
+  cat > /dev/null  # consume stdin to prevent SIGPIPE
   printf '%s\n' "$ALLOW"
   exit 0
 fi
+
+# Consume stdin now that we know we need to inspect it
+INPUT=$(cat)
 
 # Read tdd setting from afc.config.md (YAML in markdown — grep/sed parse)
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"

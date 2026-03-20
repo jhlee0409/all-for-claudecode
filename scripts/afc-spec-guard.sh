@@ -15,26 +15,26 @@ trap cleanup EXIT
 
 ALLOW='{"hookSpecificOutput":{"permissionDecision":"allow"}}'
 
-# Consume stdin immediately (prevents SIGPIPE if exiting early)
-INPUT=$(cat)
-
-# If pipeline is inactive -> allow
+# Early exit: spec guard only applies during active pipeline
 if ! afc_state_is_active; then
+  cat > /dev/null  # consume stdin to prevent SIGPIPE
   printf '%s\n' "$ALLOW"
   exit 0
 fi
 
-# Read current phase
+# Early exit: only guard during implement, review, clean phases
 PHASE="$(afc_state_read phase || echo '')"
-
-# Only guard during implement, review, clean phases
 case "$PHASE" in
   implement|review|clean) ;;
   *)
+    cat > /dev/null  # consume stdin to prevent SIGPIPE
     printf '%s\n' "$ALLOW"
     exit 0
     ;;
 esac
+
+# Consume stdin now that we know we need to inspect it
+INPUT=$(cat)
 
 if [ -z "$INPUT" ]; then
   printf '%s\n' "$ALLOW"
