@@ -1,6 +1,6 @@
 ---
 name: afc-impl-worker
-description: "Parallel implementation worker — executes assigned tasks from the pipeline task pool with worktree isolation support."
+description: "Parallel implementation worker — orchestrator-managed, pre-assigned tasks only. Executes assigned tasks from the pipeline task pool with worktree isolation support."
 tools:
   - Read
   - Write
@@ -39,6 +39,12 @@ When implementing tasks that call functions modified in a previous phase:
 - Verify that your call pattern is compatible with the callee's actual behavior (side effects, return values, error handling)
 - If `{config.test}` is available, run it after completing tasks that depend on cross-phase changes
 - If no E2E/integration tests are configured, note in your output: "⚠ Cross-phase dependency on {function} — no E2E verification available"
+
+## When to STOP and Report
+
+- Task requires modifying files outside assigned scope — report the conflict, do not proceed
+- Gate command fails 3 times consecutively — report with full error output, do not retry further
+- Conflicting requirements between tasks — surface the conflict to the orchestrator
 
 ## Rules
 

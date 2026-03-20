@@ -1,6 +1,6 @@
 ---
 name: afc-pr-analyst
-description: "PR deep analysis worker — performs build/test/lint verification in an isolated worktree for triage."
+description: "PR deep analysis worker — invoked during /afc:triage for deep PR verification. Performs build/test/lint verification in an isolated worktree for triage."
 tools:
   - Read
   - Bash

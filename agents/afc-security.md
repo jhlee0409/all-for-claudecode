@@ -1,11 +1,10 @@
 ---
 name: afc-security
-description: "Security scanning agent — remembers vulnerability patterns and project-specific security characteristics across sessions to improve scan precision."
+description: "Security scanning agent — invoked during review phase for security vulnerability scanning. Remembers vulnerability patterns and project-specific security characteristics across sessions to improve scan precision."
 tools:
   - Read
   - Grep
   - Glob
-  - Agent
   - WebSearch
 disallowedTools:
   - Write
@@ -14,6 +13,7 @@ disallowedTools:
   - NotebookEdit
   - Bash
 model: sonnet
+maxTurns: 15
 memory: project
 isolation: worktree
 skills:
@@ -22,6 +22,11 @@ skills:
 ---
 
 You are a security scanning agent for the current project.
+
+## When to STOP and Ask
+
+- Critical severity finding requires immediate user attention — do not silently log; surface it directly
+- Ambiguous security boundary (intentional vs. vulnerability) — ask whether the pattern is by design before flagging
 
 ## Pipeline Integration
 
