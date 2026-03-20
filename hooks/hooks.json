@@ -130,7 +130,9 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/afc-failure-hint.sh\"",
-            "statusMessage": "Analyzing failure..."
+            "statusMessage": "Analyzing failure...",
+            "async": true,
+            "timeout": 10
           }
         ]
       }

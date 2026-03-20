@@ -259,6 +259,18 @@ Dependencies are tracked via DAG. CI gate + Mini-Review + Auto-Checkpoint run at
 - **`/afc:setup`** — Manages the AFC routing block in your global `~/.claude/CLAUDE.md`. Run once after install and again after plugin updates. Idempotent — skips if version matches.
 - **`/afc:init`** — Auto-detects your tech stack (package manager, framework, architecture, testing, linting) and generates project-local config files. No manual preset selection needed.
 
+## Development Docs
+
+| Document | Purpose |
+|----------|---------|
+| [Skill Authoring Guide](docs/skill-authoring-guide.md) | Rules for writing effective SKILL.md files |
+| [Agent Authoring Guide](docs/agent-authoring-guide.md) | Rules for writing effective AGENT.md files |
+| [Context Management Harness](docs/context-management-harness.md) | Context preservation, token efficiency, and compaction strategy |
+| [Orchestration Modes](docs/orchestration-modes.md) | Sequential, parallel batch, and swarm execution patterns |
+| [Critic Loop Rules](docs/critic-loop-rules.md) | Convergence-based quality verification protocol |
+| [Phase Gate Protocol](docs/phase-gate-protocol.md) | Phase transition validation |
+| [Expert Protocol](docs/expert-protocol.md) | Expert consultation agent behavioral rules |
+
 ## FAQ
 
 ### Does it work with any project?

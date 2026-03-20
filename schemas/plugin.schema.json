@@ -45,10 +45,6 @@
       "type": "string",
       "description": "Path to skills directory"
     },
-    "agents": {
-      "type": "string",
-      "description": "Path to agents directory"
-    },
     "hooks": {
       "type": "string",
       "description": "Path to hooks configuration file"

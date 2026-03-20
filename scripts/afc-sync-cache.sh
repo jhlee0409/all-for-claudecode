@@ -36,13 +36,19 @@ FILES_TO_SYNC="package.json"
 
 for dir in $DIRS_TO_SYNC; do
   if [ -d "$PROJECT_ROOT/$dir" ]; then
-    rsync -a --delete "$PROJECT_ROOT/$dir/" "$CACHE_DIR/$dir/"
+    rsync -a --delete "$PROJECT_ROOT/$dir/" "$CACHE_DIR/$dir/" || {
+      printf '[afc:sync] Error syncing %s\n' "$dir" >&2
+      exit 1
+    }
   fi
 done
 
 for file in $FILES_TO_SYNC; do
   if [ -f "$PROJECT_ROOT/$file" ]; then
-    cp "$PROJECT_ROOT/$file" "$CACHE_DIR/$file"
+    cp "$PROJECT_ROOT/$file" "$CACHE_DIR/$file" || {
+      printf '[afc:sync] Error copying %s\n' "$file" >&2
+      exit 1
+    }
   fi
 done
 
