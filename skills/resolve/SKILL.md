@@ -19,7 +19,7 @@ Collects LLM bot review comments from a PR, classifies as VALID/NOISE/DISCUSS, f
 
 ## Arguments
 
-- `$ARGUMENTS` — (required) PR을 식별할 수 있는 어떤 형태든 가능 (번호, URL, cross-repo 등)
+- `$ARGUMENTS` — (required) Any format that identifies a PR (number, URL, cross-repo, etc.)
 
 ## PR Context
 
@@ -37,7 +37,7 @@ Fails → `[afc:resolve] Error: gh CLI not installed or not authenticated.` → 
 
 ### 2. Identify PR
 
-`$ARGUMENTS`에서 PR 번호를 의도 기반으로 추출. `owner/repo` 정보가 포함되면 `--repo` 플래그 사용, 아니면 `gh repo view --json owner,name`으로 파생.
+Extract PR number from `$ARGUMENTS` by intent. If `owner/repo` info is included, use `--repo` flag. Otherwise derive via `gh repo view --json owner,name`.
 
 If "PR Context" above shows `PR_FETCH_FAILED`, parse `$ARGUMENTS` manually and retry.
 
@@ -69,11 +69,11 @@ Read each comment's target file (±10 lines context), then classify:
 
 | Class | When | Action |
 |-------|------|--------|
-| **VALID** | 객관적 버그, 수정 방법 하나, 기존 코드 내 해결 가능 | Fix |
-| **NOISE** | 스타일, 의도적 설계, false positive, `[OUTDATED]` | Skip |
-| **DISCUSS** | 판단 필요 (새 의존성, 트레이드오프, 임계값, API 변경 등) | Ask |
+| **VALID** | Objectively verifiable bug, single fix approach, resolvable within existing code | Fix |
+| **NOISE** | Style preference, intentional design, false positive, `[OUTDATED]` | Skip |
+| **DISCUSS** | Requires judgment (new dependency, tradeoff, threshold, API change, etc.) | Ask |
 
-**핵심: 자신 없으면 DISCUSS. VALID는 보수적으로.**
+**Key: when in doubt, classify as DISCUSS. Be conservative with VALID.**
 
 ### 7. Present Summary
 
@@ -112,13 +112,13 @@ See [graphql.md](graphql.md) for the mutation.
 | Classification | Resolve? |
 |---------------|----------|
 | VALID (fixed) | Yes |
-| NOISE | Yes (유저가 skip 판단) |
+| NOISE | Yes (user decided to skip) |
 | DISCUSS-Apply | Yes |
 | DISCUSS-Skip | Yes |
-| DISCUSS-Defer | **No** (추후 재논의) |
+| DISCUSS-Defer | **No** (revisit later) |
 | Already resolved | Skip |
 
-GraphQL 실패 → warn, **do not abort**.
+GraphQL failure → warn, **do not abort**.
 
 ### 11. Commit
 

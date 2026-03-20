@@ -139,7 +139,7 @@ Execute `/afc:spec` logic inline:
    - INDEPENDENCE: no implementation details (code, library names) in spec?
    - EDGE_CASES: at least 2 identified?
    - TESTABILITY: every System Requirement follows EARS pattern? Each has mapped TC (`→ TC: should_...`)?
-   - FAIL → auto-fix and continue. ESCALATE → pause. DEFER → record and mark clean.
+   - Verdicts: follow `docs/critic-loop-rules.md`
 7. Progress: `✓ 1/5 Spec complete (US: {N}, FR: {N}, researched: {N}, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
 
 ---
@@ -262,8 +262,8 @@ Progress: `  ├─ Acceptance tests: {N} generated, {M} passing`
 - ARCHITECTURE: changed files vs `{config.architecture}` rules. "N of M rules checked" count required.
 - CORRECTNESS: cross-check against spec.md AC. "N of M AC verified" count required.
 - SIDE_EFFECT_SAFETY: for call order/error handling/state flow changes — verify callee behavior compatibility by reading callee implementation directly.
-- **Adversarial 3-perspective** (mandatory each pass): Skeptic / Devil's Advocate / Edge-case Hunter — one failure scenario each. If realistic → FAIL + fix. If not → quantitative rationale required.
-- FAIL → auto-fix + re-run `{config.ci}`. ESCALATE → pause. DEFER → record and mark clean.
+- **Adversarial 3-perspective** (mandatory each pass): Skeptic / Devil's Advocate / Edge-case Hunter — one failure scenario each.
+- Verdicts: follow `docs/critic-loop-rules.md`
 
 7. If unexpected problems arose not predicted in Plan: record in `.claude/afc/specs/{feature}/retrospective.md`
 8. Progress: `✓ 3/5 Implement complete ({completed}/{total} tasks, CI: ✓, Critic: converged ({N} passes, {M} fixes, {E} escalations))`
