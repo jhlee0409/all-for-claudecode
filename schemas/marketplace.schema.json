@@ -24,7 +24,12 @@
       "required": ["description", "version"],
       "properties": {
         "description": { "type": "string", "minLength": 1 },
-        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+" }
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+" },
+        "features": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Feature highlights for marketplace listing"
+        }
       },
       "additionalProperties": false
     },

@@ -6,7 +6,18 @@
   },
   "metadata": {
     "description": "Automated pipeline for Claude Code — spec → plan → implement → review → clean",
-    "version": "2.13.0"
+    "version": "2.13.0",
+    "features": [
+      "5-phase pipeline: spec → plan → implement → review → clean",
+      "31 slash commands (/afc:auto, /afc:implement, /afc:review, etc.)",
+      "12 specialized subagents (architect, security, 8 domain experts, impl-worker, pr-analyst)",
+      "Convergence-based critic loop with 4-verdict system (PASS/FAIL/ESCALATE/DEFER)",
+      "Dependency-aware task orchestration (sequential, parallel batch, swarm)",
+      "Skill Advisor system with 5 phase-boundary checkpoints",
+      "Context management harness (phase-boundary compact, budget monitor)",
+      "Persistent memory agents for cross-session learning",
+      "17 hook events for CI gates, safety guards, and workflow automation"
+    ]
   },
   "plugins": [
     {
