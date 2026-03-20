@@ -1,7 +1,7 @@
 ---
 name: afc:resolve
 description: "Analyze and address LLM review comments on PR — use when the user asks to resolve, fix, or respond to bot review comments (CodeRabbit, Copilot, Codex) on a pull request"
-argument-hint: "<PR URL, owner/repo#number, #number, or number>"
+argument-hint: "<PR number or URL>"
 allowed-tools:
   - Read
   - Grep
@@ -15,231 +15,148 @@ model: sonnet
 
 # /afc:resolve — LLM Review Comment Resolution
 
-> Collects LLM bot review comments (CodeRabbit, Copilot, Codex, etc.) from a PR, classifies each as VALID/NOISE/DISCUSS, applies fixes for VALID items, and asks the user about DISCUSS items.
-> Creates a single commit with all fixes and outputs a summary report.
+Collects LLM bot review comments from a PR, classifies as VALID/NOISE/DISCUSS, fixes VALID items, resolves addressed threads on GitHub, and outputs a summary report.
 
 ## Arguments
 
-- `$ARGUMENTS` — (required) One of:
-  - PR number: `456` or `#456`
-  - GitHub URL: `https://github.com/owner/repo/pull/456`
-  - Cross-repo: `owner/repo#456`
+- `$ARGUMENTS` — (required) PR을 식별할 수 있는 어떤 형태든 가능 (번호, URL, cross-repo 등)
+
+## PR Context
+
+!`gh pr view $(echo "$ARGUMENTS" | grep -oE '[0-9]+' | head -1) --json url,title,headRefName,comments 2>/dev/null || echo "PR_FETCH_FAILED"`
 
 ## Execution Steps
 
-### 1. Prerequisites Check
-
-Verify `gh` CLI is available and authenticated:
+### 1. Prerequisites
 
 ```bash
 gh --version >/dev/null 2>&1 && gh auth status >/dev/null 2>&1
 ```
 
-If either check fails:
-- Output: `[afc:resolve] Error: GitHub CLI (gh) is not installed or not authenticated. Install from https://cli.github.com/ and run 'gh auth login'.`
-- **Abort immediately.**
+Fails → `[afc:resolve] Error: gh CLI not installed or not authenticated.` → **abort**.
 
-### 2. Parse Input
+### 2. Identify PR
 
-Determine the input format and extract owner, repo, and PR number:
+`$ARGUMENTS`에서 PR 번호를 의도 기반으로 추출. `owner/repo` 정보가 포함되면 `--repo` 플래그 사용, 아니면 `gh repo view --json owner,name`으로 파생.
 
-1. **GitHub URL** (`https://github.com/{owner}/{repo}/pull/{number}`):
-   - Extract owner, repo, number from URL path segments
-   - Set `GH_REPO_FLAG="--repo {owner}/{repo}"`
+If "PR Context" above shows `PR_FETCH_FAILED`, parse `$ARGUMENTS` manually and retry.
 
-2. **Cross-repo** (`{owner}/{repo}#{number}`):
-   - Split on `#` — left part is `owner/repo`, right part is number
-   - Set `GH_REPO_FLAG="--repo {owner}/{repo}"`
-
-3. **Local number** (`456` or `#456`):
-   - Strip leading `#` if present
-   - Set `GH_REPO_FLAG=""` (use current repo from git remote)
-
-### 3. Collect Review Comments
-
-Collect all review comments from the PR:
-
-```bash
-gh pr view {number} {GH_REPO_FLAG} --json reviews,comments,url,title,headRefName
-```
-
-Additionally, collect inline review comments:
+### 3. Collect Review Data
 
 ```bash
 gh api repos/{owner}/{repo}/pulls/{number}/comments --paginate
 ```
 
-If `--repo` flag was not used, derive owner/repo from `gh repo view --json owner,name`.
-
-If API call fails → output the error and **abort**.
+Also fetch review threads for resolve (Step 8). See [graphql.md](graphql.md) for the query.
 
 ### 4. Filter Bot Comments
 
-Identify LLM bot comments by checking the comment author's login:
+Keep only comments from authors whose login ends with `[bot]`. Tag `outdated` comments as `[OUTDATED]`.
 
-**Known bot patterns**:
-- `coderabbitai[bot]` — CodeRabbit
-- `copilot[bot]` or `github-copilot[bot]` — GitHub Copilot
-- `codex[bot]` — Codex
-- Any login ending with `[bot]` — generic bot detection
+0 bot comments → `No LLM bot review comments found on PR #{number}.` → **exit**.
 
-**Filter rules**:
-- Keep only comments where the author matches a bot pattern
-- Discard all human reviewer comments (MVP scope)
-- If an inline comment is marked as `outdated` by GitHub → tag as `[OUTDATED]`
+### 5. Check Working Tree
 
-If 0 bot comments found:
-- Output: `No LLM bot review comments found on PR #{number}.`
-- **Exit gracefully** (success, not error).
+```bash
+git status --porcelain
+```
 
-### 5. Classify Each Comment
+Dirty → list files, ask user to confirm before proceeding.
 
-For each bot comment, analyze the content and classify:
+### 6. Classify
 
-| Classification | Criteria | Action |
-|---------------|----------|--------|
-| **VALID** | Real bug, security issue, clear improvement, correct suggestion with code context | Auto-fix |
-| **NOISE** | Style preference difference, intentional design choice, false positive, already addressed | Skip |
-| **DISCUSS** | Architecture decision needed, tradeoff exists, multiple valid approaches, no code `path`/`position` (non-code feedback) | Ask user |
+Read each comment's target file (±10 lines context), then classify:
 
-**Classification guidelines**:
-- If the comment points to a concrete bug (null check, off-by-one, resource leak) → **VALID**
-- If the comment is about naming convention or style that differs from project rules → **NOISE**
-- If the comment suggests a refactor with pros/cons → **DISCUSS**
-- If multiple bots give conflicting advice on the same line → **DISCUSS**
-- If the comment is on an `[OUTDATED]` diff → **NOISE** (code already changed)
+| Class | When | Action |
+|-------|------|--------|
+| **VALID** | 객관적 버그, 수정 방법 하나, 기존 코드 내 해결 가능 | Fix |
+| **NOISE** | 스타일, 의도적 설계, false positive, `[OUTDATED]` | Skip |
+| **DISCUSS** | 판단 필요 (새 의존성, 트레이드오프, 임계값, API 변경 등) | Ask |
 
-Also collect from each comment:
-- `file_path`: the file the comment targets
-- `line`: the line number (if available)
-- `suggestion`: the suggested change (if available)
-- `body`: the full comment text
+**핵심: 자신 없으면 DISCUSS. VALID는 보수적으로.**
 
-### 6. Present Classification Summary
+### 7. Present Summary
 
-Before making any changes, present the classification to the user:
+**MUST output before any code changes:**
 
 ```
 PR #{number}: {title}
 Branch: {headRefName}
+Bot comments: {total} ({bot_names})
 
-Bot comments: {total_count} ({bot_names})
-
-VALID ({count}):
-  1. [{bot}] {file}:{line} — {1-line summary of issue}
-  2. [{bot}] {file}:{line} — {1-line summary of issue}
-
-NOISE ({count}):
-  1. [{bot}] {file}:{line} — {reason for skipping}
-
-DISCUSS ({count}):
-  1. [{bot}] {file}:{line} — {question for user}
+VALID ({n}):  1. [{bot}] {file}:{line} — {summary}
+NOISE ({n}):  1. [{bot}] {file}:{line} — {skip reason}
+DISCUSS ({n}): 1. [{bot}] {file}:{line} — {question}
 ```
 
-### 7. Handle DISCUSS Items
+### 8. Handle DISCUSS
 
-For each DISCUSS item, present to the user:
+Each item → present comment, target code (5 lines), tradeoff → ask user:
+1. Apply → move to VALID
+2. Skip → move to NOISE
+3. Defer → stays DISCUSS
 
-```
-[DISCUSS #{n}] {bot_name} on {file}:{line}
+### 9. Apply Fixes
 
-Comment:
-> {original comment text, truncated to 500 chars}
+For each VALID item:
+1. Read target file
+2. Apply minimal fix via Edit
+3. Verify modified area
 
-Target code:
-> {relevant code snippet, 5 lines context}
+**Feedback loop**: after all fixes, run project tests if available. If tests fail → diagnose and fix → rerun. Repeat until pass or user decides to stop.
 
-If applied: {description of what would change}
-Tradeoff: {why this is not a clear-cut decision}
+### 10. Resolve Threads on GitHub
 
-Options:
-  1. Apply — treat as VALID, fix the code
-  2. Skip — treat as NOISE, record skip reason
-  3. Defer — skip for now, revisit later
-```
+See [graphql.md](graphql.md) for the mutation.
 
-Wait for user response. Reclassify based on choice:
-- `Apply` → move to VALID list
-- `Skip` → move to NOISE list with user's reason
-- `Defer` → keep as DISCUSS in report
+| Classification | Resolve? |
+|---------------|----------|
+| VALID (fixed) | Yes |
+| NOISE | Yes (유저가 skip 판단) |
+| DISCUSS-Apply | Yes |
+| DISCUSS-Skip | Yes |
+| DISCUSS-Defer | **No** (추후 재논의) |
+| Already resolved | Skip |
 
-### 8. Apply VALID Fixes
+GraphQL 실패 → warn, **do not abort**.
 
-For each VALID comment (including user-accepted DISCUSS items):
+### 11. Commit
 
-1. **Read the target file** before modifying
-2. **Identify the exact location** from the comment's `file_path` and `line`
-3. **Apply the fix** using Edit tool:
-   - If the bot provided a specific code suggestion → apply it
-   - If the bot described the issue without a suggestion → implement the fix based on the description
-4. **Verify** the fix doesn't break the immediate surrounding code context
+No fixes applied → skip to Step 12.
 
-If the target file is in a dirty state (uncommitted changes unrelated to this PR):
-- Warn user: `{file} has uncommitted changes not related to this PR. Proceed?`
-- If user declines → skip this fix, note in report
+Show summary + resolved thread count → **wait for user confirmation** (NFR-003).
 
-If the target file was deleted in the PR branch:
-- Skip, note `[FILE DELETED]` in report
-
-### 9. Commit Changes
-
-**Before committing**, show the user a summary of all changes:
-
-```
-Changes to commit:
-  {file1}: {description of change}
-  {file2}: {description of change}
-  Total: {N} files changed
-
-Proceed with commit? (y/n)
-```
-
-**Wait for user confirmation** before committing. This is a safety requirement.
-
-**Commit strategy**:
-- If VALID items ≤ 9: single commit
-- If VALID items ≥ 10: group by file/module into 2-3 commits
-
-**Commit message format** (single commit):
 ```
 resolve LLM review comments on #{number}
 
 - fix: {description} ({bot_name})
-- fix: {description} ({bot_name})
 - skip: {reason} (NOISE, {count} items)
 ```
 
-Do **NOT** push automatically. The user decides when to push.
+Do **NOT** push.
 
-### 10. Output Report
+### 12. Output Report
+
+**MUST always output**, even if interrupted:
 
 ```
 Resolve complete
 ├─ PR: #{number} — {title}
 ├─ Bot comments: {total} ({bot_names})
-├─ VALID: {count} (applied)
-├─ NOISE: {count} (skipped)
-├─ DISCUSS: {count} (applied: {n}, skipped: {n}, deferred: {n})
-├─ Commit: {hash} ({files_changed} files, +{additions}/-{deletions})
+├─ VALID: {n} (applied)
+├─ NOISE: {n} (skipped)
+├─ DISCUSS: {n} (applied: {a}, skipped: {s}, deferred: {d})
+├─ Tests: {pass}/{total} passed
+├─ Threads resolved: {resolved}/{addressed}
+├─ Commit: {hash} ({files} files, +{add}/-{del})
 └─ Push: not pushed (run 'git push' when ready)
 ```
 
-If no VALID items were found (all NOISE/DISCUSS-skipped):
-```
-Resolve complete
-├─ PR: #{number} — {title}
-├─ Bot comments: {total} ({bot_names})
-├─ VALID: 0
-├─ NOISE: {count}
-├─ DISCUSS: {count} (all skipped/deferred)
-└─ No changes made
-```
+## Completion Guarantee
+
+MUST reach Step 12 before returning control. If user sends unrelated request mid-flow → output partial report with `[INTERRUPTED]` → then address new request.
 
 ## Notes
 
-- **MVP scope**: Only bot comments are analyzed. Human reviewer comments are ignored. Use `afc:review` for human-initiated code review.
-- **No auto-push**: Changes are committed but never pushed automatically. The user controls when to push.
-- **User confirmation required**: All code changes must be confirmed by the user before committing (NFR-003 safety requirement).
-- **Not part of auto pipeline**: This is a standalone skill invoked manually.
-- **Idempotency**: Re-running on the same PR will skip comments that have already been addressed (the code diff won't match the bot's original concern).
-- **Relationship to other skills**: `afc:review` does full code review. `afc:pr-comment` posts review comments. `afc:resolve` addresses existing bot comments. They are complementary.
+- Human comments are ignored (use `afc:review`). No auto-push. Thread resolution needs `repo` scope.
+- Idempotent: re-run skips already-addressed comments and resolved threads.
