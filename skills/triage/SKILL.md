@@ -14,8 +14,14 @@ model: sonnet
 
 # /afc:triage — PR & Issue Triage
 
-> Collects open PRs and issues, analyzes them in parallel, and produces a priority-ranked triage report.
+> Collects open PRs and issues, analyzes them in parallel batch, and produces a priority-ranked triage report.
 > Uses lightweight analysis first (no checkout), then selective deep analysis with worktree isolation for PRs that require build/test verification.
+
+## Pre-fetched Context
+
+!`gh pr list --json number,title,headRefName,author,labels,additions,deletions,changedFiles,createdAt,updatedAt,reviewDecision,isDraft --limit 50 2>/dev/null || echo "PR_FETCH_FAILED"`
+
+!`gh issue list --json number,title,labels,author,createdAt,updatedAt,comments --limit 50 2>/dev/null || echo "ISSUE_FETCH_FAILED"`
 
 ## Arguments
 
@@ -30,64 +36,28 @@ model: sonnet
 
 ### 1. Collect Targets
 
-Run the metadata collection script:
+Use the pre-fetched context above. If fetch failed, fall back to:
 
 ```bash
 "${CLAUDE_SKILL_DIR}/../../scripts/afc-triage.sh" "$ARGUMENTS"
 ```
 
-This returns JSON with PR/issue metadata. If the script is not available, fall back to direct `gh` commands:
+Apply `$ARGUMENTS` filtering: skip irrelevant items based on `--pr`, `--issue`, or specific numbers.
 
-```bash
-# PRs
-gh pr list --json number,title,headRefName,author,labels,additions,deletions,changedFiles,createdAt,updatedAt,reviewDecision,isDraft --limit 50
+### 2. Phase 1 — Lightweight Parallel Batch (no checkout)
 
-# Issues
-gh issue list --json number,title,labels,author,createdAt,updatedAt,comments --limit 50
-```
+Spawn all agents in a **single message** (parallel batch, max 5 concurrent).
 
-### 2. Phase 1 — Lightweight Parallel Analysis (no checkout)
+#### PR Analysis
 
-For each PR/issue, gather analysis data **without** checking out branches:
-
-#### PR Analysis (parallel — one agent per PR, max 5 concurrent)
-
-Spawn parallel agents in a **single message**:
+See prompt template: [pr-analysis-prompt.md](./pr-analysis-prompt.md)
 
 ```
 Task("Triage PR #{number}: {title}", subagent_type: "general-purpose",
-  prompt: "Analyze this PR without checking out the branch.
-
-  PR #{number}: {title}
-  Author: {author}
-  Branch: {headRefName}
-  Changed files: {changedFiles}, +{additions}/-{deletions}
-  Labels: {labels}
-  Review status: {reviewDecision}
-  Draft: {isDraft}
-
-  Steps:
-  1. Run: gh pr diff {number}
-  2. Run: gh pr view {number} --comments
-  3. Analyze the diff for:
-     - What the PR does (1-2 sentence summary)
-     - Risk level: Assess the actual impact of this PR on the system. Consider: does it change trust boundaries, data flows, or core business logic? Could a bug here cause data loss, security breach, or service outage? Rate risk based on potential blast radius, not file categories.
-     - Complexity: Assess the cognitive complexity of reviewing this PR. Consider: how many distinct concerns does it touch, does it cross architectural boundaries, does understanding one change require understanding another? Rate complexity based on review difficulty, not file count.
-     - Whether build/test verification is needed (yes/no + reason)
-     - Potential issues or concerns (max 3)
-     - Suggested reviewers or labels if obvious
-
-  Output as structured text:
-  SUMMARY: ...
-  RISK: Critical|Medium|Low
-  COMPLEXITY: High|Medium|Low
-  NEEDS_DEEP: yes|no
-  DEEP_REASON: ... (if yes)
-  CONCERNS: ...
-  SUGGESTION: ...")
+  prompt: "<contents of pr-analysis-prompt.md with placeholders filled>")
 ```
 
-#### Issue Analysis (parallel — one agent per batch of 5 issues)
+#### Issue Analysis (batch of 5 per agent)
 
 ```
 Task("Triage Issues #{n1}-#{n5}", subagent_type: "general-purpose",
@@ -95,15 +65,15 @@ Task("Triage Issues #{n1}-#{n5}", subagent_type: "general-purpose",
   {issue list with titles, labels, comment count}
 
   For each issue:
-  1. Read issue body and comments: gh issue view {number} --comments
+  1. gh issue view {number} --comments
   2. Classify:
-     - Type: Classify based on the issue's actual nature. The standard categories (Bug, Feature, Enhancement, Question, Maintenance) serve as defaults, but adapt to the project's own labeling conventions if they differ.
-     - Priority: Assess priority based on the issue's relationship to current work, user impact, and project goals — not by forcing into generic P0-P3 buckets. Consider: is this blocking other work? How many users are affected? Does it align with current priorities?
-     - Estimated effort: Estimate based on the actual scope of work required, considering project complexity and available context — not by rigid day-count buckets.
+     - Type: Bug|Feature|Enhancement|Question|Maintenance (adapt to project labels)
+     - Priority: P0 (blocking/critical) | P1 (high impact) | P2 (normal) | P3 (low/nice-to-have)
+     - Effort: Small|Medium|Large
      - Related PRs (if any mentioned)
   3. One-line summary
 
-  Output as structured text per issue:
+  Output per issue:
   ISSUE #{number}: {title}
   TYPE: ...
   PRIORITY: P0|P1|P2|P3
@@ -114,9 +84,9 @@ Task("Triage Issues #{n1}-#{n5}", subagent_type: "general-purpose",
 
 ### 3. Phase 2 — Selective Deep Analysis (worktree, optional)
 
-From Phase 1 results, identify PRs where `NEEDS_DEEP: yes`.
+From Phase 1, identify PRs where `NEEDS_DEEP: yes`.
 
-For each deep-analysis PR, spawn a **worktree-isolated agent**:
+For each, spawn a worktree-isolated agent (max 3 concurrent):
 
 ```
 Task("Deep triage PR #{number}", subagent_type: "afc:afc-pr-analyst",
@@ -127,11 +97,10 @@ Task("Deep triage PR #{number}", subagent_type: "afc:afc-pr-analyst",
   Phase 1 concerns: {concerns from Phase 1}
 
   Steps:
-  1. Checkout the PR branch: gh pr checkout {number}
-  2. Run project CI/test commands if available (from .claude/afc.config.md or CLAUDE.md)
-  3. Check for type errors, lint issues, test failures
-  4. Analyze architectural impact
-  5. Report findings
+  1. gh pr checkout {number}
+  2. Run CI commands from .claude/afc.config.md or CLAUDE.md
+  3. Check type errors, lint issues, test failures
+  4. Report architectural impact
 
   Output:
   BUILD_STATUS: pass|fail|skip
@@ -141,27 +110,13 @@ Task("Deep triage PR #{number}", subagent_type: "afc:afc-pr-analyst",
   RECOMMENDATION: merge|request-changes|needs-discussion")
 ```
 
-**Important**: Launch at most 3 worktree agents concurrently to avoid resource contention.
-
-If `--deep` flag was specified, run Phase 2 for **all** PRs regardless of Phase 1 classification.
+If `--deep` flag specified, run Phase 2 for all PRs regardless of Phase 1 classification.
 
 ### 3.5. Cross-PR Coupling Detection
 
-After Phase 1 (and Phase 2 if applicable) results are collected, detect file-level coupling between PRs:
-
-1. Extract changed file lists from each PR's diff (already available from Phase 1 agent outputs)
-2. For each file, check if it appears in multiple PRs' changed file lists
-3. If shared files are found, annotate affected PRs with a coupling flag:
-   ```
-   COUPLING: PR #{A} and PR #{B} both modify src/shared/utils.ts
-   ```
-4. Include coupling information in the consolidated report's Priority Actions table and per-PR details
-
-This helps identify merge-order dependencies and potential conflict risks that no single-PR agent can detect.
+See: [coupling-detection.md](./coupling-detection.md)
 
 ### 4. Consolidate Triage Report
-
-Merge Phase 1 and Phase 2 results into a single report:
 
 ```markdown
 # Triage Report
@@ -176,7 +131,7 @@ Merge Phase 1 and Phase 2 results into a single report:
 
 | # | Title | Risk | Complexity | Status | Action |
 |---|-------|------|------------|--------|--------|
-| {sorted by: Critical first, then by staleness} |
+| {sorted: Critical first, then by staleness} |
 
 ### PR Details
 
@@ -195,25 +150,23 @@ Merge Phase 1 and Phase 2 results into a single report:
 
 | Priority | # | Title | Type | Effort | Related PR |
 |----------|---|-------|------|--------|------------|
-| {sorted by priority, then by creation date} |
+| {sorted by priority, then creation date} |
 
 ## Summary
 
-- **Immediate attention**: {list of Critical PRs and P0 issues}
+- **Immediate attention**: {Critical PRs and P0 issues}
 - **Ready to merge**: {PRs with no concerns and passing checks}
 - **Needs discussion**: {PRs/issues requiring team input}
-- **Stale items**: {PRs/issues with no meaningful activity for an extended period. Consider the project's typical development cadence — what counts as stale depends on the project's release cycle and activity patterns.}
+- **Stale items**: {items with no meaningful activity relative to project cadence}
 ```
 
 ### 5. Save Report
-
-Save the triage report:
 
 ```
 .claude/afc/memory/triage/{YYYY-MM-DD}.md
 ```
 
-If a previous triage report exists for today, overwrite it.
+Overwrite if a report for today already exists.
 
 ### 6. Final Output
 
@@ -229,8 +182,8 @@ Triage complete
 
 ## Notes
 
-- **Read-only**: Triage does not modify any code, merge PRs, or close issues.
-- **Rate limits**: `gh` API calls are rate-limited. For repos with 50+ open items, consider using `--pr` or `--issue` to reduce scope.
-- **Worktree cleanup**: Worktree agents auto-clean on completion. If a worktree is left behind, use `git worktree prune`.
-- **NEVER use `run_in_background: true` on Phase 1 Task calls**: agents must run in foreground so results are collected before consolidation. Phase 2 worktree agents also run in foreground.
-- **Parallel limits**: Phase 1 — max 5 concurrent agents. Phase 2 — max 3 concurrent worktree agents.
+- **Read-only**: Does not modify code, merge PRs, or close issues.
+- **Rate limits**: For repos with 50+ open items, use `--pr` or `--issue` to reduce scope.
+- **Worktree cleanup**: Worktree agents auto-clean on completion. If left behind: `git worktree prune`.
+- **NEVER use `run_in_background: true`** on Phase 1 or Phase 2 Task calls — results must be collected before consolidation.
+- **Parallel limits**: Phase 1 — max 5 concurrent (parallel batch). Phase 2 — max 3 concurrent worktree agents.

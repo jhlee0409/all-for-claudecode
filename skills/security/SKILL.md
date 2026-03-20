@@ -38,8 +38,9 @@ For dependency audit command: infer from `packageManager` field in `package.json
 ### 1. Determine Scan Scope
 
 - `$ARGUMENTS` = path → that path only
-- `$ARGUMENTS` = "full" → entire `src/`
-- Not specified → changed files from `git diff --name-only HEAD`
+- `$ARGUMENTS` = "full" → entire codebase
+- Not specified → changed files from:
+  !`git diff --name-only HEAD 2>/dev/null || echo "[GIT_DIFF_FAILED]"`
 
 ### 2. Agent Teams (when scan complexity warrants it)
 
@@ -84,26 +85,7 @@ For direct scans (orchestrator only): skip pre-scan — orchestrator has full co
 
 ### 2.5. Cross-Boundary Verification
 
-After parallel agent results are collected, the **orchestrator** performs cross-boundary verification on injection/vulnerability findings:
-
-1. **Filter**: From all findings, select those involving:
-   - Injection vulnerabilities (SQL, command, XSS) where input origin is in another agent's scan scope
-   - Authentication/authorization checks where the guard is in a different directory slice
-   - Sensitive data exposure where the data source and the exposure point are in different slices
-
-2. **Verify**: For each Critical or High finding:
-   - Read the **upstream code** (where input enters or is sanitized)
-   - Check: is the input actually sanitized before reaching the flagged consumption point?
-   - If sanitized → downgrade: Critical → Low, High → Low (append "verified: input sanitized at {location}")
-   - If NOT sanitized → keep severity, enrich with full data flow path
-
-3. **Output**: Append verification summary before Output Results:
-   ```
-   Cross-Boundary Check: {N} injection/vulnerability findings verified
-   ├─ Confirmed: {M} (severity kept — no upstream sanitization)
-   ├─ Downgraded: {K} (false positive — sanitized upstream)
-   └─ Skipped: {J} (single-file scope, no cross-boundary flow)
-   ```
+Read `${CLAUDE_SKILL_DIR}/cross-boundary-verification.md` and apply it after parallel agent results are collected.
 
 ### 3. Security Check Items
 

@@ -99,9 +99,7 @@ Structure analysis results and **print to console**:
 
 ### 4. Critic Loop
 
-> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
-
-Run the critic loop until convergence. Safety cap: 5 passes.
+Read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` and follow it. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
@@ -109,12 +107,6 @@ Run the critic loop until convergence. Safety cap: 5 passes.
 | **INCREMENTALITY** | Can it be applied incrementally? (avoid big-bang refactoring) |
 | **COMPATIBILITY** | Is it compatible with existing code? Are there breaking changes? |
 | **ARCHITECTURE** | Does it comply with {config.architecture} rules? |
-
-**On FAIL**: auto-fix and continue to next pass.
-**On ESCALATE**: pause, present options to user, apply choice, resume.
-**On DEFER**: record reason, mark criterion clean, continue.
-**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
-**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
 ### 5. Save ADR (for design decisions)
 
