@@ -29,12 +29,12 @@ model: sonnet
 
 ## Config Load
 
-**Always** read `.claude/afc.config.md` first (read manually if not auto-loaded above) — needed for CI Commands (YAML).
+**Always** read `.claude/afc.config.md` first — needed for CI Commands (YAML).
 Architecture, Code Style, and Project Context are auto-loaded via `.claude/rules/afc-project.md`.
 
 If config file is missing:
-1. Ask the user: "`.claude/afc.config.md` not found. Run `/afc:init` to set up the project?"
-2. If user accepts → run `/afc:init`, then **restart this command** with the original `$ARGUMENTS`
+1. Ask: "`.claude/afc.config.md` not found. Run `/afc:init`?"
+2. If user accepts → run `/afc:init`, then **restart** with original `$ARGUMENTS`
 3. If user declines → **abort**
 
 ## Execution Steps
@@ -43,194 +43,68 @@ If config file is missing:
 
 1. **Determine scope**:
    - `$ARGUMENTS` = file path → that file only
-   - `$ARGUMENTS` = PR number → run `gh pr diff {number}`
+   - `$ARGUMENTS` = PR number → `gh pr diff {number}`
    - `$ARGUMENTS` = "staged" → `git diff --cached`
-   - Not specified → `git diff HEAD` (all uncommitted changes)
-2. Extract **list of changed files**
-3. Read **full content** of each changed file (not just the diff — full context)
-4. **Load spec context** (if available): Check for `.claude/afc/specs/{feature}/context.md` and `.claude/afc/specs/{feature}/spec.md`. If found, load them for SPEC_ALIGNMENT validation in the Critic Loop. If neither exists, SPEC_ALIGNMENT criterion is skipped with note "no spec artifacts available"
-
-### 1.5. Reverse Impact Analysis
-
-Before reviewing, identify **files affected by the changes** (not just the changed files themselves):
-
-1. **For each changed file**, find files that depend on it:
-   - **LSP (preferred)**: `LSP(findReferences)` on exported symbols — tracks type references, function calls, re-exports
-   - **Grep (fallback)**: `Grep` for `import.*{filename}`, `require.*{filename}`, `source.*{filename}` patterns across the codebase
-   - LSP and Grep are complementary — use both when LSP is available (LSP catches type-level references Grep misses; Grep catches dynamic patterns LSP misses)
-
-2. **Build impact map**:
-   ```
-   Impact Map:
-   ├─ src/auth/login.ts (changed)
-   │  └─ affected: src/pages/LoginPage.tsx, src/middleware/auth.ts
-   ├─ scripts/afc-state.sh (changed)
-   │  └─ affected: scripts/afc-stop-gate.sh, scripts/afc-drift.sh (grep: source.*afc-state)
-   └─ Total: {N} changed files → {M} affected files
-   ```
-
-3. **Scope decision**:
-   - Affected files are NOT full review targets (that would explode scope)
-   - Instead, include them as **cross-reference context** in Step 2 and Step 3.5
-   - Flag affected files for closer inspection when they have significant coupling to the changed code — consider the nature of the references (type-only imports vs behavioral calls), the criticality of the affected file, and whether the references involve the specific symbols that changed.
-
-4. **Limitations** (include in review output):
-   > ⚠ Dynamic dependencies not covered: runtime dispatch (`obj[method]()`), reflection, cross-language calls, config/env-driven branching. Manual verification recommended for these patterns.
+   - Not specified → `git diff HEAD`
+2. Extract changed file list; read **full content** of each file (not just the diff)
+3. **Load spec context** (if available): `.claude/afc/specs/{feature}/context.md` and `spec.md`. If neither exists, skip SPEC_ALIGNMENT with note "no spec artifacts available"
+4. **Build Impact Map** — see [Reverse Impact Analysis](perspectives.md#reverse-impact-analysis)
 
 ### 2. Parallel Review (scaled by file count)
 
-Assess review complexity holistically — consider total diff size (lines changed), file complexity, diversity of change types, and whether changes are localized to one module or cross-cutting across multiple boundaries.
+Assess complexity holistically: total diff size, file complexity, change diversity, and whether changes are localized or cross-cutting.
 
-**Pre-scan: Call Chain Context** (for Parallel Batch and Review Swarm modes only):
+**Pre-scan for parallel batch / swarm**: Before distributing files, collect cross-boundary context — outbound calls between changed files with function signature + 1-line side-effect summary. Include Impact Map. Provide each agent a `## Cross-File Context` block. Skip pre-scan for Direct mode.
 
-Before distributing files to review agents, collect cross-boundary context:
+| Mode | When to use | How |
+|------|-------------|-----|
+| **Direct** | Small diff, single module, fits in context | Review all files in current context |
+| **Parallel batch** | Multiple files/modules, substantial diff | 2–3 files per agent, single message |
+| **Swarm** | Large-scale, cross-cutting, mixed types | Pre-assigned workers (≤5), single message |
 
-1. For each changed file, identify **outbound calls** to other changed files (imports + function calls)
-2. For each outbound call target, extract: function signature + 1-line side-effect summary (e.g., "mutates playlist state", "triggers async cascade")
-3. Include the **Impact Map** from Step 1.5 — each agent receives the list of affected (non-changed) files that depend on its assigned files
-4. Include this context in each review agent's prompt:
-   ```
-   ## Cross-File Context
-   This file calls:
-   - `deleteVideo()` in api/videos.ts → internally auto-advances to next video if current is deleted
-   - `getNextVideo()` in api/playlist.ts → pops pending keyword queue first, falls back to normal next
-   Review findings should account for these behaviors.
-   ```
-
-For Direct review mode: skip pre-scan — orchestrator already has full context.
-
-#### Low complexity: Direct review
-Appropriate when changes are small in total diff size, confined to a single module or area, and the reviewing model can hold all changed files in context without losing coherence. Review all files directly in the current context (no delegation).
-
-#### Moderate complexity: Parallel Batch
-Appropriate when changes span multiple files or modules, the total diff size is substantial, or different change types (e.g., API, UI, config) benefit from focused review segments. Distribute to parallel review agents (2–3 files per agent) in a **single message**:
 ```
+// Parallel batch example
 Task("Review: {file1, file2}", subagent_type: "general-purpose")
 Task("Review: {file3, file4}", subagent_type: "general-purpose")
 ```
-Read each agent's returned output, then write consolidated review.
 
-#### High complexity: Review Swarm
-Appropriate when changes are large-scale, cross-cutting across many modules, involve mixed change types (security-sensitive code, architecture layers, business logic), or individual file groups require deep specialist focus. Create a review task pool and spawn pre-assigned review workers:
+> Note: Unlike implement swarm (prohibits self-claiming due to write conflicts), review workers use orchestrator pre-assignment. This is safe — review is read-only.
 
-> **Note**: Unlike implement swarm (which prohibits self-claiming due to write conflicts), review workers use orchestrator pre-assignment by file group. This is safe because review is read-only — no write race conditions.
-
-```
-// 1. Group files into batches (2-3 files per worker)
-// 2. Spawn N review workers in a single message (N = min(5, file count / 2))
-Task("Review Worker 1: src/auth/login.ts, src/auth/session.ts", subagent_type: "general-purpose",
-  prompt: "Review the following files for quality, security, architecture, performance.
-  Files: src/auth/login.ts, src/auth/session.ts
-  Review criteria: {config.code_style}, {config.architecture}, security, performance.
-  Output findings as: severity (Critical/Warning/Info), file:line, issue, suggested fix.")
-Task("Review Worker 2: src/api/routes.ts, src/api/middleware.ts", subagent_type: "general-purpose", ...)
-```
 Collect all worker outputs, then write consolidated review.
 
 ### 2.5. Specialist Agent Delegation (optional, parallel)
 
-When the `afc-architect` and `afc-security` agents are available, delegate perspectives B and C for deeper analysis:
+When `afc-architect` and `afc-security` agents are available, delegate perspectives B and C in a **single message**:
 
 ```
 Task("Architecture Review", subagent_type: "afc:afc-architect",
-  prompt: "Review changed files for architecture compliance.
-  Files: {changed file list}
-  Rules: {config.architecture}
-  Return findings as: severity, file:line, issue, suggested fix.")
+  prompt: "Review changed files for architecture compliance. Files: {list}. Rules: {config.architecture}. Return: severity, file:line, issue, fix.")
 
 Task("Security Review", subagent_type: "afc:afc-security",
-  prompt: "Scan changed files for security vulnerabilities.
-  Files: {changed file list}
-  Return findings as: severity, file:line, issue, suggested fix.")
+  prompt: "Scan changed files for security vulnerabilities. Files: {list}. Return: severity, file:line, issue, fix.")
 ```
 
-- Launch both in a **single message** (parallel execution)
-- Merge agent findings into the consolidated review (Step 4)
-- Agents update their persistent memory automatically (ADR patterns, vulnerability patterns, false positives)
-- If agents are unavailable (e.g., standalone mode without plugin): fall back to direct review for B and C
+Merge agent findings into the consolidated review (Step 4). If agents unavailable: fall back to direct review for B and C.
 
 ### 3. Perform Review
 
-For each changed file, examine from the following perspectives:
+Review each changed file across all 8 perspectives. See [perspectives.md](perspectives.md) for full criteria.
 
-#### A. Code Quality
-- {config.code_style} compliance (any usage, missing types)
-- Naming conventions (handleX, isX, UPPER_SNAKE)
-- Duplicate code
-- Unnecessary complexity
-
-#### B. {config.architecture} (agent-enhanced when available)
-- Layer dependency direction violations (lower→upper imports)
-- Segment rules (api/, model/, ui/, lib/)
-- Appropriate layer placement
-- **Agent bonus**: ADR conflict detection, cross-session pattern recognition
-
-#### C. Security (agent-enhanced when available)
-- XSS vulnerabilities (dangerouslySetInnerHTML, unvalidated user input)
-- Sensitive data exposure
-- SQL/Command injection
-- **Agent bonus**: false positive filtering, known vulnerability pattern matching
-
-#### D. Performance
-- Startup/response latency concerns
-- Unnecessary computation or redundant operations
-- Resource management (memory, file handles, connections, subprocesses)
-- Framework-specific performance patterns (from Project Context)
-
-#### E. Project Pattern Compliance
-- {config.code_style} naming and structure conventions
-- {config.architecture} layer rules and boundaries
-- Framework-specific idioms and best practices (from Project Context)
-
-#### F. Reusability
-- Duplicate or near-duplicate logic across files
-- Opportunities to extract shared utilities or helpers
-- DRY principle adherence (same logic repeated in multiple places)
-- Appropriate abstraction level (not premature, not missing)
-
-#### G. Maintainability
-- Function/file size — can a developer or LLM understand each unit in isolation?
-- Naming clarity — do names reveal intent without requiring surrounding context?
-- Self-contained files — minimal cross-file dependencies for comprehension
-- Comments where logic is non-obvious (present where needed, absent where redundant)
-
-#### H. Extensibility
-- Can new variants or features be added without modifying existing code?
-- Are there clear extension points (configuration, plugin hooks, strategy patterns)?
-- Open/Closed principle adherence where applicable
-- Future modification cost — would a reasonable feature request require rewriting or only extending?
+| Perspective | Focus |
+|-------------|-------|
+| **A. Code Quality** | `{config.code_style}` compliance, naming, duplication, complexity |
+| **B. Architecture** | Layer dependency direction, segment rules, placement (agent-enhanced) |
+| **C. Security** | XSS, sensitive data exposure, injection (agent-enhanced) |
+| **D. Performance** | Latency, redundant computation, resource management |
+| **E. Project Pattern** | `{config.code_style}` + `{config.architecture}` conventions, framework idioms |
+| **F. Reusability** | DRY adherence, extraction opportunities, abstraction level |
+| **G. Maintainability** | Unit comprehensibility, naming clarity, self-contained files |
+| **H. Extensibility** | Extension points, Open/Closed principle, future modification cost |
 
 ### 3.5. Cross-Boundary Verification (MANDATORY)
 
-After individual/parallel reviews complete, the **orchestrator** MUST perform a cross-boundary check. This is a required step, not optional — skipping it is a review defect.
-
-**For High complexity (Review Swarm) reviews**: This is especially critical because individual review agents cannot see cross-file interactions. The orchestrator MUST read callee implementations directly.
-
-0. **Impact Map integration**: Use the Impact Map from Step 1.5 to prioritize verification. Affected files with significant coupling to changed symbols (behavioral call references, not just type imports, especially in critical code paths) should be read and checked for breakage — even if no finding was raised against them.
-
-1. **Filter**: From all collected findings, select those involving:
-   - Call order changes (function A now calls B before C)
-   - Error handling modifications (try/catch scope changes, error propagation changes)
-   - State mutation changes (new writes to shared state, removed cleanup)
-
-2. **Verify**: For each behavioral finding rated Critical or Warning:
-   - **Read the callee's implementation** (the function/method being called) — this read is mandatory, not optional
-   - **Skip external dependencies**: If the callee is in `node_modules/`, `vendor/`, or other third-party directories, do NOT read the source (it may be minified/compiled). Instead, verify against the dependency's type definitions or documented API contract. Note: "verified against types/docs, not source"
-   - Check: does the callee's internal behavior (side effects, state changes, return values) actually conflict with the change?
-   - If no conflict → downgrade: Critical → Info, Warning → Info (append "verified: no cross-boundary impact")
-   - If confirmed conflict → keep severity, enrich description with callee behavior details
-
-3. **False positive reference** (security-related findings only): For behavioral findings involving security concerns (injection, auth bypass, data exposure), check `afc-security` agent's MEMORY.md (at `.claude/agent-memory/afc-security/MEMORY.md`) `## False Positives` section if the file exists. Known false positive patterns should be noted in findings to avoid recurring false alarms.
-
-4. **Output**: Append verification summary before Review Output:
-   ```
-   Cross-Boundary Check: {N} behavioral findings verified
-   ├─ Confirmed: {M} (severity kept)
-   ├─ Downgraded: {K} (false positive — callee compatible)
-   └─ Skipped: {J} (no behavioral change)
-   ```
-
-This step runs in the orchestrator context (not delegated), as it requires reading code across file boundaries that individual review agents cannot see.
+After reviews complete, the orchestrator MUST verify behavioral findings across file boundaries.
+See [Cross-Boundary Verification](perspectives.md#cross-boundary-verification-mandatory) for the full procedure.
 
 ### 4. Review Output
 
@@ -241,8 +115,8 @@ This step runs in the orchestrator context (not delegated), as it requires readi
 | Severity | Count | Items |
 |----------|-------|-------|
 | Critical | {N} | {summary} |
-| Warning | {N} | {summary} |
-| Info | {N} | {summary} |
+| Warning  | {N} | {summary} |
+| Info     | {N} | {summary} |
 
 ### Impact Analysis
 | Changed File | Affected Files | Method |
@@ -258,10 +132,7 @@ This step runs in the orchestrator context (not delegated), as it requires readi
 - **Issue**: {description}
 - **Suggested fix**: {code example}
 
-#### W-{N}: {title}
-{same format}
-
-#### I-{N}: {title}
+#### W-{N}: {title}  #### I-{N}: {title}
 {same format}
 
 ### Positives
@@ -270,59 +141,42 @@ This step runs in the orchestrator context (not delegated), as it requires readi
 
 ### 5. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` directory exists, load the **most recent 10 files** (sorted by filename descending) and check:
-- Were there recurring Critical finding categories in past reviews? Prioritize those perspectives.
-- Were there false positives that wasted effort? Reduce sensitivity for those patterns.
+If `.claude/afc/memory/retrospectives/` exists, load the most recent 10 files (sorted descending) and check:
+- Recurring Critical categories from past reviews → prioritize those perspectives
+- Past false positives → reduce sensitivity for those patterns
 
 ### 6. Critic Loop
 
-> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
-
-Run the critic loop until convergence. Safety cap: 5 passes.
+> **Always** read `docs/critic-loop-rules.md` first and follow it. Safety cap: 5 passes.
 
 | Criterion | Validation |
 |-----------|------------|
-| **COMPLETENESS** | Were all changed files reviewed? Are there any missed perspectives (A through H)? |
-| **SPEC_ALIGNMENT** | Cross-check implementation against spec.md: (1) every SC (success criterion) is satisfied — provide `{M}/{N} SC verified` count, (2) every acceptance scenario (GWT) has corresponding code path, (3) no spec constraint is violated by the implementation |
-| **SIDE_EFFECT_AWARENESS** | For findings involving call order changes, error handling modifications, or state mutation changes: did the reviewer verify the callee's internal behavior? If a Critical finding assumes a side effect without reading the target implementation → auto-downgrade to Info with note "cross-boundary unverified". Provide "{M} of {N} behavioral findings verified" count. |
-| **PRECISION** | Are the findings actual issues, not false positives? |
+| **COMPLETENESS** | All changed files reviewed? All perspectives A–H covered? |
+| **SPEC_ALIGNMENT** | Every SC satisfied (`{M}/{N} SC verified`), every GWT scenario has a code path, no spec constraint violated |
+| **SIDE_EFFECT_AWARENESS** | Behavioral findings (call order, error handling, state mutation) verified against callee implementations. Unverified Critical → auto-downgrade to Info with note. Report `{M}/{N} behavioral findings verified` |
+| **PRECISION** | Findings are actual issues, not false positives |
 
-**On FAIL**: auto-fix and continue to next pass.
-**On ESCALATE**: pause, present options to user, apply choice, resume.
-**On DEFER**: record reason, mark criterion clean, continue.
-**On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`
-**On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
+**On FAIL**: auto-fix and continue. **On ESCALATE**: pause, present options, resume. **On DEFER**: record, mark clean. **On CONVERGE**: `✓ Critic converged ({N} passes, {M} fixes, {E} escalations)`. **On SAFETY CAP**: `⚠ Critic safety cap ({N} passes). Review recommended.`
 
 ### 7. Retrospective Entry (if new pattern found)
 
-If this review reveals a recurring pattern not previously documented in `.claude/afc/memory/retrospectives/`:
+Append to `.claude/afc/memory/retrospectives/{YYYY-MM-DD}.md` only when a pattern is new and actionable:
 
-Append to `.claude/afc/memory/retrospectives/{YYYY-MM-DD}.md`:
 ```markdown
 ## Pattern: {category}
 **What happened**: {concrete description}
 **Root cause**: {why this keeps occurring}
-**Prevention rule**: {actionable rule — usable in future plan/implement phases}
+**Prevention rule**: {actionable rule}
 **Severity**: Critical | Warning
 ```
 
-Only write if the pattern is new and actionable. Generic observations are prohibited.
-
 ### 8. Archive Review Report
 
-When running inside a pipeline (.claude/afc/specs/{feature}/ exists), persist the review results:
+When inside a pipeline (`.claude/afc/specs/{feature}/` exists):
+1. Write to `.claude/afc/specs/{feature}/review-report.md` with metadata header (date, files reviewed, finding counts)
+2. This file survives Clean phase (copied to `.claude/afc/memory/reviews/{feature}-{date}.md`)
 
-1. Write full review output (Summary table + Detailed Findings + Positives) to `.claude/afc/specs/{feature}/review-report.md`
-2. Include metadata header:
-   ```markdown
-   # Review Report: {feature name}
-   > Date: {YYYY-MM-DD}
-   > Files reviewed: {count}
-   > Findings: Critical {N} / Warning {N} / Info {N}
-   ```
-3. This file survives Clean phase (copied to `.claude/afc/memory/reviews/{feature}-{date}.md` before .claude/afc/specs/ deletion)
-
-When running standalone (no active pipeline), skip archiving — display results in console only.
+Standalone run: display results in console only.
 
 ### 9. Final Output
 
@@ -337,7 +191,7 @@ Review complete
 ## Notes
 
 - **Read-only**: do not modify code. Report findings only.
-- **Full context**: read the entire file, not just the diff lines, to understand context before reviewing.
+- **Full context**: read the entire file, not just diff lines.
 - **Avoid false positives**: classify uncertain issues as Info.
-- **Respect patterns**: do not flag code simply because it differs from other patterns. Use CLAUDE.md and afc.config.md as the standard.
-- **NEVER use `run_in_background: true` on Task calls**: review agents must run in foreground so results are returned before consolidation.
+- **Respect patterns**: flag against `afc.config.md` standards, not personal preference.
+- **NEVER use `run_in_background: true` on Task calls**: review agents must return results before consolidation.

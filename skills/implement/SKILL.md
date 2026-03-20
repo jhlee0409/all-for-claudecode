@@ -7,7 +7,7 @@ argument-hint: "[task ID or phase specification]"
 # /afc:implement — Execute Code Implementation
 
 > Executes implementation phase by phase with dependency-aware scheduling.
-> Generates tasks.md automatically from plan.md if absent. Swarm mode activates for >5 parallel tasks per phase.
+> Generates tasks.md automatically from plan.md if absent. Swarm mode activates for high-parallelism phases.
 
 ## Arguments
 
@@ -51,63 +51,51 @@ This enables Stop Gate and CI Gate hooks during standalone implementation. Relea
 ### 1. Load Context
 
 1. **Current branch** → `BRANCH_NAME`
-2. Load the following files from `.claude/afc/specs/{feature}/`:
+2. Load from `.claude/afc/specs/{feature}/`:
    - **plan.md** (required) — abort if missing: "plan.md not found. Run `/afc:plan` first."
    - **spec.md** (for reference)
    - **research.md** (if present)
    - **tasks.md** (if present — may be generated in Step 1.3)
-3. **Recent changes**: run `git log --oneline -20` to understand what changed recently (context for implementation)
-4. **Smoke test**: run `{config.gate}` before starting implementation:
-   - If it fails → diagnose before implementing (existing code is broken — fix first or report to user)
-   - If it passes → continue to baseline test
-5. **Baseline test** (if `{config.test}` is non-empty): run `{config.test}` before starting implementation:
-   - If it fails → report pre-existing test failures to user and ask: "(1) Proceed anyway (tests were already broken) (2) Fix first (3) Abort"
-   - If it passes → full baseline confirmed, proceed
-   - If `{config.test}` is empty → skip (no test framework configured)
+3. **Recent changes**: run `git log --oneline -20`
+4. **Smoke test**: run `{config.gate}` before starting:
+   - Fails → diagnose before implementing (fix first or report to user)
+5. **Baseline test** (if `{config.test}` is non-empty): run `{config.test}`:
+   - Fails → ask user: "(1) Proceed anyway (2) Fix first (3) Abort"
+   - Empty → skip
 
 ### 1.3. Task List Generation (if tasks.md absent)
 
-If `.claude/afc/specs/{feature}/tasks.md` does not exist, generate it from plan.md:
-
 1. **Parse plan.md File Change Map**: extract files, actions, descriptions, `Depends On`, `Phase`
 2. **Generate tasks.md**:
-   - Convert each row to task format: `- [ ] T{NNN} {[P]} {description} \`{file}\` {depends: [TXXX]}`
+   - Convert each row to: `- [ ] T{NNN} {[P]} {description} \`{file}\` {depends: [TXXX]}`
    - Assign `[P]` to tasks in the same Phase with no file dependency overlap
    - Map `Depends On` column to `depends: [TXXX]` references
    - Include phase gate validation task per phase
-   - Include coverage mapping at the bottom:
-     - FR/NFR → tasks (every FR-*/NFR-* maps to at least one task)
-     - Entity → tasks (every spec Key Entity maps to at least one task)
-     - Constraint → tasks (every spec Constraint is addressed by at least one task)
-3. **Validate** (script-based, no critic loop):
+   - Include coverage mapping at bottom (FR/NFR → tasks, Entity → tasks, Constraint → tasks)
+3. **Validate**:
    ```bash
    "${CLAUDE_SKILL_DIR}/../../scripts/afc-dag-validate.sh" .claude/afc/specs/{feature}/tasks.md
    "${CLAUDE_SKILL_DIR}/../../scripts/afc-parallel-validate.sh" .claude/afc/specs/{feature}/tasks.md
    ```
-4. If validation fails → fix tasks.md and re-validate (max 2 attempts)
+4. If validation fails → fix and re-validate (max 2 attempts)
 5. Save to `.claude/afc/specs/{feature}/tasks.md`
 
-If tasks.md already exists (e.g., from standalone `/afc:tasks` run): use as-is, skip generation.
+If tasks.md already exists: use as-is, skip generation.
 
 ### 1.5. Parse Task List
 
-1. Parse tasks.md:
-   - Extract each task's ID, [P] marker, [US*] label, description, file paths, `depends:` list
-   - Group by phase
-   - Build dependency graph (validate DAG — abort if circular)
-   - Identify already-completed `[x]` tasks
-2. Load **Implementation Context** section from plan.md (used in sub-agent prompts)
+1. Extract each task's ID, [P] marker, description, file paths, `depends:` list
+2. Group by phase; build dependency graph (validate DAG — abort if circular)
+3. Identify already-completed `[x]` tasks
+4. Load **Implementation Context** section from plan.md (used in sub-agent prompts)
 
 ### 1.7. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files** (sorted by filename descending) and check:
-- Were there implementation issues in past pipelines (e.g., file conflicts, unexpected dependencies, CI failures after parallel execution)?
-- Flag similar patterns in the current task list. Warn before implementation begins.
-- Skip gracefully if directory is empty or absent.
+If `.claude/afc/memory/retrospectives/` exists, load the most recent 10 files and check for past patterns (file conflicts, unexpected dependencies, CI failures after parallel execution). Flag similar patterns. Skip gracefully if absent.
 
 ### 2. Check Progress
 
-- If completed tasks exist, display status:
+- If completed tasks exist, display:
   ```
   Progress: {completed}/{total} ({percent}%)
   Next: {first incomplete task ID} - {description}
@@ -116,263 +104,86 @@ If `.claude/afc/memory/retrospectives/` exists, load the **most recent 10 files*
 
 ### 3. Phase-by-Phase Execution
 
-Execute each phase in order. Choose the orchestration mode by evaluating whether multi-agent coordination overhead would be justified given the tasks' characteristics:
+Execute each phase in order. Choose orchestration mode based on whether multi-agent coordination overhead is justified.
 
 #### Mode Selection
 
-**Default: Main agent executes directly.** Delegation to impl-workers is the exception, not the rule.
+| Condition | Mode |
+|-----------|------|
+| No [P] markers | Sequential |
+| [P] tasks but delegation criteria NOT met | Sequential |
+| [P] tasks, ALL criteria met, moderate parallelism | Parallel Batch |
+| [P] tasks, ALL criteria met, high parallelism (multiple rounds needed) | Swarm |
 
-| Condition | Mode | Strategy |
-|-----------|------|----------|
-| No [P] markers | Sequential | Main agent executes tasks one by one |
-| [P] tasks but delegation criteria NOT met | Sequential | Main agent executes directly (preserves full context) |
-| [P] tasks, delegation criteria ALL met, coordination overhead justified, moderate parallelism | Parallel Batch | Launch Task() calls in parallel |
-| [P] tasks, delegation criteria ALL met, coordination overhead clearly justified, high parallelism | Swarm | Create task pool → orchestrator pre-assigns tasks to worker agents |
+**Default is direct execution**: main agent executes tasks directly unless all 4 parallel delegation criteria are met. See `docs/orchestration-modes.md` for full criteria, execution patterns, failure recovery, and dependency resolution.
 
-**Mode judgment**: Ask — "Given these N tasks with their complexity, file scope, and interdependencies, would spawning multiple agents and merging their results be faster and safer than executing sequentially?" If the answer is not clearly yes, default to Sequential.
+#### Sequential Mode
 
-- **Parallel Batch** is appropriate when there are enough independent tasks that parallel execution provides meaningful speed gain, but the total count is manageable enough that a single orchestrator round-trip suffices.
-- **Swarm** is appropriate when the number of independent tasks is large enough that a single batch of Task() calls would saturate the concurrent agent limit, requiring multiple orchestrator rounds.
+Execute one at a time in order. On start: `▶ {ID}: {description}`. On complete: `✓ {ID} complete`.
 
-**Parallel delegation criteria** (ALL must be satisfied):
-1. Tasks have **no `depends:` edges** between them in the DAG (no ordering constraint)
-2. **Enough parallelizable tasks** that multi-agent overhead is worth it (a very small number of short tasks → sequential is cheaper)
-3. Each task is **self-contained** (does not require runtime results from other tasks in the same batch)
-4. Each task's **target files do not overlap** with any other task in the batch (no shared file writes)
+#### Parallel Batch Mode
 
-If ANY criterion fails → main agent sequential execution (context preservation outweighs parallelism speed).
+For moderate independent [P] tasks. Launch multiple Task() calls in a single message (concurrent). See `docs/orchestration-modes.md` for prompt template, verification steps, and failure recovery.
 
-#### Sequential Mode (no P marker)
+Key constraints:
+- Pre-validate no file overlap before launching (downgrade to sequential if overlapping)
+- After each batch: poll TaskList manually for newly-unblocked tasks (auto-unblocking not guaranteed in sub-agent mode)
+- Verification failures → main agent fixes directly, no re-delegation
+- `run_in_background: true` is **never** used on Task calls
 
-- Execute one at a time in order
-- On task start: `▶ {ID}: {description}`
-- On completion: `✓ {ID} complete`
+#### Swarm Mode
 
-#### Parallel Batch Mode (moderate [P] tasks)
+For high-parallelism phases requiring multiple orchestrator rounds. Orchestrator pre-assigns tasks — workers never self-claim. Max 5 concurrent sub-agents (platform limit). See `docs/orchestration-modes.md` for full swarm protocol, worker prompt template, and failure recovery.
 
-**Pre-validation**: Verify no file overlap (downgrade to sequential if overlapping).
+#### Phase Completion Gate
 
-**Step 1 — Register**: Create tasks for the current phase only (phase-locked registration):
-```
-TaskCreate({ subject: "T003: Create UserService", description: "..." })
-TaskCreate({ subject: "T004: Create AuthService", description: "..." })
-TaskUpdate({ taskId: "T004", addBlockedBy: ["T002"] })  // if T004 depends on T002
-```
+> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/phase-gate-protocol.md` first and perform all steps in order.
+> Cannot advance to the next phase without passing the gate. Abort and report after 3 consecutive CI failures.
 
-**Step 2 — Launch unblocked [P] tasks in a single message** (Claude Code executes multiple Task() calls in a single message concurrently, up to ~10):
-```
-Task("T003: Create UserService", subagent_type: "afc:afc-impl-worker",
-  isolation: "worktree",
-  prompt: "Implement the following task:
-
-  ## Task
-  {task ID}: {description} — `{file path}`
-
-  ## Implementation Context
-  {paste full ## Implementation Context section from plan.md}
-
-  ## Relevant Acceptance Criteria
-  {extract FR/AC items from spec.md that relate to this task — NOT the full spec, only matching items}
-  {e.g., FR-001, FR-003, SC-002 — with their full text from spec.md}
-
-  ## Plan Context
-  {relevant Phase section from plan.md for this task}
-
-  ## Rules
-  - {config.code_style} and {config.architecture}
-  - Follow CLAUDE.md and afc.config.md
-
-  ## Output
-  Return a structured summary (max 2000 chars):
-  - Files changed: {list}
-  - Key decisions: {any design choices made}
-  - Issues: {blockers or concerns, if any}
-  - Verification: {config.gate} result")
-Task("T004: Create AuthService", subagent_type: "afc:afc-impl-worker", isolation: "worktree", ...)
-```
-
-**Step 3 — Collect results and verify**: After all parallel agents return:
-1. Read each agent's returned output and verify completion
-2. **Post-task individual verification** (per worker, before marking complete):
-   a. If `{config.gate}` is non-empty: run it against the worker's changed files only. If empty: skip gate check (log "no gate configured, skipping")
-   b. Check `git diff` to confirm changes stay within the task's declared file scope (no unplanned file modifications)
-   c. If verification fails → main agent fixes directly (do NOT re-delegate — context loss on re-delegation causes compound failures)
-   d. If verification passes → proceed to step 3
-3. Mark `TaskUpdate(status: "completed")` for each verified task
-4. **Manually check for newly-unblocked tasks**: Call `TaskList`, inspect `blockedBy` lists — if all blockers are now completed, the task is unblockable. (Note: auto-unblocking is only guaranteed in Agent Teams mode; in sub-agent mode, the orchestrator must poll and check manually.)
-5. If newly-unblockable tasks exist → launch next batch (repeat Step 2)
-6. If no more pending tasks remain → phase complete
-
-**Failure Recovery** (per-task, not per-batch):
-1. Identify the failed task from the agent's error return
-2. Capture the `agentId` from the failed agent's result (returned in Task tool output)
-3. Reset: `TaskUpdate(taskId, status: "pending")`
-4. Track: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
-5. **Classify the error before deciding to retry**:
-   - **First failure** (no `metadata.lastError` exists): store `metadata.lastError = {current error message}`. Classify as transient (no prior error to compare) and proceed with retry.
-   - **Subsequent failures** (`metadata.lastError` exists): Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
-   - If the error **differs** from the previous attempt (transient/flaky — different message, network blip, lock contention) → re-launch with `resume: lastAgentId`. The resumed agent retains full context from the previous attempt (what it tried, what failed, partial progress), enabling more targeted retry.
-   - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
-   - Update `metadata.lastError` with the current error on each attempt.
-6. If retryCount >= 5 (absolute safety cap) → mark as failed, report: `"T{ID} failed after {retryCount} attempts: {last error}"`
-7. Continue with remaining tasks — a single failure does not block the entire phase
-
-#### Swarm Mode (high [P] task count)
-
-When a phase has enough parallelizable tasks that a single batch of Task() calls would saturate the concurrent agent limit and require multiple orchestrator rounds, use the **orchestrator-managed swarm pattern**.
-
-> **Key constraint**: Claude Code's TaskUpdate uses **last-write-wins** with local file locking only. Multiple sub-agents calling TaskUpdate on the same task simultaneously can cause lost writes. The orchestrator must mediate task assignment to prevent collisions.
-
-**Step 1 — Register current-phase tasks only** (phase-locked):
-```
-// Register ONLY this phase's tasks — never register future phases
-TaskCreate({ subject: "T007: Create ComponentA", description: "..." })
-TaskCreate({ subject: "T008: Create ComponentB", description: "..." })
-// ... for all tasks in this phase
-TaskUpdate({ taskId: "T008", addBlockedBy: ["T006"] })  // if dependency exists
-```
-
-**Step 2 — Orchestrator assigns tasks** (no self-claiming):
-Instead of workers self-claiming (race-prone), the **orchestrator pre-assigns** tasks:
-```
-// Orchestrator assigns: each worker gets a unique, non-overlapping task set
-Task("Worker 1: T007, T009, T011", subagent_type: "afc:afc-impl-worker",
-  isolation: "worktree",
-  prompt: "Implement these tasks in order:
-  1. T007: {description} — `{file path}`
-  2. T009: {description} — `{file path}`
-  3. T011: {description} — `{file path}`
-
-  ## Implementation Context
-  {paste full ## Implementation Context section from plan.md}
-
-  ## Relevant Acceptance Criteria
-  {extract FR/AC items from spec.md that relate to these tasks — NOT the full spec, only matching items}
-  {e.g., FR-001, FR-003, SC-002 — with their full text from spec.md}
-
-  For each task:
-  - Read the target file before modifying
-  - Implement following plan.md design
-  - Verify with {config.gate} after each task
-
-  ## Rules
-  - {config.code_style} and {config.architecture}
-  - Follow CLAUDE.md and afc.config.md
-
-  ## Output
-  Return a structured summary per task (max 2000 chars total):
-  - Files changed, key decisions, issues encountered per task.")
-
-Task("Worker 2: T008, T010, T012", subagent_type: "afc:afc-impl-worker", isolation: "worktree", ...)
-```
-
-**Step 3 — Collect and verify**:
-1. Wait for all workers to return (foreground execution)
-2. **Post-task individual verification** (per worker):
-   a. If `{config.gate}` is non-empty: run it against each worker's changed files. If empty: skip gate check (log "no gate configured, skipping")
-   b. Check `git diff` to confirm changes stay within declared file scope
-   c. If verification fails → main agent fixes directly (no re-delegation)
-3. Read results, mark `TaskUpdate(status: "completed")` for each verified task
-4. Call `TaskList` to check for remaining pending/blocked tasks
-5. If unblocked tasks remain → assign to new worker batch (repeat Step 2)
-6. If all tasks complete → phase done
-
-**Worker count**: N = min(5, unblocked task count). Max 5 concurrent sub-agents per phase (5 is the Claude Code platform limit for concurrent agents — not a semantic preference).
-
-**Task assignment strategy**: Round-robin by file path — each worker gets tasks targeting different files to maximize isolation. If a worker has multiple tasks, order them by `depends:` topology.
-
-#### Swarm Failure Recovery
-
-When a worker agent returns an error:
-1. Identify which tasks the worker was assigned (from the pre-assigned list)
-2. Check which tasks the worker actually completed (from its result summary)
-3. Capture the `agentId` from the failed worker's result
-4. Reset uncompleted tasks: `TaskUpdate(taskId, status: "pending")`
-5. Track retry count: `TaskUpdate(taskId, metadata: { retryCount: N, lastAgentId: agentId })`
-6. **Classify the error before deciding to retry**:
-   - **First failure** (no `metadata.lastError` exists): store `metadata.lastError = {current error message}`. Classify as transient (no prior error to compare) and proceed with retry.
-   - **Subsequent failures** (`metadata.lastError` exists): Compare the current error with `metadata.lastError`. If the error is **the same** (deterministic failure — same message, same stack location) → stop immediately and mark as failed. Retrying a deterministic failure wastes cycles.
-   - If the error **differs** from the previous attempt (transient/flaky — different message, network blip, lock contention) → re-launch with `resume: lastAgentId`. The resumed agent retains its full conversation history (files read, changes attempted, errors encountered), enabling targeted retry.
-   - **Worktree caveat**: if the failed worker made no file changes, its worktree is auto-cleaned and `resume` will fail. In this case, fall back to a fresh launch (omit `resume`) for the retry.
-   - Update `metadata.lastError` with the current error on each attempt.
-7. If retryCount >= 5 (absolute safety cap) → mark as failed, report: `"T{ID} failed after {retryCount} attempts: {last error}"`
-8. Continue with remaining tasks
-
-> Single task failure does not block the phase. The orchestrator reassigns failed tasks to subsequent batches.
-
-#### Dependency Resolution
-
-- Tasks with `depends: [T001, T002]` are registered via `TaskUpdate(addBlockedBy: ["T001", "T002"])`
-- **Auto-unblocking is NOT guaranteed in sub-agent mode**. The orchestrator must:
-  1. After each batch completes, call `TaskList` to get current state
-  2. For each pending task, check if all `blockedBy` tasks are now completed
-  3. If all blockers resolved → task is eligible for the next batch
-- **Phase-locked registration**: Only register tasks for the current phase. Never register Phase N+1 tasks until Phase N is fully complete and its gate has passed. This prevents workers from claiming future-phase tasks.
-- **Cross-phase dependencies**: A Phase 2 task may `depends:` on a Phase 1 task. Since Phase 1 must complete before Phase 2 begins, this is always satisfied. Within the same phase, `depends:` creates intra-phase ordering.
-
-#### Phase Completion Gate (3 steps)
-
-> **Always** read `${CLAUDE_SKILL_DIR}/../../docs/phase-gate-protocol.md` first and perform the 3–4 steps (CI gate → Mini-Review → Integration/E2E Gate (conditional) → Auto-Checkpoint) in order.
-> Cannot advance to the next phase without passing the gate. Abort and report to user after 3 consecutive CI failures.
-
-After passing the gate, create a phase rollback point:
+After passing the gate:
 ```bash
 "${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase-tag {phase_number}
 ```
-This enables granular rollback: `git reset --hard afc/phase-{N}` restores state after Phase N completed.
 
 ### 4. Task Execution Pattern
 
 For each task:
 
-1. **Read files**: always read files before modifying them
-2. **TDD cycle** (when plan.md Test Strategy classifies the task's target file as "required"):
-   - **Red**: write the test file first (failing test that defines expected behavior)
-   - **Green**: implement the minimum code to pass the test
-   - **Refactor**: clean up while keeping tests green
-   - If `{config.tdd}` is `strict` or `guide`: always follow this order. If `off` or unset: recommended but not enforced.
-3. **Implement**: write code following the design in plan.md
-4. **Type/Lint check**: verify new code passes `{config.gate}`
+1. **Read files**: always read before modifying
+2. **TDD cycle** (when plan.md Test Strategy marks target file as "required"):
+   - Red → Green → Refactor
+   - If `{config.tdd}` is `strict` or `guide`: enforce order. If `off` or unset: recommended only.
+3. **Implement**: write code following plan.md design
+4. **Type/Lint check**: verify with `{config.gate}`
 5. **Update tasks.md**: mark completed tasks as `[x]`
-   ```markdown
-   - [x] T001 {description}  ← complete
-   - [ ] T002 {description}  ← incomplete
-   ```
 
 ### 5. Final Verification
-
-After all tasks are complete:
 
 ```bash
 {config.ci}
 ```
 
-- **Pass**: output final report
-- **Fail**: **Debug-based RCA** (replaces blind retry):
-  1. Execute `/afc:debug` logic inline with the CI error output as input
-  2. Debug performs RCA: error trace → data flow → hypothesis → targeted fix
+- **Pass** → output final report
+- **Fail** → Debug-based RCA:
+  1. Execute `/afc:debug` logic inline with the CI error as input
+  2. RCA: error trace → data flow → hypothesis → targeted fix
   3. Re-run `{config.ci}` after fix
-  4. If debug-fix cycle fails 3 times → report to user with diagnosis details (not a simple fix)
-  5. This produces targeted fixes instead of blind retries
+  4. If debug-fix cycle fails 3 times → report to user with diagnosis details
 
 ### 6. Implement Critic Loop
 
-After CI passes, run a convergence-based Critic Loop to verify design alignment before reporting completion.
+After CI passes, run a convergence-based Critic Loop to verify design alignment.
 
 > **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 
 **Critic Loop until convergence** (safety cap: 5):
 
-- **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change Map. Flag any file modified that is NOT in the plan. Flag any planned file NOT modified. Provide "M of N files match" count.
-- **ARCHITECTURE**: Validate changed files against `{config.architecture}` rules (layer boundaries, naming conventions, import paths). Provide "N of M rules checked" count.
-- **CORRECTNESS**: Cross-check implemented changes against spec.md acceptance criteria (AC). Verify each AC has corresponding code. Provide "N of M AC verified" count.
-- **SIDE_EFFECT_SAFETY**: For tasks that changed call order, error handling, or state flow: verify that callee behavior is compatible with the new call pattern. Provide "{M} of {N} behavioral changes verified" count.
-- **Adversarial 3-perspective** (mandatory each pass):
-  - Skeptic: "Which implementation assumption is most likely wrong?"
-  - Devil's Advocate: "How could this implementation be misused or fail unexpectedly?"
-  - Edge-case Hunter: "What input would cause this implementation to fail silently?"
-  - State one failure scenario per perspective. If realistic → FAIL + fix. If unrealistic → state quantitative rationale.
-- FAIL → auto-fix, re-run `{config.ci}`, and continue. ESCALATE → pause, present options, resume after response. DEFER → record reason, mark clean.
+- **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change Map. "M of N files match."
+- **ARCHITECTURE**: Validate against `{config.architecture}` rules. "N of M rules checked."
+- **CORRECTNESS**: Cross-check against spec.md acceptance criteria. "N of M AC verified."
+- **SIDE_EFFECT_SAFETY**: Verify callee behavior compatibility for changed call order/error handling/state flow. "{M} of {N} behavioral changes verified."
+- **Adversarial 3-perspective** (mandatory each pass): Skeptic, Devil's Advocate, Edge-case Hunter — one failure scenario each. Realistic → FAIL + fix. Unrealistic → quantitative rationale.
+- FAIL → auto-fix + re-run `{config.ci}`. ESCALATE → pause for user. DEFER → record reason.
 
 ### 7. Final Output
 
@@ -392,16 +203,11 @@ Implementation complete
 
 ## Notes
 
-- **Read existing code first**: always read file contents before modifying. Do not blindly generate code.
-- **No over-modification**: do not refactor or improve beyond what is in plan.md.
-- **Architecture compliance**: follow {config.architecture} rules.
-- **{config.ci} gate**: must pass on phase completion. Do not bypass.
-- **Swarm workers**: max 5 concurrent. File overlap is strictly prohibited between parallel tasks.
-- **On error**: classify errors before retrying. Stop immediately on deterministic (same) errors. Allow additional attempts for transient (different) errors. Hard cap at 5 retries total.
+- **Read existing code first**: always read file contents before modifying.
+- **No over-modification**: do not refactor beyond what is in plan.md.
+- **Architecture compliance**: follow `{config.architecture}` rules.
+- **`{config.ci}` gate**: must pass on phase completion. Do not bypass.
+- **File overlap**: strictly prohibited between parallel tasks.
+- **Error classification**: stop on deterministic (same) errors; allow retries for transient (different) errors. Hard cap: 5 retries.
 - **Real-time tasks.md updates**: mark checkbox on each task completion.
-- **Default is direct execution**: main agent executes tasks directly unless all 4 parallel delegation criteria are met. This preserves full context and avoids multi-agent context loss.
-- **Mode selection is automatic**: do not manually override. Sequential (default), batch when moderate independent parallelism justifies coordination overhead, swarm when high task count requires multiple orchestrator rounds.
-- **NEVER use `run_in_background: true` on Task calls**: agents must run in foreground so results are returned before the next step.
-- **No worker self-claiming**: In swarm mode, the orchestrator pre-assigns tasks to workers. Workers do NOT call TaskList/TaskUpdate to claim tasks — this avoids last-write-wins race conditions on TaskUpdate.
-- **Phase-locked registration**: Only register (TaskCreate) the current phase's tasks. Never pre-register future phases. This is the primary mechanism for phase boundary enforcement.
-- **Orchestrator polls for unblocking**: After each batch, the orchestrator calls TaskList and manually checks blockedBy status. Do not rely on automatic unblocking outside Agent Teams mode.
+- **Orchestration modes reference**: `docs/orchestration-modes.md`

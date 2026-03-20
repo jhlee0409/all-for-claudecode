@@ -23,6 +23,7 @@ Every skill should have a `model:` field:
 - `context: fork` — isolated subagent execution (validate, analyze, architect, security)
 
 ## Shared References
+- **Skill authoring guide: reference `docs/skill-authoring-guide.md`** — all skills MUST follow this guide (conciseness, progressive disclosure, `!`command``, terminology, feedback loops)
 - Critic Loop rules: reference `docs/critic-loop-rules.md`
 - Phase gate protocol: reference `docs/phase-gate-protocol.md`
 - Do not duplicate these blocks inline
