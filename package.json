@@ -1,7 +1,7 @@
 {
   "name": "all-for-claudecode",
-  "version": "2.13.0",
-  "description": "Claude Code plugin that automates the full dev cycle — spec, plan, implement, review, clean.",
+  "version": "2.14.0",
+  "description": "Claude Code plugin that automates the full dev cycle \u2014 spec, plan, implement, review, clean.",
   "bin": {
     "all-for-claudecode": "bin/cli.mjs"
   },
@@ -40,7 +40,7 @@
     "test:all": "npm run lint && npm run qa && npm run test",
     "setup:test": "bash scripts/install-shellspec.sh",
     "sync:cache": "bash scripts/afc-sync-cache.sh",
-    "validate:plugin": "claude plugin validate . 2>&1 || echo '[afc:validate] claude CLI not available — skipping plugin validation'"
+    "validate:plugin": "claude plugin validate . 2>&1 || echo '[afc:validate] claude CLI not available \u2014 skipping plugin validation'"
   },
   "engines": {
     "node": ">=18"

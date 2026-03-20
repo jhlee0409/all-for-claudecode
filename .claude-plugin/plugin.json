@@ -1,11 +1,22 @@
 {
   "name": "afc",
-  "version": "2.13.0",
-  "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec → plan → implement → review → clean.",
-  "author": { "name": "jhlee0409", "email": "relee6203@gmail.com" },
+  "version": "2.14.0",
+  "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec \u2192 plan \u2192 implement \u2192 review \u2192 clean.",
+  "author": {
+    "name": "jhlee0409",
+    "email": "relee6203@gmail.com"
+  },
   "homepage": "https://github.com/jhlee0409/all-for-claudecode",
   "repository": "https://github.com/jhlee0409/all-for-claudecode",
   "license": "MIT",
-  "keywords": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"],
+  "keywords": [
+    "pipeline",
+    "automation",
+    "spec",
+    "plan",
+    "implement",
+    "review",
+    "critic-loop"
+  ],
   "skills": "./skills/"
 }

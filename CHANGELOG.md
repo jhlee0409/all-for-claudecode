@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.0] - 2026-03-20
+
+### Added
+- **Context Management Harness**: proactive context control system for 1M context window
+  - Phase-boundary compact: automatic `/compact` recommendation with phase-specific preservation instructions on every phase transition
+  - Context budget monitor: `totalPromptCount`-based usage estimation with escalating hints at 50%/70%/90% thresholds
+  - PostCompact hook: re-injects pipeline feature/phase + context.md after compaction for context recovery
+  - PreCompact checkpoint: includes context.md (first 50 lines) in auto-checkpoint
+  - Compact instructions: `/afc:init` auto-adds preservation section to project CLAUDE.md
+  - `CLAUDE_CODE_AUTO_COMPACT_WINDOW` guidance for 1M models (reserve 500k as headroom)
+- **StopFailure hook**: detects rate_limit, authentication, and server errors with user-friendly messages
+- **CLAUDE_ENV_FILE caching**: SessionStart caches `AFC_CACHED_PHASE`/`AFC_CACHED_FEATURE` for hook I/O reduction
+- **Advisor → context.md accumulation**: Skill Advisor checkpoints (A-E) append results to context.md for cross-phase knowledge transfer
+- **SendMessage resume pattern**: dependent tasks chain to same worker via SendMessage instead of spawning new instances
+- **Selective summarize guidance**: `/rewind` → Summarize from here recommendation before implement phase
+- **Skill authoring guide** (`docs/skill-authoring-guide.md`): project-wide rules based on Anthropic official best practices
+- **Agent authoring guide** (`docs/agent-authoring-guide.md`): rules for writing effective AGENT.md files
+- **Context management harness doc** (`docs/context-management-harness.md`): comprehensive context preservation strategy
+- **Orchestration modes doc** (`docs/orchestration-modes.md`): shared reference for Sequential/Batch/Swarm patterns
+- **`.claude/rules/agents.md`**: auto-loaded rules for agent file editing
+- **`validate:plugin` npm script**: separate plugin validation command using `claude plugin validate`
+- **marketplace.json features**: 9 feature highlights for marketplace listing
+- **README Development Docs section**: links to 7 guide documents
+
+### Changed
+- **All 31 skills refactored** to comply with Anthropic official skill authoring best practices:
+  - `auto`: 1156→437 lines (62% reduction), Skill Advisor extracted to `skill-advisor.md`
+  - `implement`: 407→213 lines, orchestration modes extracted to `docs/orchestration-modes.md`
+  - `review`: 343→197 lines, perspectives A-H extracted to `perspectives.md`
+  - `resolve`: 245→162 lines, GraphQL queries extracted, GitHub thread resolution added, `!`command`` prefetch
+  - 15 skills now use `!`command`` for data pre-fetching (config, PR, git)
+  - All inline Critic Loop duplications replaced with `docs/critic-loop-rules.md` references
+  - Progressive disclosure: 15 reference files created for large content blocks
+- **All 12 agents refactored** to comply with official subagent best practices:
+  - `afc-architect`, `afc-security`: `Agent` tool removed (no nested spawning)
+  - All 10 persistent agents: `maxTurns` added (expert: 10, scanner: 15-20, worker: 50)
+  - All 12 agents: HITL (When to STOP and Ask) rules added
+  - 8 expert agents: Write usage policy documented, Red Flags trimmed to domain-specific only, completion definitions added
+  - 8 expert agents: `effort: medium` for thinking token savings
+
+### Fixed
+- **Hook overhead optimization**: `afc-spec-guard.sh` and `afc-tdd-guard.sh` now early-exit before stdin consumption when pipeline inactive (95%+ calls skip all I/O)
+- **TaskCompleted keyword precision**: `'spec'` → `'spec.md'` to reduce false positive haiku API calls by ~80-90%
+- **PostToolUseFailure async**: `afc-failure-hint` hook changed from sync to async (non-blocking diagnostics)
+- **plugin.schema.json**: removed invalid `agents` field that caused validator errors
+- **afc-sync-cache.sh**: added error handling on rsync/cp operations
+- **CLAUDE.md**: updated docs/ listing with 4 new documents, added missing skill names (checkpoint, resume, principles)
+- **marketplace.schema.json**: added `features` field to metadata schema
+
 ## [2.13.0] - 2026-03-17
 
 ### Added

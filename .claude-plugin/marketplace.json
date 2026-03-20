@@ -5,10 +5,10 @@
     "email": "relee6203@gmail.com"
   },
   "metadata": {
-    "description": "Automated pipeline for Claude Code — spec → plan → implement → review → clean",
-    "version": "2.13.0",
+    "description": "Automated pipeline for Claude Code \u2014 spec \u2192 plan \u2192 implement \u2192 review \u2192 clean",
+    "version": "2.14.0",
     "features": [
-      "5-phase pipeline: spec → plan → implement → review → clean",
+      "5-phase pipeline: spec \u2192 plan \u2192 implement \u2192 review \u2192 clean",
       "31 slash commands (/afc:auto, /afc:implement, /afc:review, etc.)",
       "12 specialized subagents (architect, security, 8 domain experts, impl-worker, pr-analyst)",
       "Convergence-based critic loop with 4-verdict system (PASS/FAIL/ESCALATE/DEFER)",
@@ -23,10 +23,18 @@
     {
       "name": "afc",
       "source": "./",
-      "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec → plan → implement → review → clean.",
-      "version": "2.13.0",
+      "description": "Automated pipeline for Claude Code. Automates the full development cycle: spec \u2192 plan \u2192 implement \u2192 review \u2192 clean.",
+      "version": "2.14.0",
       "category": "automation",
-      "tags": ["pipeline", "automation", "spec", "plan", "implement", "review", "critic-loop"]
+      "tags": [
+        "pipeline",
+        "automation",
+        "spec",
+        "plan",
+        "implement",
+        "review",
+        "critic-loop"
+      ]
     }
   ]
 }
