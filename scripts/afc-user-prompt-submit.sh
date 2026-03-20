@@ -143,9 +143,37 @@ PHASE="$(printf '%s' "$PHASE" | tr -d '"\n\r' | cut -c1-100)"
 # Increment per-phase prompt counter + pipeline-wide total
 CALL_COUNT=$(afc_state_increment promptCount 2>/dev/null || echo 0)
 afc_state_increment totalPromptCount >/dev/null 2>&1 || echo "[afc:prompt-submit] totalPromptCount increment failed" >&2
+TOTAL_COUNT=$(afc_state_read totalPromptCount 2>/dev/null || echo 0)
 
 # Build context message
 CONTEXT="[Pipeline: ${FEATURE}] [Phase: ${PHASE}] [TASK HYGIENE: Mark completed tasks via TaskUpdate(status: completed) -- do not leave stale tasks]"
+
+# P1.1: Phase-Boundary Compact 권고
+# Inject compact recommendation on first prompt after a phase transition
+PHASE_TRANSITION=$(afc_state_read phaseTransition 2>/dev/null || echo "")
+if [ "$PHASE_TRANSITION" = "true" ]; then
+  afc_state_write "phaseTransition" "false"
+  case "$PHASE" in
+    plan)
+      COMPACT_MSG="이전 phase(spec) 컨텍스트 정리 권장: /compact Preserve spec.md acceptance criteria, edge cases, and NFRs"
+      ;;
+    implement)
+      COMPACT_MSG="이전 phase(plan) 컨텍스트 정리 권장: /compact Preserve File Change Map, Implementation Context, and ADR decisions"
+      ;;
+    review)
+      COMPACT_MSG="이전 phase(implement) 컨텍스트 정리 권장: /compact Preserve changed files list, CI results, and unresolved issues"
+      ;;
+    clean)
+      COMPACT_MSG="이전 phase(review) 컨텍스트 정리 권장: /compact Preserve review findings and fix status"
+      ;;
+    *)
+      COMPACT_MSG=""
+      ;;
+  esac
+  if [ -n "$COMPACT_MSG" ]; then
+    CONTEXT="${CONTEXT} [afc:context] ${COMPACT_MSG}"
+  fi
+fi
 
 # Drift checkpoint: inject plan constraints at every N prompts during implement/review
 # AFC_DRIFT_THRESHOLD sourced from afc-state.sh (SSOT)
@@ -156,6 +184,16 @@ if [ "$CALL_COUNT" -gt 0 ] && [ $((CALL_COUNT % AFC_DRIFT_THRESHOLD)) -eq 0 ]; t
       CONTEXT="${CONTEXT} ${DRIFT_MSG}"
       ;;
   esac
+fi
+
+# P1.3: Context Budget Monitor
+# Inject budget hints based on totalPromptCount across all phases
+if [ "$TOTAL_COUNT" -ge 200 ]; then
+  CONTEXT="${CONTEXT} [afc:context] ~90%+ context estimated (${TOTAL_COUNT} total prompts). Auto-compact imminent. /compact now with phase-specific preservation."
+elif [ "$TOTAL_COUNT" -ge 150 ]; then
+  CONTEXT="${CONTEXT} [afc:context] Context ~70%+ estimated (${TOTAL_COUNT} total prompts). /compact recommended: preserve current phase artifacts."
+elif [ "$TOTAL_COUNT" -ge 100 ]; then
+  CONTEXT="${CONTEXT} [afc:context] Context ~50%+ estimated (${TOTAL_COUNT} total prompts). Delegate verbose operations to subagents."
 fi
 
 # Output additionalContext to stdout (injected into Claude context)

@@ -121,6 +121,8 @@ Execute each phase in order. Choose orchestration mode based on whether multi-ag
 
 Execute one at a time in order. On start: `▶ {ID}: {description}`. On complete: `✓ {ID} complete`.
 
+**Dependent task chaining**: When Task B depends on Task A (same worker), use `SendMessage` to resume the existing worker instead of spawning a new one. This preserves Task A's full context (file reads, decisions, test results) for Task B.
+
 #### Parallel Batch Mode
 
 For moderate independent [P] tasks. Launch multiple Task() calls in a single message (concurrent). See `docs/orchestration-modes.md` for prompt template, verification steps, and failure recovery.

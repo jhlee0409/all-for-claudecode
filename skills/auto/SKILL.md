@@ -120,6 +120,13 @@ Score `$ARGUMENTS` on 5 ambiguity signals (vague scope, missing quantifiers, und
 
 Signals: A1 (idea-level request → `ideate` Transform), A2 (domain expertise needed → `consult({domain})` Enrich).
 
+After advisor skill completes, append result summary to `context.md`:
+```
+## Advisor: {skill_name} (Checkpoint A)
+- Insight: {1-line key finding}
+- Action: {1-line required action or "none"}
+```
+
 ---
 
 ### Phase 1: Spec (1/5)
@@ -149,6 +156,13 @@ Execute `/afc:spec` logic inline:
 > Evaluate AFTER Phase 1, BEFORE Phase 2. See `skills/auto/skill-advisor.md#checkpoint-b--post-spec` for full invocation patterns. Budget: max 2 skills. Skip if `ADVISOR_COUNT >= 5`.
 
 Signals: B1 (sensitive data/trust boundary → `security` Enrich), B2 (cross-architectural boundary → `architect` Enrich). If both >= 3: launch parallel. Security/architecture conflicts → **ESCALATE**.
+
+After advisor skill completes, append result summary to `context.md`:
+```
+## Advisor: {skill_name} (Checkpoint B)
+- Insight: {1-line key finding}
+- Action: {1-line required action or "none"}
+```
 
 ---
 
@@ -196,11 +210,20 @@ Execute `/afc:plan` logic inline:
 
 Signals: C1 (high interconnection risk → dependency analysis Observe), C2 (unresolved domain uncertainties → `consult({domain})` Enrich).
 
+After advisor skill completes, append result summary to `context.md`:
+```
+## Advisor: {skill_name} (Checkpoint C)
+- Insight: {1-line key finding}
+- Action: {1-line required action or "none"}
+```
+
 ---
 
 ### Phase 3: Implement (3/5)
 
 `"${CLAUDE_SKILL_DIR}/../../scripts/afc-pipeline-manage.sh" phase implement`
+
+**Context optimization**: If extensive exploration occurred in previous phases, consider `/rewind` → Summarize from here to compact investigation-heavy sections while preserving plan/spec context intact.
 
 **Session context reload**: read `.claude/afc/specs/{feature}/context.md`. If `complexity-analysis.md` exists, read it and flag high-risk files for extra verification.
 
@@ -276,6 +299,13 @@ Progress: `  ├─ Acceptance tests: {N} generated, {M} passing`
 
 Signals: D1 (testable files changed without test coverage → test generation Enrich), D2 (historical quality issues → pre-review QA Observe).
 
+After advisor skill completes, append result summary to `context.md`:
+```
+## Advisor: {skill_name} (Checkpoint D)
+- Insight: {1-line key finding}
+- Action: {1-line required action or "none"}
+```
+
 ---
 
 ### Phase 4: Review (4/5)
@@ -349,6 +379,13 @@ If Checkpoint D produced `QA_FINDINGS` → include as Priority Hints. New test f
 > Evaluate AFTER Phase 4, BEFORE Phase 5. See `skills/auto/skill-advisor.md#checkpoint-e--post-review` for full invocation patterns. Budget: max 1 skill. Skip if `ADVISOR_COUNT >= 5`.
 
 Signal: E1 (recurring problem patterns → learner Observe).
+
+After advisor skill completes, append result summary to `context.md`:
+```
+## Advisor: {skill_name} (Checkpoint E)
+- Insight: {1-line key finding}
+- Action: {1-line required action or "none"}
+```
 
 ---
 

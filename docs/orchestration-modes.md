@@ -32,6 +32,24 @@ Execute one at a time in order.
 - On task start: `▶ {ID}: {description}`
 - On completion: `✓ {ID} complete`
 
+### Dependent Task Chaining (SendMessage Resume)
+
+When tasks have explicit dependencies (`depends: [TXXX]`), the orchestrator should resume the worker that completed the dependency rather than spawning a new one:
+
+1. Worker completes Task A → orchestrator receives result with agent ID
+2. Task B depends on A → orchestrator sends Task B to the same agent ID via SendMessage
+3. Worker-1 resumes with full context from Task A + new Task B instructions
+4. Benefit: worker already knows the files it modified, decisions it made, and test results
+
+Use this pattern for:
+- Sequential dependencies within the same file
+- Cross-file dependencies where Task B calls functions modified by Task A
+- Any task chain where context from previous work improves accuracy
+
+Do NOT use this pattern for:
+- Independent tasks (spawn separate workers for parallelism)
+- Tasks in different worktrees
+
 ---
 
 ## Parallel Batch Mode

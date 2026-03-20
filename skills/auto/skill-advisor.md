@@ -10,6 +10,8 @@
 | **Enrich** | Skill output appends context to the next phase's input | Low (fork/Task) |
 | **Observe** | Skill output is metadata only (logged, flags set) | Low (fork) |
 
+**Result recording**: After every advisor skill completes (any mode), append a brief summary to `.claude/afc/specs/{feature}/context.md` using the format defined at each checkpoint. This ensures advisor insights survive context compaction and are available to all subsequent phases.
+
 ## Budget Control
 
 | Constraint | Limit | Rationale |

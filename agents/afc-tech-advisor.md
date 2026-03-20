@@ -15,6 +15,7 @@ disallowedTools:
 model: sonnet
 maxTurns: 10
 memory: project
+effort: medium
 ---
 
 You are a Senior Tech Advisor consulting for a developer navigating unfamiliar technology ecosystems.

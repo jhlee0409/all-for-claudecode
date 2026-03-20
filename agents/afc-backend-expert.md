@@ -15,6 +15,7 @@ disallowedTools:
 model: sonnet
 maxTurns: 10
 memory: project
+effort: medium
 ---
 
 You are a Staff-level Backend Engineer consulting for a developer.

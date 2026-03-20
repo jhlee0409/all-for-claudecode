@@ -84,6 +84,26 @@ Write `.claude/afc/project-profile.md` for expert consultation agents:
 3. Fill Stack/Architecture/Domain from Step 3 analysis; leave Team/Scale/Constraints as placeholders
 4. Use template `${CLAUDE_SKILL_DIR}/../../templates/project-profile.template.md`
 
+### 4.7. Update CLAUDE.md with Compact Instructions
+
+Append a `# Compact instructions` section to the project's `CLAUDE.md` (create if not present):
+
+1. Check if `CLAUDE.md` already contains `# Compact instructions` → if yes, skip silently
+2. Append the following block to `CLAUDE.md`:
+
+```markdown
+# Compact instructions
+When compacting, always preserve:
+- Active pipeline feature name and current phase
+- File Change Map from plan.md (file paths + task assignments)
+- All unresolved ESCALATE items with their options
+- context.md contents (spec summary + plan decisions + advisor results)
+- Changed files list and CI/test pass/fail status
+- Current task progress (completed/total)
+```
+
+This ensures auto-compact retains critical pipeline state.
+
 ### 5. Final Output
 
 ```
@@ -91,6 +111,7 @@ all-for-claudecode project init complete
 ├─ Config: .claude/afc.config.md
 ├─ Rules: .claude/rules/afc-project.md (auto-loaded)
 ├─ Profile: .claude/afc/project-profile.md
+├─ Compact instructions: CLAUDE.md updated
 ├─ Framework: {detected framework}
 ├─ Architecture: {detected style}
 ├─ Package Manager: {detected manager}

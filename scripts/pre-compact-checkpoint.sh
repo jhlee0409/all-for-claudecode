@@ -76,6 +76,13 @@ if [ -n "$PIPELINE_FEATURE" ] && [ -d "$PROJECT_DIR/.claude/afc/specs/$PIPELINE_
   fi
 fi
 
+# Include context.md if pipeline is active and file exists
+CONTEXT_MD=""
+if [ -n "$PIPELINE_FEATURE" ] && [ -f "$PROJECT_DIR/.claude/afc/specs/$PIPELINE_FEATURE/context.md" ]; then
+  # Include first 50 lines of context.md (keep checkpoint concise)
+  CONTEXT_MD=$(head -50 "$PROJECT_DIR/.claude/afc/specs/$PIPELINE_FEATURE/context.md" 2>/dev/null || true)
+fi
+
 # Guard against empty lists
 if [ -n "$MODIFIED" ]; then
   # shellcheck disable=SC2001
@@ -109,6 +116,9 @@ $STAGED_LIST
 ## Pipeline Status
 - Active: $([ -n "$PIPELINE_FEATURE" ] && echo "Yes ($PIPELINE_FEATURE)" || echo "No")
 - Task progress: $TASKS_DONE/$TASKS_TOTAL
+
+## Feature Context
+${CONTEXT_MD:-"(no context.md found)"}
 
 ## Restore Command
 \`\`\`

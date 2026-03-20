@@ -82,6 +82,7 @@ case "$COMMAND" in
       afc_state_invalidate_ci
       afc_state_write "promptCount" "0"  # numeric: afc_state_write detects digits and stores as JSON number
       afc_state_checkpoint "$PHASE"
+      afc_state_write "phaseTransition" "true"
       echo "Phase: $PHASE"
     else
       printf "[afc:pipeline] Invalid phase: %s\n  → Valid phases: %s\n" "$PHASE" "$AFC_VALID_PHASES" >&2
