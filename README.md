@@ -1,5 +1,5 @@
 <div align="center">                                                                                                                                        
-  <img src="https://github.com/user-attachments/assets/9e23029e-e326-4cfa-b329-3bdd1006aecd" alt="all-for-claudecode" width="640" />                        
+  <img src="https://github.com/user-attachments/assets/ce9a12a0-5554-425e-ae8a-efa098bfb70e" alt="all-for-claudecode" width="1080" />
 </div>
 
 # all-for-claudecode
