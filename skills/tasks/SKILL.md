@@ -1,6 +1,6 @@
 ---
 name: afc:tasks
-description: "Task decomposition — auto-invoked during implement phase to break down plan into executable tasks with dependency tracking"
+description: "Task decomposition from plan with dependency tracking"
 argument-hint: "[constraints/priority directives]"
 user-invocable: false
 allowed-tools:

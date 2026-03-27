@@ -1,6 +1,6 @@
 ---
 name: afc:resolve
-description: "Analyze and address LLM review comments on PR — use when the user asks to resolve, fix, or respond to bot review comments (CodeRabbit, Copilot, Codex) on a pull request"
+description: "Address LLM bot review comments on PR — fix valid issues, dismiss false positives"
 argument-hint: "<PR number or URL>"
 allowed-tools:
   - Read

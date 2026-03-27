@@ -1,6 +1,6 @@
 ---
 name: afc:validate
-description: "Artifact consistency validation (read-only) — auto-invoked to verify spec, plan, and task artifacts are consistent with each other"
+description: "Validate spec/plan/task artifact consistency"
 argument-hint: "[validation scope: spec-plan, tasks-only]"
 user-invocable: false
 context: fork
@@ -32,6 +32,15 @@ From `.claude/afc/specs/{feature}/`:
 
 Warn about missing files but proceed with what is available.
 If config is missing: use `CLAUDE.md` for architecture info; assume "Layered Architecture" as fallback.
+
+**No artifacts early-exit**: If both spec.md and plan.md are missing (no feature directory exists or directory is empty), output:
+```
+Validation skipped — no pipeline artifacts found
+├─ spec.md: not found
+├─ plan.md: not found
+└─ Run /afc:spec followed by /afc:plan to generate artifacts for validation
+```
+Exit without running validation categories. Do not produce a degenerate report with empty coverage data.
 
 ### 2. Run Validation
 

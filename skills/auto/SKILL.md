@@ -1,6 +1,6 @@
 ---
 name: afc:auto
-description: "Full auto pipeline — use when the user asks to run the full afc pipeline automatically or automate the spec-to-clean cycle"
+description: "Full auto pipeline — run spec-to-clean cycle automatically for new features"
 argument-hint: "[feature description in natural language]"
 ---
 

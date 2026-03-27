@@ -1,6 +1,6 @@
 ---
 name: afc:doctor
-description: "Diagnose afc plugin setup and configuration — use when the user asks for a health check, wants to verify plugin installation, or check if afc is properly configured"
+description: "Diagnose afc plugin setup and health"
 argument-hint: "[--verbose]"
 allowed-tools:
   - Read

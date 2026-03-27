@@ -1,6 +1,6 @@
 ---
 name: afc:learner
-description: "Review and promote learned patterns to project rules — use when the user wants to save recurring preferences, review detected corrections, or manage learned coding rules"
+description: "Review and promote learned patterns to project rules"
 argument-hint: "[action: review, status, reset]"
 allowed-tools:
   - Read
@@ -38,10 +38,13 @@ Parse `$ARGUMENTS`:
 ### 1. Load Context
 
 1. Read `.claude/.afc-learner-queue.jsonl` (JSONL format — one JSON object per line)
-2. If queue is empty or file does not exist: output "No pending patterns. Use `/afc:learner enable` to start collecting." and exit
+2. If queue is empty or file does not exist:
+   - **Fallback: git history analysis** — scan recent fix/chore commits (`git log --oneline --grep="fix" --grep="chore" -n 25`) for recurring correction patterns (e.g., repeated lint fixes, naming changes, convention enforcement). Extract up to 5 candidate patterns from commit messages and diffs.
+   - If fallback also finds nothing: output "No pending patterns and no recurring corrections in recent history. Use `/afc:learner enable` to start collecting signals automatically." and exit
+   - If fallback finds candidates: continue to Step 2 with git-derived entries (mark `source: "git-history"` to distinguish from queue entries)
 3. Read `.claude/rules/afc-learned.md` if it exists (for deduplication)
 4. Read `CLAUDE.md` (project root) if it exists (for conflict detection)
-5. Count pending signals: `{N} patterns pending`
+5. Count pending signals: `{N} patterns pending` (note source: queue vs git-history)
 
 ### 2. Classify & Cluster (LLM Batch Analysis)
 

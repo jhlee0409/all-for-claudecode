@@ -1,6 +1,6 @@
 ---
 name: afc:review
-description: "Code review — use when the user asks to review code, analyze a PR diff, do a code review, or evaluate code quality and correctness"
+description: "Code review — review code, analyze PR diff, evaluate quality and correctness"
 argument-hint: "[scope: file path, PR number, or staged]"
 allowed-tools:
   - Read

@@ -1,6 +1,6 @@
 ---
 name: afc:setup
-description: "Global CLAUDE.md configuration — use when the user asks to set up afc routing in their global config, update the AFC block version, or resolve routing conflicts"
+description: "Configure afc routing block in global CLAUDE.md"
 argument-hint: "[--force]"
 allowed-tools:
   - Read

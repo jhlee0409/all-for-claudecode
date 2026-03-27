@@ -1,6 +1,6 @@
 ---
 name: afc:triage
-description: "Parallel triage of open PRs and issues — use when the user asks to triage PRs, review open issues, or prioritize the backlog of pull requests and issues"
+description: "Parallel triage of open PRs and issues"
 argument-hint: "[scope: --pr, --issue, --all (default), or specific numbers]"
 allowed-tools:
   - Read
@@ -43,6 +43,15 @@ Use the pre-fetched context above. If fetch failed, fall back to:
 ```
 
 Apply `$ARGUMENTS` filtering: skip irrelevant items based on `--pr`, `--issue`, or specific numbers.
+
+**Empty backlog early-exit**: If both PR list and issue list are empty (zero open items after filtering), output a clean-backlog summary and exit:
+```
+Triage complete — backlog is clean
+├─ Open PRs: 0
+├─ Open issues: 0
+└─ No items require attention
+```
+Skip all subsequent phases.
 
 ### 2. Phase 1 — Lightweight Parallel Batch (no checkout)
 

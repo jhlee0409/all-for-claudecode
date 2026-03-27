@@ -1,6 +1,6 @@
 ---
 name: afc:ideate
-description: "Explore and structure a product idea — use when the user wants to brainstorm, ideate, explore what to build, or create a product brief from a rough concept"
+description: "Explore and structure a product idea — brainstorm, ideate, create product brief"
 argument-hint: "[rough idea or problem statement]"
 allowed-tools:
   - Read

@@ -1,6 +1,6 @@
 ---
 name: afc:debug
-description: "Bug diagnosis and fix — use when the user reports a bug, error, crash, exception, broken behavior, or something not working and wants root-cause analysis and a targeted fix"
+description: "Bug diagnosis and fix — root-cause analysis for errors, crashes, broken behavior"
 argument-hint: "[bug description, error message, or reproduction steps]"
 allowed-tools:
   - Read
@@ -39,13 +39,15 @@ model: sonnet
 
 ### 2. Root Cause Analysis (RCA)
 
-Proceed in order:
+Proceed in order, applying **adaptive skipping** based on symptom type:
 
 1. **Error trace**: extract file:line from error message/stack trace → read that code
-2. **Data flow**: trace backwards from the problem point (where did the bad data come in?)
-3. **State analysis**: check relevant state management cache state (from Project Context)
-4. **Recent changes**: check recent changes with `git log --oneline -10 -- {related files}`
-5. **Race conditions**: check for timing issues between async operations
+2. **Data flow**: trace backwards from the problem point (where did the bad data come in?) — *skip if error trace already identifies root cause with high confidence*
+3. **State analysis**: check relevant state management cache state (from Project Context) — *skip if bug is clearly a syntax/type/null-reference error with no state involvement*
+4. **Recent changes**: check recent changes with `git log --oneline -10 -- {related files}` — *skip if bug is clearly pre-existing (user reports it "always" fails)*
+5. **Race conditions**: check for timing issues between async operations — *skip if bug is deterministic (same input always fails, no async/concurrent context)*
+
+When skipping a step, note: `"Skipped: {reason}"`. Do not skip steps 1 and 2 unless step 1 alone identifies the root cause.
 
 ### 3. Form Hypotheses
 
@@ -84,6 +86,8 @@ If hypothesis 0 is rejected: verify remaining hypotheses starting from highest p
 > **Always** read `${CLAUDE_SKILL_DIR}/../../docs/critic-loop-rules.md` first and follow it.
 
 Run the critic loop until convergence. Safety cap: 5 passes.
+
+**Fast-path**: If the fix is a single-line change (null guard, typo, missing import) with no behavioral side effects: run 1 pass with both criteria. If both PASS on the first pass, converge immediately without adversarial challenge.
 
 | Criterion | Validation |
 |-----------|------------|

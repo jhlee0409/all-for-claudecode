@@ -1,6 +1,6 @@
 ---
 name: afc:consult
-description: "Expert consultation — use when the user asks for expert advice, wants to consult a specialist, needs domain-specific guidance on backend, infra, PM, design, marketing, legal, or tech decisions, or wants to think together, brainstorm, discuss ideas, or have a structured dialogue"
+description: "Expert consultation — backend, infra, PM, design, marketing, legal, or tech guidance"
 argument-hint: "[domain?] \"[question]\" [brief|deep]"
 model: sonnet
 ---

@@ -1,6 +1,6 @@
 ---
 name: afc:implement
-description: "Execute code implementation — use when the user asks to implement a feature, execute a planned refactor, modify code from a plan, or build something"
+description: "Execute code implementation — implement features, refactors, or planned changes"
 argument-hint: "[task ID or phase specification]"
 ---
 
@@ -91,7 +91,7 @@ If tasks.md already exists: use as-is, skip generation.
 
 ### 1.7. Retrospective Check
 
-If `.claude/afc/memory/retrospectives/` exists, load the most recent 10 files and check for past patterns (file conflicts, unexpected dependencies, CI failures after parallel execution). Flag similar patterns. Skip gracefully if absent.
+If `.claude/afc/memory/retrospectives/` exists, load the most recent 3 files and scan for patterns relevant to the current task (file conflicts, unexpected dependencies, CI failures after parallel execution). Flag similar patterns. Skip gracefully if absent. Do not load more than 3 files — diminishing returns beyond recent history.
 
 ### 2. Check Progress
 
@@ -180,6 +180,9 @@ After CI passes, run a convergence-based Critic Loop to verify design alignment.
 
 **Critic Loop until convergence** (safety cap: 5):
 
+**Fast-path**: If total changed files ≤ 3 AND no new public API surface: run SCOPE_ADHERENCE + CORRECTNESS only (skip ARCHITECTURE and SIDE_EFFECT_SAFETY). Adversarial pass: 1 perspective instead of 3. This reduces overhead for small, contained changes without sacrificing correctness.
+
+**Full critic** (when fast-path does not apply):
 - **SCOPE_ADHERENCE**: Compare `git diff` changed files against plan.md File Change Map. "M of N files match."
 - **ARCHITECTURE**: Validate against `{config.architecture}` rules. "N of M rules checked."
 - **CORRECTNESS**: Cross-check against spec.md acceptance criteria. "N of M AC verified."

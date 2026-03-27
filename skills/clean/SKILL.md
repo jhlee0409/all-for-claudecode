@@ -1,6 +1,6 @@
 ---
 name: afc:clean
-description: "Pipeline artifact cleanup and codebase hygiene — use when the user asks to clean up artifacts, remove pipeline files, or finalize after implementation"
+description: "Pipeline artifact cleanup and codebase hygiene"
 argument-hint: "[feature name — defaults to current pipeline feature]"
 model: sonnet
 ---

@@ -1,6 +1,6 @@
 ---
 name: afc:issue
-description: "Analyze GitHub issue and create actionable document — use when the user asks to analyze a GitHub issue, investigate a bug report, understand requirements from an issue, triage incoming requests, or inspect a specific issue number"
+description: "Analyze GitHub issue — investigate bug reports, understand requirements, inspect issues"
 argument-hint: "<GitHub issue URL, owner/repo#number, #number, or number>"
 allowed-tools:
   - Read

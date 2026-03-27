@@ -1,6 +1,6 @@
 ---
 name: afc:checkpoint
-description: "Save session state — use when the user asks to save progress, checkpoint the session, or preserve current work state"
+description: "Save session state for later resumption"
 argument-hint: "[checkpoint message]"
 model: sonnet
 allowed-tools:

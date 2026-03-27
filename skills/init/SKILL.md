@@ -1,6 +1,6 @@
 ---
 name: afc:init
-description: "Project initial setup — use when the user asks to set up the project, initialize afc, configure the plugin, or detect the tech stack"
+description: "Project initial setup and tech stack detection"
 argument-hint: "[additional context]"
 allowed-tools:
   - Read

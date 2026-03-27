@@ -1,6 +1,6 @@
 ---
 name: afc:test
-description: "Test strategy planning and test writing — use when the user asks to write tests, add test coverage, improve coverage, create unit/integration/e2e tests, or plan a testing strategy"
+description: "Test strategy and writing — unit, integration, e2e tests, coverage improvement"
 argument-hint: "[target: file path, feature name, or coverage]"
 allowed-tools:
   - Read

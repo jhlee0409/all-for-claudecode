@@ -1,6 +1,6 @@
 ---
 name: afc:architect
-description: "Architecture analysis and design advice — use when the user asks about architecture, system design, layer boundaries, or wants structural design review"
+description: "Architecture analysis and design review"
 argument-hint: "[analysis target or design question]"
 context: fork
 agent: afc-architect
